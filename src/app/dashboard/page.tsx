@@ -20,7 +20,7 @@ interface Stats {
     activeKeywords: number;
     systemHealth: string;
     recentAlerts: any[];
-    alertsByDay: { date: string; count: number }[];
+    alertsByWeek: { week: string; count: number }[];
 }
 
 export default function Dashboard() {
@@ -65,16 +65,15 @@ export default function Dashboard() {
             <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
                     <BarChart3 size={20} color="#00A3FF" />
-                    <h2 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Posts per day</h2>
+                    <h2 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Posts per week</h2>
                 </div>
                 <div style={{ width: "100%", height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.alertsByDay ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <BarChart data={stats.alertsByWeek ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                             <XAxis
-                                dataKey="date"
+                                dataKey="week"
                                 tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                                tickFormatter={(v) => formatDate(v)}
                             />
                             <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
                             <Tooltip
@@ -85,7 +84,7 @@ export default function Dashboard() {
                                 }}
                                 labelStyle={{ color: "rgba(255,255,255,0.6)" }}
                                 formatter={(value) => [value ?? 0, "Posts"]}
-                                labelFormatter={(label) => formatDate(label)}
+                                labelFormatter={(label) => label}
                             />
                             <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
                         </BarChart>

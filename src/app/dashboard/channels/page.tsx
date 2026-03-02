@@ -154,7 +154,7 @@ export default function ChannelsPage() {
                     <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>Manage and monitor your Telegram network.</p>
                 </div>
 
-                <div style={{ display: "flex", gap: "1rem", width: "100%", maxWidth: "500px" }}>
+                <div style={{ display: "flex", gap: "1rem", width: "100%", maxWidth: "500px", alignItems: "stretch" }}>
                     <div style={{ position: "relative", flex: 1 }}>
                         <LinkIcon
                             size={18}
@@ -163,7 +163,7 @@ export default function ChannelsPage() {
                         />
                         <input
                             className="input-field"
-                            style={{ paddingLeft: "3rem" }}
+                            style={{ paddingLeft: "3rem", height: "44px", boxSizing: "border-box" }}
                             placeholder="Add @username or Link..."
                             value={newChannel}
                             onChange={(e) => setNewChannel(e.target.value)}
@@ -175,7 +175,7 @@ export default function ChannelsPage() {
                         className="btn-primary"
                         onClick={handleAdd}
                         disabled={adding || !newChannel.trim()}
-                        style={{ width: "60px", minWidth: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        style={{ width: "60px", minWidth: "60px", height: "44px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                         {adding ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} />}
                     </button>
