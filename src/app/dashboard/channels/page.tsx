@@ -288,8 +288,8 @@ export default function ChannelsPage() {
                                                         style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "0.8rem" }}
                                                     >
                                                         <div style={{
-                                                            width: "32px",
-                                                            height: "32px",
+                                                            width: "28px",
+                                                            height: "28px",
                                                             borderRadius: "10px",
                                                             background: "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
                                                             border: `1px solid ${isPending ? "rgba(255,159,10,0.3)" : "rgba(255,255,255,0.05)"}`,
