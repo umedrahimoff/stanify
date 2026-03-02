@@ -111,6 +111,11 @@ h4 {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.tag-input-wrapper:focus-within {
+  border-color: hsl(var(--primary));
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* Animations */
 @keyframes fadeIn {
   from {
