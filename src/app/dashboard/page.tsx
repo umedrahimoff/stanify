@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Bell, Radio, Hash, ArrowUpRight, Loader2, BarChart3 } from "lucide-react";
+import { Activity, Bell, Radio, Hash, ArrowUpRight, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
 import { formatDate } from "@/lib/date";
@@ -23,15 +23,71 @@ interface Stats {
     alertsByWeek: { week: string; count: number }[];
 }
 
+function DashboardSkeleton() {
+    return (
+        <div className="animate-fade">
+            <div style={{ marginBottom: "2.5rem" }}>
+                <div className="skeleton" style={{ width: "200px", height: "2rem", marginBottom: "0.5rem" }} />
+                <div className="skeleton" style={{ width: "400px", height: "1.1rem", maxWidth: "100%" }} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="card" style={{ padding: "1.5rem" }}>
+                        <div className="skeleton" style={{ width: "48px", height: "48px", borderRadius: "12px", marginBottom: "1.25rem" }} />
+                        <div className="skeleton" style={{ width: "60%", height: "1.75rem", marginBottom: "0.5rem" }} />
+                        <div className="skeleton" style={{ width: "80%", height: "0.85rem" }} />
+                    </div>
+                ))}
+            </div>
+
+            <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                    <div className="skeleton" style={{ width: "20px", height: "20px", borderRadius: "4px" }} />
+                    <div className="skeleton" style={{ width: "140px", height: "1.1rem" }} />
+                </div>
+                <div className="skeleton" style={{ width: "100%", height: 280, borderRadius: "8px" }} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "1.5rem" }}>
+                <div className="card" style={{ padding: "1.5rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+                        <div className="skeleton" style={{ width: "120px", height: "1.1rem" }} />
+                        <div className="skeleton" style={{ width: "70px", height: "0.8rem" }} />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} style={{ padding: "1.25rem", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div className="skeleton" style={{ width: "40%", height: "1rem", marginBottom: "0.5rem" }} />
+                                <div className="skeleton" style={{ width: "60%", height: "0.85rem" }} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="card" style={{ padding: "1.5rem" }}>
+                    <div className="skeleton" style={{ width: "120px", height: "1.1rem", marginBottom: "1.5rem" }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                        {[1, 2].map((i) => (
+                            <div key={i} style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
+                                <div className="skeleton" style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 6, flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                    <div className="skeleton" style={{ width: "70%", height: "0.9rem", marginBottom: "0.25rem" }} />
+                                    <div className="skeleton" style={{ width: "100%", height: "0.8rem" }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Dashboard() {
     const { data: stats, error, isLoading } = useSWR<Stats>("/api/stats");
 
     if (isLoading || error || !stats) {
-        return (
-            <div style={{ display: "flex", justifyContent: "center", padding: "3rem", height: "100%", alignItems: "center" }}>
-                <Loader2 className="animate-spin" size={48} color="#00A3FF" />
-            </div>
-        );
+        return <DashboardSkeleton />;
     }
 
     const cards = [

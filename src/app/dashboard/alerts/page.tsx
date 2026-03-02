@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Hash } from "lucide-react";
+import { Hash } from "lucide-react";
+import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterStyles } from "@/components/FilterCard";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
@@ -125,9 +126,7 @@ export default function AlertsHistoryPage() {
 
             <div className="card" style={{ padding: '0' }}>
                 {isLoading ? (
-                    <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
-                        <Loader2 className="animate-spin" size={40} color="#00A3FF" />
-                    </div>
+                    <TableSkeleton columns={5} rows={15} />
                 ) : alerts.length === 0 ? (
                     <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
                         {hasFilters ? "No alerts match the filters." : "No alerts detected yet. Monitoring is active."}

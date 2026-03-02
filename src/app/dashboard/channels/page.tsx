@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
+import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterStyles } from "@/components/FilterCard";
 import axios from "axios";
 import useSWR, { useSWRConfig } from "swr";
@@ -267,9 +268,7 @@ export default function ChannelsPage() {
 
             <div className="card" style={{ padding: "0.5rem" }}>
                 {isLoading ? (
-                    <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
-                        <Loader2 className="animate-spin" size={40} color="#00A3FF" />
-                    </div>
+                    <TableSkeleton columns={7} rows={12} />
                 ) : (
                     <div style={{ overflowX: "auto" }}>
                         <table className="table-dashboard">
