@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle } from "lucide-react";
 import axios from "axios";
+import useSWR, { useSWRConfig } from "swr";
 
 interface Channel {
     id: string;
@@ -14,8 +15,6 @@ interface Channel {
 }
 
 export default function ChannelsPage() {
-    const [channels, setChannels] = useState<Channel[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [newChannel, setNewChannel] = useState("");
     const [adding, setAdding] = useState(false);
@@ -23,31 +22,20 @@ export default function ChannelsPage() {
     const [showOnlyActive, setShowOnlyActive] = useState(true);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
 
-    useEffect(() => {
-        fetchChannels();
-    }, []);
+    const { data: channels = [], isLoading, mutate } = useSWR<Channel[]>("/api/channels");
+    const { mutate: mutateStats } = useSWRConfig();
 
     const showToast = (msg: string, type: "success" | "error" | "warn" = "success") => {
         setToast({ msg, type });
         setTimeout(() => setToast(null), 4000);
     };
 
-    const fetchChannels = async () => {
-        try {
-            const res = await axios.get("/api/channels");
-            setChannels(res.data);
-        } catch (error) {
-            console.error("Failed to fetch channels:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleSync = async () => {
         setSyncing(true);
         try {
             await axios.post("/api/channels/sync");
-            await fetchChannels();
+            mutate();
+            mutateStats("/api/stats");
             showToast("Channels synced successfully!");
         } catch (error) {
             console.error("Sync failed:", error);
@@ -63,8 +51,9 @@ export default function ChannelsPage() {
         try {
             const cleanSource = newChannel.trim();
             const res = await axios.post("/api/channels", { username: cleanSource });
-            setChannels((prev) => [res.data, ...prev]);
             setNewChannel("");
+            mutate([res.data, ...channels], false);
+            mutateStats("/api/stats");
             if (res.data._warning) {
                 showToast(`Added (private channel — join may be limited)`, "warn");
             } else {
@@ -81,7 +70,8 @@ export default function ChannelsPage() {
     const toggleStatus = async (id: string, currentStatus: boolean) => {
         try {
             const res = await axios.post("/api/channels", { id, isActive: !currentStatus });
-            setChannels((prev) => prev.map((c) => (c.id === id ? res.data : c)));
+            mutate(channels.map((c) => (c.id === id ? res.data : c)), false);
+            mutateStats("/api/stats");
         } catch (error) {
             console.error("Failed to toggle channel status:", error);
             showToast("Failed to update status", "error");
@@ -92,7 +82,8 @@ export default function ChannelsPage() {
         if (!confirm("Are you sure you want to remove this channel?")) return;
         try {
             await axios.delete("/api/channels", { data: { id } });
-            setChannels((prev) => prev.filter((c) => c.id !== id));
+            mutate(channels.filter((c) => c.id !== id), false);
+            mutateStats("/api/stats");
             showToast("Channel removed.");
         } catch (error) {
             console.error("Failed to delete channel:", error);
@@ -241,7 +232,7 @@ export default function ChannelsPage() {
             </div>
 
             <div className="card" style={{ padding: "0.5rem" }}>
-                {loading ? (
+                {isLoading ? (
                     <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
                         <Loader2 className="animate-spin" size={40} color="#00A3FF" />
                     </div>

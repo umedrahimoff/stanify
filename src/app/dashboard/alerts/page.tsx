@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Bell, Search, Loader2 } from "lucide-react";
-import axios from "axios";
+import { Loader2 } from "lucide-react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface Alert {
     id: string;
@@ -14,27 +14,9 @@ interface Alert {
 }
 
 export default function AlertsHistoryPage() {
-    const [alerts, setAlerts] = useState<Alert[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchAlerts = async () => {
-            try {
-                const res = await axios.get("/api/alerts");
-                setAlerts(res.data);
-            } catch (error) {
-                console.error("Failed to fetch alerts:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchAlerts();
-
-        // Refresh alerts every 10 seconds
-        const interval = setInterval(fetchAlerts, 10000);
-        return () => clearInterval(interval);
-    }, []);
+    const { data: alerts = [], isLoading } = useSWR<Alert[]>("/api/alerts", fetcher, {
+        refreshInterval: 10000,
+    });
 
     return (
         <div className="animate-fade">
@@ -46,7 +28,7 @@ export default function AlertsHistoryPage() {
             </div>
 
             <div className="card" style={{ padding: '0' }}>
-                {loading ? (
+                {isLoading ? (
                     <div className="flex justify-center p-12">
                         <Loader2 className="animate-spin text-blue-500" size={40} />
                     </div>

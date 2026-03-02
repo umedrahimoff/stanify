@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Activity, Bell, Radio, Hash, ArrowUpRight, Loader2 } from "lucide-react";
-import axios from "axios";
+import useSWR from "swr";
 
 interface Stats {
     totalAlerts: number;
@@ -13,25 +12,9 @@ interface Stats {
 }
 
 export default function Dashboard() {
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { data: stats, error, isLoading } = useSWR<Stats>("/api/stats");
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await axios.get("/api/stats");
-                setStats(res.data);
-            } catch (error) {
-                console.error("Failed to fetch stats:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStats();
-    }, []);
-
-    if (loading || !stats) {
+    if (isLoading || error || !stats) {
         return (
             <div className="flex justify-center p-12 h-full items-center">
                 <Loader2 className="animate-spin text-blue-500" size={48} />

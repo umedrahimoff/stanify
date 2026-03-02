@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, X, Hash, Loader2 } from "lucide-react";
 import axios from "axios";
+import useSWR, { useSWRConfig } from "swr";
 
 interface Keyword {
     id: string;
@@ -10,33 +11,19 @@ interface Keyword {
 }
 
 export default function KeywordsPage() {
-    const [keywords, setKeywords] = useState<Keyword[]>([]);
     const [newKeyword, setNewKeyword] = useState("");
-    const [loading, setLoading] = useState(true);
     const [adding, setAdding] = useState(false);
-
-    useEffect(() => {
-        fetchKeywords();
-    }, []);
-
-    const fetchKeywords = async () => {
-        try {
-            const res = await axios.get("/api/keywords");
-            setKeywords(res.data);
-        } catch (error) {
-            console.error("Failed to fetch keywords:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { data: keywords = [], isLoading, mutate } = useSWR<Keyword[]>("/api/keywords");
+    const { mutate: mutateStats } = useSWRConfig();
 
     const handleAdd = async () => {
         if (!newKeyword.trim()) return;
         setAdding(true);
         try {
             const res = await axios.post("/api/keywords", { text: newKeyword });
-            setKeywords([res.data, ...keywords]);
             setNewKeyword("");
+            mutate([res.data, ...keywords], false);
+            mutateStats("/api/stats");
         } catch (error) {
             console.error("Failed to add keyword:", error);
         } finally {
@@ -47,7 +34,8 @@ export default function KeywordsPage() {
     const handleRemove = async (id: string) => {
         try {
             await axios.delete("/api/keywords", { data: { id } });
-            setKeywords(keywords.filter(k => k.id !== id));
+            mutate(keywords.filter((k) => k.id !== id), false);
+            mutateStats("/api/stats");
         } catch (error) {
             console.error("Failed to remove keyword:", error);
         }
@@ -81,7 +69,7 @@ export default function KeywordsPage() {
             </div>
 
             <div className="card" style={{ padding: '2rem' }}>
-                {loading ? (
+                {isLoading ? (
                     <div className="flex justify-center p-8">
                         <Loader2 className="animate-spin text-blue-500" size={32} />
                     </div>
