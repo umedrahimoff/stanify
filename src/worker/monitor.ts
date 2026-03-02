@@ -65,4 +65,28 @@ async function startMonitoring() {
     console.log("🟢 Listener active. Waiting for messages...");
 }
 
+async function cleanupOldAlerts() {
+    console.log("🧹 Running database cleanup...");
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
+
+    try {
+        const deleted = await prisma.alert.deleteMany({
+            where: {
+                createdAt: {
+                    lt: threeMonthsAgo
+                }
+            }
+        });
+        console.log(`✅ Cleanup finished: Deleted ${deleted.count} old alerts.`);
+    } catch (error) {
+        console.error("❌ Cleanup failed:", error);
+    }
+}
+
+// Run cleanup every 24 hours
+setInterval(cleanupOldAlerts, 24 * 60 * 60 * 1000);
+// Also run once on startup
+cleanupOldAlerts();
+
 startMonitoring().catch(console.error);
