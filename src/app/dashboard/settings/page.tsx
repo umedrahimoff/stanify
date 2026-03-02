@@ -40,63 +40,63 @@ export default function SettingsPage() {
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Configure your Telegram user account and monitoring settings.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                <div className="card" style={{ padding: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                        <Fingerprint size={22} color="#00A3FF" />
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Telegram Account</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="card" style={{ padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                        <Fingerprint size={18} color="#00A3FF" />
+                        <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Telegram Account</h2>
                     </div>
 
                     {isTelegramAccountLocked && (
-                        <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem' }}>
+                        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1rem' }}>
                             Telegram account is already connected via server configuration and cannot be changed from the admin panel.
                         </p>
                     )}
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {/* Step 1: API Information */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>API ID</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>API ID</label>
                             <div style={{ display: 'flex', position: 'relative' }}>
-                                <Key size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+                                <Key size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                                 <input
-                                    className="input-field"
+                                    className="input-field text-[0.85rem]"
                                     value={apiId}
                                     onChange={(e) => setApiId(e.target.value)}
                                     placeholder="Enter your API ID"
-                                    style={{ paddingLeft: '2.5rem' }}
+                                    style={{ paddingLeft: '2.25rem', height: '36px' }}
                                     disabled={isTelegramAccountLocked}
                                     readOnly={isTelegramAccountLocked}
                                 />
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>API HASH</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>API HASH</label>
                             <div style={{ display: 'flex', position: 'relative' }}>
-                                <ShieldCheck size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+                                <ShieldCheck size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                                 <input
-                                    className="input-field"
+                                    className="input-field text-[0.85rem]"
                                     value={apiHash}
                                     onChange={(e) => setApiHash(e.target.value)}
                                     placeholder="Enter your API HASH"
-                                    style={{ paddingLeft: '2.5rem' }}
+                                    style={{ paddingLeft: '2.25rem', height: '36px' }}
                                     disabled={isTelegramAccountLocked}
                                     readOnly={isTelegramAccountLocked}
                                 />
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Phone Number</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Phone Number</label>
                             <div style={{ display: 'flex', position: 'relative' }}>
-                                <Phone size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+                                <Phone size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                                 <input
-                                    className="input-field"
+                                    className="input-field text-[0.85rem]"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="+1 234 567 890"
-                                    style={{ paddingLeft: '2.5rem' }}
+                                    style={{ paddingLeft: '2.25rem', height: '36px' }}
                                     disabled={isTelegramAccountLocked}
                                     readOnly={isTelegramAccountLocked}
                                 />
@@ -104,16 +104,16 @@ export default function SettingsPage() {
                         </div>
 
                         {step === 3 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Verification Code</label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Verification Code</label>
                                 <div style={{ display: 'flex', position: 'relative' }}>
-                                    <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+                                    <Mail size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                                     <input
-                                        className="input-field"
+                                        className="input-field text-[0.85rem]"
                                         value={code}
                                         onChange={(e) => setCode(e.target.value)}
                                         placeholder="12345"
-                                        style={{ paddingLeft: '2.5rem' }}
+                                        style={{ paddingLeft: '2.25rem', height: '36px' }}
                                         disabled={isTelegramAccountLocked}
                                         readOnly={isTelegramAccountLocked}
                                     />
@@ -121,10 +121,10 @@ export default function SettingsPage() {
                             </div>
                         )}
 
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
                             <button
                                 className="btn-primary"
-                                style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                                style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                                 onClick={() => {
                                     if (!isTelegramAccountLocked) {
                                         setStep(step + 1);
@@ -144,23 +144,23 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div className="card" style={{ padding: '1.25rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                            <Activity size={22} color="#00FF94" />
-                            <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Notification Settings</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="card" style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                            <Activity size={18} color="#00FF94" />
+                            <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Notification Settings</h2>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Telegram recipients</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Telegram recipients</label>
                                 <div
-                                    className="input-field tag-input-wrapper"
-                                    style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.85rem', minHeight: '36px', cursor: 'text' }}
+                                    className="input-field tag-input-wrapper text-[0.85rem]"
+                                    style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', minHeight: '36px', cursor: 'text' }}
                                     onClick={(e) => (e.target as HTMLElement).querySelector('input')?.focus()}
                                 >
                                     {recipients.map((r, i) => (
-                                        <span key={`${r}-${i}`} style={{ background: 'rgba(0,163,255,0.15)', color: '#00A3FF', padding: '0.25rem 0.5rem', borderRadius: '6px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <span key={`${r}-${i}`} style={{ background: 'rgba(0,163,255,0.15)', color: '#00A3FF', padding: '0.2rem 0.4rem', borderRadius: '6px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                             @{r}
                                             <button type="button" onClick={(e) => { e.stopPropagation(); setRecipients((x) => x.filter((_, j) => j !== i)); }} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, display: 'flex' }}>
                                                 <span style={{ opacity: 0.7 }}>×</span>
@@ -187,7 +187,7 @@ export default function SettingsPage() {
                                         style={{ flex: 1, minWidth: '120px', background: 'none', border: 'none', outline: 'none', color: 'inherit', fontSize: 'inherit' }}
                                     />
                                 </div>
-                                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+                                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
                                     Alerts and login codes will be sent to all listed users.
                                 </p>
                             </div>
@@ -195,7 +195,7 @@ export default function SettingsPage() {
 
                         <button
                             className="btn-primary"
-                            style={{ width: '100%', marginTop: '1.25rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                            style={{ width: '100%', marginTop: '1rem', padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.4rem' }}
                             onClick={async () => {
                                 setSaving(true);
                                 setSaveMsg(null);
@@ -216,11 +216,11 @@ export default function SettingsPage() {
                             }}
                             disabled={saving}
                         >
-                            <Save size={18} />
+                            <Save size={16} />
                             {saving ? "Saving…" : "Save"}
                         </button>
                         {saveMsg && (
-                            <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: saveMsg.ok ? "#00FF75" : "#ff4545" }}>
+                            <p style={{ marginTop: "0.4rem", fontSize: "0.8rem", color: saveMsg.ok ? "#00FF75" : "#ff4545" }}>
                                 {saveMsg.text}
                             </p>
                         )}

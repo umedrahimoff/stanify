@@ -17,7 +17,7 @@ export function FilterCard({ children }: { children: React.ReactNode }) {
 
 export const filterClasses = {
     field: "flex flex-col gap-0.5 flex-1 min-w-[100px]",
-    label: "text-[0.7rem] text-white/40",
+    label: "text-[0.75rem] text-white/40",
     input: "px-3 py-1.5 h-8 text-[0.8rem] w-full min-w-[120px] leading-normal rounded-lg",
     inputWithIcon: "pl-10",
     actions: "flex items-center gap-2 shrink-0 flex-nowrap",

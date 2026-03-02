@@ -161,48 +161,48 @@ export default function ChannelDetailPage() {
                 style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "0.5rem",
+                    gap: "0.4rem",
                     color: "rgba(255,255,255,0.5)",
-                    fontSize: "0.9rem",
-                    marginBottom: "2rem",
+                    fontSize: "0.85rem",
+                    marginBottom: "1rem",
                     textDecoration: "none",
                 }}
             >
-                <ArrowLeft size={18} /> Back to Channels
+                <ArrowLeft size={16} /> Back to Channels
             </Link>
 
             {!currentChannel ? (
-                <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
-                    <Loader2 className="animate-spin" size={40} color="#00A3FF" />
+                <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+                    <Loader2 className="animate-spin" size={28} color="#00A3FF" />
                 </div>
             ) : (
                 <>
-                    <div className="card" style={{ padding: "0", marginBottom: "2rem" }}>
-                        <div style={{ padding: "1.5rem", display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+                    <div className="card" style={{ padding: "0", marginBottom: "1rem" }}>
+                        <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             <div
                                 style={{
-                                    width: "48px",
-                                    height: "48px",
-                                    borderRadius: "12px",
+                                    width: "36px",
+                                    height: "36px",
+                                    borderRadius: "10px",
                                     background: "linear-gradient(135deg, rgba(0,163,255,0.2), rgba(0,163,255,0.05))",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     fontWeight: 700,
                                     color: "#00A3FF",
-                                    fontSize: "1.2rem",
+                                    fontSize: "1rem",
                                 }}
                             >
                                 {currentChannel.name ? currentChannel.name[0].toUpperCase() : "?"}
                             </div>
                             <div>
-                                <h1 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.25rem" }}>
+                                <h1 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "0.15rem" }}>
                                     {currentChannel.name || "Unknown"}
                                 </h1>
-                                <div style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.5)" }}>
+                                <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>
                                     {currentChannel.username ? `@${currentChannel.username}` : `ID: ${currentChannel.telegramId}`}
                                 </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem", fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.35rem", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
                                     <Calendar size={14} />
                                     Added {formatDate(currentChannel.createdAt)}
                                 </div>
@@ -210,16 +210,16 @@ export default function ChannelDetailPage() {
                         </div>
                     </div>
 
-                    <div className="card" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
-                        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Keywords (triggers for this channel)</h2>
-                        <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+                    <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem" }}>Keywords (triggers for this channel)</h2>
+                        <div style={{ display: "flex", gap: "0.6rem", marginBottom: "0.75rem", flexWrap: "wrap", alignItems: "flex-end" }}>
                             <div
-                                className="input-field tag-input-wrapper"
-                                style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", minHeight: "44px", flex: 1, minWidth: "200px", cursor: "text" }}
+                                className="input-field tag-input-wrapper text-[0.85rem]"
+                                style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.85rem", minHeight: "36px", flex: 1, minWidth: "180px", cursor: "text" }}
                                 onClick={() => inputRef.current?.focus()}
                             >
                                 {pendingTags.map((tag, idx) => (
-                                    <span key={`${tag}-${idx}`} style={{ background: "rgba(0,163,255,0.15)", color: "#00A3FF", padding: "0.2rem 0.5rem", borderRadius: "6px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                    <span key={`${tag}-${idx}`} style={{ background: "rgba(0,163,255,0.15)", color: "#00A3FF", padding: "0.15rem 0.4rem", borderRadius: "6px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "0.25rem" }}>
                                         {tag}
                                         <button type="button" onClick={(e) => { e.stopPropagation(); removePendingTag(idx); }} style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0, display: "flex" }}>
                                             <X size={12} />
@@ -237,17 +237,17 @@ export default function ChannelDetailPage() {
                                     style={{ flex: 1, minWidth: "100px", background: "none", border: "none", outline: "none", color: "inherit", fontSize: "inherit" }}
                                 />
                             </div>
-                            <button className="btn-primary" onClick={handleAdd} disabled={adding || !tagInputHasContent} style={{ width: "48px", minWidth: "48px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                {adding ? <Loader2 className="animate-spin" size={20} /> : <Plus size={20} />}
+                            <button className="btn-primary" onClick={handleAdd} disabled={adding || !tagInputHasContent} style={{ width: "40px", minWidth: "40px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {adding ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
                             </button>
                         </div>
                         {keywordsLoading ? (
-                            <div style={{ display: "flex", justifyContent: "center", padding: "1.5rem 0" }}><Loader2 className="animate-spin" size={24} color="#00A3FF" /></div>
+                            <div style={{ display: "flex", justifyContent: "center", padding: "1rem 0" }}><Loader2 className="animate-spin" size={20} color="#00A3FF" /></div>
                         ) : (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
                                 {keywords.length > 0 && (
                                     <>
-                                        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginRight: "0.5rem" }}>
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginRight: "0.4rem" }}>
                                             <input type="checkbox" checked={selectedIds.size === keywords.length} onChange={() => setSelectedIds(selectedIds.size === keywords.length ? new Set() : new Set(keywords.map((k) => k.id)))} />
                                             Select all
                                         </label>
@@ -260,13 +260,13 @@ export default function ChannelDetailPage() {
                                     </>
                                 )}
                                 {keywords.length === 0 ? (
-                                    <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.9rem" }}>No keywords. Add triggers above.</span>
+                                    <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No keywords. Add triggers above.</span>
                                 ) : (
                                     keywords.map((kw) => (
-                                        <div key={kw.id} style={{ background: "rgba(255,255,255,0.05)", padding: "0.4rem 0.8rem", borderRadius: "100px", display: "flex", alignItems: "center", gap: "0.4rem", border: "1px solid rgba(255,255,255,0.1)" }}>
+                                        <div key={kw.id} style={{ background: "rgba(255,255,255,0.05)", padding: "0.3rem 0.65rem", borderRadius: "100px", display: "flex", alignItems: "center", gap: "0.35rem", border: "1px solid rgba(255,255,255,0.1)" }}>
                                             <input type="checkbox" checked={selectedIds.has(kw.id)} onChange={() => setSelectedIds((s) => { const n = new Set(s); if (n.has(kw.id)) n.delete(kw.id); else n.add(kw.id); return n; })} style={{ cursor: "pointer" }} />
                                             <Hash size={12} color="#00A3FF" />
-                                            <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>{kw.text}</span>
+                                            <span style={{ fontWeight: 600, fontSize: "0.8rem" }}>{kw.text}</span>
                                             <button onClick={() => handleRemove(kw.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", padding: 0, display: "flex" }}><X size={12} /></button>
                                         </div>
                                     ))
@@ -275,17 +275,17 @@ export default function ChannelDetailPage() {
                         )}
                     </div>
 
-                    <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
+                    <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem" }}>
                         Posts ({alertsTotal})
                     </h2>
 
                     <div className="card" style={{ padding: "0" }}>
                         {alertsLoading ? (
-                            <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
-                                <Loader2 className="animate-spin" size={40} color="#00A3FF" />
+                            <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+                                <Loader2 className="animate-spin" size={28} color="#00A3FF" />
                             </div>
                         ) : alerts.length === 0 ? (
-                            <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
+                            <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>
                                 No posts yet.
                             </div>
                         ) : (
@@ -312,8 +312,8 @@ export default function ChannelDetailPage() {
                                                     {alert.content || "(no text)"}
                                                 </td>
                                                 <td className="td-right">
-                                                    <Link href={`/dashboard/archive/${alert.id}`} className="btn-link">
-                                                        View <ExternalLink size={14} />
+                                                    <Link href={`/dashboard/archive/${alert.id}`} className="btn-link" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>
+                                                        View <ExternalLink size={12} />
                                                     </Link>
                                                 </td>
                                             </tr>

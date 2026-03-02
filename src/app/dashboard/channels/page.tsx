@@ -136,7 +136,7 @@ export default function ChannelsPage() {
                     color: toastColor,
                     padding: "0.9rem 1.4rem",
                     borderRadius: "12px",
-                    fontSize: "0.9rem",
+                    fontSize: "0.85rem",
                     fontWeight: 600,
                     zIndex: 9999,
                     boxShadow: `0 4px 24px ${toastColor}22`,
@@ -303,7 +303,7 @@ export default function ChannelsPage() {
                                                             {c.name ? c.name[0].toUpperCase() : "?"}
                                                         </div>
                                                         <div>
-                                                            <div style={{ fontWeight: 600, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                            <div style={{ fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                                 {c.name || "Unknown"}
                                                                 <ChevronRight size={16} color="rgba(255,255,255,0.3)" />
                                                                 {isPending && (

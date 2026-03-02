@@ -35,7 +35,7 @@ function DashboardSkeleton() {
                 <div className="skeleton" style={{ width: "320px", maxWidth: "100%", height: "0.9rem" }} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1rem", marginBottom: "1.25rem", width: "100%" }}>
                 {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="card" style={{ padding: "1rem" }}>
                         <div className="skeleton" style={{ width: "40px", height: "40px", borderRadius: "10px", marginBottom: "0.75rem" }} />
@@ -113,7 +113,7 @@ export default function Dashboard() {
     ];
 
     return (
-        <div className="animate-fade">
+        <div className="animate-fade" style={{ width: "100%" }}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>Overview</h1>
@@ -134,7 +134,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
+            <div className="dashboard-cards" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1rem", marginBottom: "1.25rem", width: "100%" }}>
                 {cards.map((card) => (
                     <div key={card.title} className="card" style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -237,14 +237,14 @@ export default function Dashboard() {
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00FF75', marginTop: '6px' }}></div>
                             <div>
-                                <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>Telegram Node</div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Telegram Node</div>
                                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Status: Active, Data Center: DC2</div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00FF75', marginTop: '6px' }}></div>
                             <div>
-                                <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>Database Stream</div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Database Stream</div>
                                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Status: Operational, Last Sync: 1m ago</div>
                             </div>
                         </div>

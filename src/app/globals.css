@@ -185,6 +185,15 @@ h4 {
   background: rgba(255,69,69,0.1) !important;
 }
 
+/* Dashboard typography scale:
+   - Page title (h1): 1.75rem
+   - Section title (h2): 1rem
+   - Body: 0.85rem
+   - Secondary: 0.8rem
+   - Small/labels: 0.75rem
+   - Input height: 36px (forms), 32px (filters)
+*/
+
 /* Dashboard Tables — unified style */
 .table-dashboard {
   width: 100%;
@@ -253,6 +262,21 @@ h4 {
 }
 .table-dashboard .btn-link:hover {
   background: rgba(0,163,255,0.15);
+}
+
+/* Dashboard overview cards — full width, responsive */
+.dashboard-cards {
+  width: 100%;
+}
+@media (max-width: 900px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 500px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Filter card — unified across Alerts, Archive, Channels */

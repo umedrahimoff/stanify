@@ -27,8 +27,8 @@ export default function ArchiveDetailPage() {
 
     if (isLoading || error) {
         return (
-            <div style={{ display: "flex", justifyContent: "center", padding: "3rem", height: "100%", alignItems: "center" }}>
-                <Loader2 className="animate-spin" size={48} color="#00A3FF" />
+            <div style={{ display: "flex", justifyContent: "center", padding: "2rem", height: "100%", alignItems: "center" }}>
+                <Loader2 className="animate-spin" size={32} color="#00A3FF" />
             </div>
         );
     }
@@ -63,49 +63,49 @@ export default function ArchiveDetailPage() {
                 style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "0.5rem",
+                    gap: "0.4rem",
                     color: "rgba(255,255,255,0.5)",
-                    fontSize: "0.9rem",
-                    marginBottom: "2rem",
+                    fontSize: "0.85rem",
+                    marginBottom: "1rem",
                     textDecoration: "none",
                     transition: "color 0.2s",
                 }}
             >
-                <ArrowLeft size={18} /> Back to Archive
+                <ArrowLeft size={16} /> Back to Archive
             </Link>
 
-            <div className="card" style={{ padding: "2rem" }}>
+            <div className="card" style={{ padding: "1rem" }}>
                 <div
                     style={{
                         display: "flex",
                         flexWrap: "wrap",
-                        gap: "1.5rem",
-                        marginBottom: "2rem",
-                        paddingBottom: "2rem",
+                        gap: "1rem",
+                        marginBottom: "1rem",
+                        paddingBottom: "1rem",
                         borderBottom: "1px solid rgba(255,255,255,0.06)",
                     }}
                 >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                        <Calendar size={18} color="rgba(255,255,255,0.4)" />
-                        <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Calendar size={14} color="rgba(255,255,255,0.4)" />
+                        <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>
                             {formatDate(alert.createdAt)}
                         </span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                        <Radio size={18} color="#00A3FF" />
-                        <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Radio size={14} color="#00A3FF" />
+                        <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>
                             {alert.channelName}
                         </span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                        <Hash size={18} color="#00FF75" />
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Hash size={14} color="#00FF75" />
                         <span
                             style={{
                                 background: "rgba(0,163,255,0.1)",
                                 color: "#00A3FF",
-                                padding: "0.2rem 0.6rem",
+                                padding: "0.15rem 0.5rem",
                                 borderRadius: "100px",
-                                fontSize: "0.8rem",
+                                fontSize: "0.75rem",
                                 fontWeight: 600,
                             }}
                         >
@@ -120,18 +120,18 @@ export default function ArchiveDetailPage() {
                             style={{
                                 display: "inline-flex",
                                 alignItems: "center",
-                                gap: "0.4rem",
+                                gap: "0.35rem",
                                 color: "#00A3FF",
-                                fontSize: "0.9rem",
+                                fontSize: "0.85rem",
                                 fontWeight: 600,
                                 textDecoration: "none",
                                 border: "1px solid rgba(0,163,255,0.3)",
-                                padding: "0.4rem 0.8rem",
+                                padding: "0.3rem 0.6rem",
                                 borderRadius: "8px",
                                 transition: "all 0.2s",
                             }}
                         >
-                            Open in Telegram <ExternalLink size={14} />
+                            Open in Telegram <ExternalLink size={12} />
                         </a>
                     )}
                 </div>
@@ -139,10 +139,10 @@ export default function ArchiveDetailPage() {
                 <div>
                     <h3
                         style={{
-                            fontSize: "0.85rem",
+                            fontSize: "0.75rem",
                             fontWeight: 600,
                             color: "rgba(255,255,255,0.5)",
-                            marginBottom: "0.75rem",
+                            marginBottom: "0.5rem",
                             textTransform: "uppercase",
                             letterSpacing: "0.05em",
                         }}
@@ -151,8 +151,8 @@ export default function ArchiveDetailPage() {
                     </h3>
                     <div
                         style={{
-                            fontSize: "1rem",
-                            lineHeight: 1.7,
+                            fontSize: "0.85rem",
+                            lineHeight: 1.5,
                             color: "rgba(255,255,255,0.9)",
                             whiteSpace: "pre-wrap",
                             wordBreak: "break-word",
