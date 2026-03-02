@@ -18,6 +18,7 @@ export default function ChannelsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [newChannel, setNewChannel] = useState("");
     const [adding, setAdding] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [showOnlyActive, setShowOnlyActive] = useState(false);
 
     useEffect(() => {
@@ -35,20 +36,33 @@ export default function ChannelsPage() {
         }
     };
 
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            await axios.post("/api/channels/sync");
+            await fetchChannels();
+            alert("Channels synced successfully!");
+        } catch (error) {
+            console.error("Sync failed:", error);
+            alert("Sync failed. Check console.");
+        } finally {
+            setSyncing(false);
+        }
+    };
+
     const handleAdd = async () => {
         if (!newChannel.trim()) return;
         setAdding(true);
         try {
-            const cleanSource = newChannel.replace("@", "").trim();
+            const cleanSource = newChannel.trim();
             const res = await axios.post("/api/channels", {
-                username: cleanSource,
-                name: cleanSource,
-                isActive: true // Enable by default when adding specifically
+                username: cleanSource
             });
             setChannels([res.data, ...channels]);
             setNewChannel("");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to add channel:", error);
+            alert(error.response?.data?.error || "Failed to add channel");
         } finally {
             setAdding(false);
         }
@@ -145,6 +159,27 @@ export default function ChannelsPage() {
                 >
                     <ListFilter size={16} />
                     {showOnlyActive ? "Showing: Active Only" : "Showing: All Sources"}
+                </button>
+
+                <button
+                    onClick={handleSync}
+                    disabled={syncing}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '0.85rem',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: 'rgba(255,255,255,0.6)',
+                        cursor: 'pointer',
+                        transition: '0.2s'
+                    }}
+                >
+                    {syncing ? <Loader2 size={16} className="animate-spin" /> : <Radio size={16} />}
+                    Sync from Telegram
                 </button>
             </div>
 
