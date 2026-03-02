@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ExternalLink, Calendar, Radio, Filter } from "lucide-react";
+import { Loader2, ExternalLink, Calendar, Radio, Filter, Hash } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
@@ -24,41 +24,120 @@ interface Channel {
 
 export default function ArchivePage() {
     const [channelFilter, setChannelFilter] = useState<string>("");
+    const [dateFrom, setDateFrom] = useState<string>("");
+    const [dateTo, setDateTo] = useState<string>("");
+    const [keywordFilter, setKeywordFilter] = useState<string>("");
 
-    const alertsKey = channelFilter
-        ? `/api/alerts?limit=200&channelId=${channelFilter}`
-        : "/api/alerts?limit=200";
+    const params = new URLSearchParams();
+    params.set("limit", "200");
+    if (channelFilter) params.set("channelId", channelFilter);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+    if (keywordFilter.trim()) params.set("keyword", keywordFilter.trim());
+
+    const alertsKey = `/api/alerts?${params.toString()}`;
     const { data: alerts = [], isLoading } = useSWR<Alert[]>(alertsKey, fetcher);
     const { data: channels = [] } = useSWR<Channel[]>("/api/channels", fetcher);
 
+    const hasFilters = channelFilter || dateFrom || dateTo || keywordFilter.trim();
+
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
-                <div>
-                    <h1 style={{ fontSize: "2.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>
-                        Archive
-                    </h1>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>
-                        Historical posts matched by keywords. Click View to see full content.
-                    </p>
+            <div style={{ marginBottom: "2.5rem" }}>
+                <h1 style={{ fontSize: "2.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+                    Archive
+                </h1>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>
+                    Historical posts matched by keywords. Filter by date, channel, or keyword.
+                </p>
+            </div>
+
+            <div className="card" style={{ padding: "1.25rem", marginBottom: "1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.9rem", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+                    <Filter size={18} />
+                    Filters
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: "220px" }}>
-                    <Filter size={18} color="rgba(255,255,255,0.4)" />
-                    <select
-                        className="input-field"
-                        value={channelFilter}
-                        onChange={(e) => setChannelFilter(e.target.value)}
-                        style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem" }}
-                    >
-                        <option value="">All channels</option>
-                        {channels.map((ch) => (
-                            <option key={ch.id} value={ch.id}>
-                                {ch.name || ch.username || ch.id}
-                            </option>
-                        ))}
-                    </select>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-end" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Channel</label>
+                        <select
+                            className="input-field"
+                            value={channelFilter}
+                            onChange={(e) => setChannelFilter(e.target.value)}
+                            style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem", minWidth: "180px" }}
+                        >
+                            <option value="">All channels</option>
+                            {channels.map((ch) => (
+                                <option key={ch.id} value={ch.id}>
+                                    {ch.name || ch.username || ch.id}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Date from</label>
+                        <input
+                            type="date"
+                            className="input-field"
+                            value={dateFrom}
+                            onChange={(e) => setDateFrom(e.target.value)}
+                            style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem", minWidth: "150px" }}
+                        />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Date to</label>
+                        <input
+                            type="date"
+                            className="input-field"
+                            value={dateTo}
+                            onChange={(e) => setDateTo(e.target.value)}
+                            style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem", minWidth: "150px" }}
+                        />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Keyword</label>
+                        <div style={{ position: "relative" }}>
+                            <Hash size={16} color="rgba(255,255,255,0.3)" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }} />
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Filter by keyword..."
+                                value={keywordFilter}
+                                onChange={(e) => setKeywordFilter(e.target.value)}
+                                style={{ padding: "0.5rem 1rem 0.5rem 2.5rem", height: "40px", fontSize: "0.9rem", minWidth: "180px" }}
+                            />
+                        </div>
+                    </div>
+                    {hasFilters && (
+                        <button
+                            onClick={() => {
+                                setChannelFilter("");
+                                setDateFrom("");
+                                setDateTo("");
+                                setKeywordFilter("");
+                            }}
+                            style={{
+                                fontSize: "0.85rem",
+                                padding: "0.5rem 1rem",
+                                height: "40px",
+                                background: "rgba(255,255,255,0.05)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                borderRadius: "10px",
+                                color: "rgba(255,255,255,0.6)",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Clear
+                        </button>
+                    )}
                 </div>
             </div>
+
+            {hasFilters && (
+                <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>
+                    Showing {alerts.length} post{alerts.length !== 1 ? "s" : ""}
+                </p>
+            )}
 
             <div className="card" style={{ padding: "0" }}>
                 {isLoading ? (
@@ -67,7 +146,7 @@ export default function ArchivePage() {
                     </div>
                 ) : alerts.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
-                        No posts in archive yet. Matches will appear here.
+                        {hasFilters ? "No posts match the filters." : "No posts in archive yet. Matches will appear here."}
                     </div>
                 ) : (
                     <div style={{ overflowX: "auto" }}>
