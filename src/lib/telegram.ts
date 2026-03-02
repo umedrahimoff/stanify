@@ -51,6 +51,16 @@ export class TelegramManager {
         }, new NewMessage({}));
     }
 
+    public async getPeerInfo(identifier: string) {
+        if (!this.client) throw new Error("Client not initialized");
+        try {
+            return await this.client.getEntity(identifier);
+        } catch (e) {
+            console.error("Error getting peer info:", e);
+            return null;
+        }
+    }
+
     public async joinChannel(channelUsername: string) {
         if (!this.client) throw new Error("Client not initialized");
         try {
