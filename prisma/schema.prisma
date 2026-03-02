@@ -39,3 +39,10 @@ model Session {
   isActive     Boolean @default(true)
   updatedAt    DateTime @updatedAt
 }
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
