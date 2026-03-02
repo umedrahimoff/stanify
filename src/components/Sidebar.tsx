@@ -2,14 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Hash, Radio, Bell, Archive, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Radio, Bell, Archive, Settings, LogOut } from "lucide-react";
 
 export function Sidebar() {
     const pathname = usePathname();
 
     const links = [
         { name: "Overview", icon: <LayoutDashboard size={20} />, href: "/dashboard" },
-        { name: "Keywords", icon: <Hash size={20} />, href: "/dashboard/keywords" },
         { name: "Channels", icon: <Radio size={20} />, href: "/dashboard/channels" },
         { name: "Alerts", icon: <Bell size={20} />, href: "/dashboard/alerts" },
         { name: "Archive", icon: <Archive size={20} />, href: "/dashboard/archive" },

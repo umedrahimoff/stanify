@@ -23,15 +23,31 @@ async function startMonitoring() {
     await tg.initialize(session.sessionStr);
     console.log("✅ Telegram Client Connected");
 
-    // 3. Load Keywords & Channels
-    const keywords = await prisma.keyword.findMany({ where: { isActive: true } });
-    const keywordList = keywords.map((k: any) => k.text);
+    // 3. Load Channels with their Keywords
+    const channels = await prisma.channel.findMany({
+        where: { isActive: true },
+        include: { keywords: { where: { isActive: true } } },
+    });
 
-    const channels = await prisma.channel.findMany({ where: { isActive: true } });
-    console.log(`📡 Monitoring ${channels.length} channels for ${keywordList.length} keywords.`);
+    const channelMapByUsername = new Map<string, { id: string; keywords: string[] }>();
+    const channelMapByTelegramId = new Map<string, { id: string; keywords: string[] }>();
+    for (const ch of channels) {
+        const kw = ch.keywords.map((k: { text: string }) => k.text);
+        if (ch.username) channelMapByUsername.set(ch.username.toLowerCase(), { id: ch.id, keywords: kw });
+        channelMapByTelegramId.set(ch.telegramId, { id: ch.id, keywords: kw });
+    }
+    const totalKeywords = channels.reduce((s, c) => s + c.keywords.length, 0);
+    console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} keywords total.`);
+
+    const getKeywordsForMessage = (msg: any): string[] => {
+        const username = (msg.peerId?.username || "").toLowerCase();
+        const channelId = msg.peerId?.channelId?.toString();
+        const entry = username ? channelMapByUsername.get(username) : channelMapByTelegramId.get(channelId || "");
+        return entry?.keywords ?? [];
+    };
 
     // 4. Setup Listener
-    await tg.setupListener(keywordList, async (msg, keyword) => {
+    await tg.setupListener(getKeywordsForMessage, async (msg, keyword) => {
         const channelName = msg.peerId?.username || "Private/Group";
         console.log(`🔔 Match found in ${channelName}! Keyword: [${keyword}]`);
 

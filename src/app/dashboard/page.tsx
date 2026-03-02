@@ -1,8 +1,17 @@
 "use client";
 
-import { Activity, Bell, Radio, Hash, ArrowUpRight, Loader2 } from "lucide-react";
+import { Activity, Bell, Radio, Hash, ArrowUpRight, Loader2, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from "recharts";
 
 interface Stats {
     totalAlerts: number;
@@ -10,6 +19,7 @@ interface Stats {
     activeKeywords: number;
     systemHealth: string;
     recentAlerts: any[];
+    alertsByDay: { date: string; count: number }[];
 }
 
 export default function Dashboard() {
@@ -37,7 +47,7 @@ export default function Dashboard() {
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>Instant performance overview of your Stanify monitoring network.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
                 {cards.map((card) => (
                     <div key={card.title} className="card" style={{ padding: '1.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
@@ -51,7 +61,38 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '1.5rem' }}>
+            <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                    <BarChart3 size={20} color="#00A3FF" />
+                    <h2 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Posts per day</h2>
+                </div>
+                <div style={{ width: "100%", height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={stats.alertsByDay ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                            <XAxis
+                                dataKey="date"
+                                tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
+                                tickFormatter={(v) => new Date(v).toLocaleDateString("ru-RU", { day: "2-digit", month: "short" })}
+                            />
+                            <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                            <Tooltip
+                                contentStyle={{
+                                    background: "#1a1a2e",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    borderRadius: "12px",
+                                }}
+                                labelStyle={{ color: "rgba(255,255,255,0.6)" }}
+                                formatter={(value) => [value ?? 0, "Posts"]}
+                                labelFormatter={(label) => new Date(label).toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}
+                            />
+                            <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "1.5rem" }}>
                 <div className="card" style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
                         <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Real-time Feed</h2>
@@ -61,7 +102,7 @@ export default function Dashboard() {
                     </div>
                     {stats.recentAlerts.length === 0 ? (
                         <div className="py-12 text-center text-gray-500">
-                            Waiting for matches. Add some keywords to start.
+                            Add keywords to channels to start matching.
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

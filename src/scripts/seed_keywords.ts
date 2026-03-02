@@ -78,27 +78,34 @@ const KEYWORDS = [
 ];
 
 async function main() {
+  const channels = await prisma.channel.findMany({ where: { isActive: true } });
+  if (channels.length === 0) {
+    console.log("No active channels. Add channels first.");
+    return;
+  }
+
   let added = 0;
   let skipped = 0;
 
-  for (const text of KEYWORDS) {
-    const normalized = text.toLowerCase().trim();
-    if (!normalized) continue;
+  for (const channel of channels) {
+    for (const text of KEYWORDS) {
+      const normalized = text.toLowerCase().trim();
+      if (!normalized) continue;
 
-    try {
-      await prisma.keyword.upsert({
-        where: { text: normalized },
-        create: { text: normalized, isActive: true },
-        update: {},
-      });
-      added++;
-      console.log(`✓ ${normalized}`);
-    } catch (e: any) {
-      if (e.code === "P2002") {
-        skipped++;
-        console.log(`- skip (exists): ${normalized}`);
-      } else {
-        throw e;
+      try {
+        await prisma.channelKeyword.upsert({
+          where: { channelId_text: { channelId: channel.id, text: normalized } },
+          create: { channelId: channel.id, text: normalized, isActive: true },
+          update: {},
+        });
+        added++;
+        console.log(`✓ ${channel.name || channel.id}: ${normalized}`);
+      } catch (e: any) {
+        if (e.code === "P2002") {
+          skipped++;
+        } else {
+          throw e;
+        }
       }
     }
   }

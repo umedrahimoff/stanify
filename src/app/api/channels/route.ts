@@ -11,6 +11,7 @@ export async function GET() {
     try {
         const channels = await prisma.channel.findMany({
             orderBy: { createdAt: "desc" },
+            include: { _count: { select: { keywords: true } } },
         });
 
         const lastActivities = await prisma.alert.groupBy({

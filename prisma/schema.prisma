@@ -16,13 +16,18 @@ model Channel {
   isActive   Boolean  @default(false)
   createdAt  DateTime @default(now())
   alerts     Alert[]
+  keywords   ChannelKeyword[]
 }
 
-model Keyword {
+model ChannelKeyword {
   id        String   @id @default(cuid())
-  text      String   @unique
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  text      String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+
+  @@unique([channelId, text])
 }
 
 model Alert {

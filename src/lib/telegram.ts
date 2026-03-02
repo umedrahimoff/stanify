@@ -34,12 +34,18 @@ export class TelegramManager {
         return this.client;
     }
 
-    public async setupListener(keywords: string[], onMatch: (msg: any, keyword: string) => void) {
+    public async setupListener(
+        getKeywordsForMessage: (msg: any) => string[],
+        onMatch: (msg: any, keyword: string) => void
+    ) {
         if (!this.client) throw new Error("Client not initialized");
 
         this.client.addEventHandler(async (event) => {
             const message = event.message;
             if (!message || !message.text) return;
+
+            const keywords = getKeywordsForMessage(message);
+            if (keywords.length === 0) return;
 
             const text = message.text.toLowerCase();
             for (const keyword of keywords) {
