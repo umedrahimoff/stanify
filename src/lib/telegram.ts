@@ -2,9 +2,6 @@ import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { NewMessage } from "telegram/events";
 
-const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
-const apiHash = process.env.TELEGRAM_API_HASH || "";
-
 export class TelegramManager {
     private static instance: TelegramManager;
     private client?: TelegramClient;
@@ -20,6 +17,13 @@ export class TelegramManager {
 
     public async initialize(sessionStr: string = "") {
         if (this.client) return this.client;
+
+        const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
+        const apiHash = process.env.TELEGRAM_API_HASH || "";
+
+        if (!apiId || !apiHash) {
+            throw new Error("TELEGRAM_API_ID or TELEGRAM_API_HASH is not set in environment");
+        }
 
         const session = new StringSession(sessionStr);
         this.client = new TelegramClient(session, apiId, apiHash, {
@@ -56,6 +60,17 @@ export class TelegramManager {
             return true;
         } catch (e) {
             console.error("Error joining channel:", e);
+            return false;
+        }
+    }
+
+    public async sendMessage(to: string, text: string) {
+        if (!this.client) throw new Error("Client not initialized");
+        try {
+            await this.client.sendMessage(to, { message: text });
+            return true;
+        } catch (e) {
+            console.error("Error sending message:", e);
             return false;
         }
     }

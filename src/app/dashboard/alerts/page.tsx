@@ -9,6 +9,7 @@ interface Alert {
     channelName: string;
     content: string;
     matchedWord: string;
+    postLink: string | null;
     createdAt: string;
 }
 
@@ -61,6 +62,7 @@ export default function AlertsHistoryPage() {
                                     <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Source Channel</th>
                                     <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Keyword</th>
                                     <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Message Snippet</th>
+                                    <th style={{ textAlign: 'right', padding: '1.5rem', fontWeight: 600 }}>Link</th>
                                     <th style={{ textAlign: 'right', padding: '1.5rem', fontWeight: 600 }}>Timestamp</th>
                                 </tr>
                             </thead>
@@ -87,13 +89,35 @@ export default function AlertsHistoryPage() {
                                             <div style={{
                                                 fontSize: '0.85rem',
                                                 color: 'rgba(255,255,255,0.7)',
-                                                maxWidth: '400px',
+                                                maxWidth: '300px',
                                                 whiteSpace: 'nowrap',
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis'
                                             }}>
                                                 {alert.content}
                                             </div>
+                                        </td>
+                                        <td style={{ padding: '1.5rem', textAlign: 'right' }}>
+                                            {alert.postLink ? (
+                                                <a
+                                                    href={alert.postLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{
+                                                        color: '#00A3FF',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: 600,
+                                                        textDecoration: 'none',
+                                                        border: '1px solid rgba(0,163,255,0.3)',
+                                                        padding: '0.4rem 0.8rem',
+                                                        borderRadius: '8px'
+                                                    }}
+                                                >
+                                                    View Post
+                                                </a>
+                                            ) : (
+                                                <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>N/A</span>
+                                            )}
                                         </td>
                                         <td style={{ padding: '1.5rem', textAlign: 'right', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
                                             {new Date(alert.createdAt).toLocaleString()}

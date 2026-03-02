@@ -28,6 +28,7 @@ model Alert {
   channelName String
   content     String
   matchedWord String
+  postLink    String?
   createdAt   DateTime @default(now())
 }
 
