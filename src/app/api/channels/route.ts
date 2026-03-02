@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { TelegramClient } from "telegram";
+import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { prisma } from "@/lib/prisma";
 
@@ -19,13 +19,13 @@ export async function GET() {
     }
 }
 
-// POST: Add new OR Update existing (toggle status)
+// POST: Add new channel OR Toggle status of existing
 export async function POST(req: Request) {
     try {
         const body = await req.json();
         console.log("POST Body:", body);
 
-        // Case 1: Toggling status of existing channel
+        // ── Case 1: Toggle status of existing channel ──────────────────────────
         if (body.id && body.isActive !== undefined) {
             const channel = await prisma.channel.update({
                 where: { id: body.id },
@@ -34,9 +34,8 @@ export async function POST(req: Request) {
             return NextResponse.json(channel);
         }
 
-        // Case 2: Adding new channel by username/link
+        // ── Case 2: Add new channel by username/link ───────────────────────────
         if (body.username) {
-            // Clean up the input
             const cleanInput = body.username.trim();
             const cleanUsername = cleanInput
                 .replace(/^@/, "")
@@ -49,92 +48,89 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Invalid username or link" }, { status: 400 });
             }
 
-            console.log("Resolving Username:", cleanUsername);
+            console.log("Resolving + Joining channel:", cleanUsername);
 
-            // Check if already exists in DB
-            const existing = await prisma.channel.findFirst({
-                where: {
-                    OR: [{ username: cleanUsername }, { username: `@${cleanUsername}` }],
-                },
-            });
-
-            if (existing) {
-                // Re-activate if it was paused
-                const updated = await prisma.channel.update({
-                    where: { id: existing.id },
-                    data: { isActive: true },
-                });
-                return NextResponse.json(updated);
+            // Get active Telegram session
+            const sessionEntry = await prisma.session.findFirst({ where: { isActive: true } });
+            if (!sessionEntry) {
+                return NextResponse.json({ error: "No active Telegram session found." }, { status: 401 });
             }
 
-            // Try to resolve via Telegram (with short timeout for Vercel)
-            const sessionEntry = await prisma.session.findFirst({ where: { isActive: true } });
+            const client = new TelegramClient(
+                new StringSession(sessionEntry.sessionStr),
+                apiId,
+                apiHash,
+                { connectionRetries: 2 }
+            );
 
-            if (sessionEntry) {
-                const client = new TelegramClient(
-                    new StringSession(sessionEntry.sessionStr),
-                    apiId,
-                    apiHash,
-                    { connectionRetries: 1, timeout: 8 }
-                );
+            try {
+                await client.connect();
+                console.log("TG Connected");
 
+                // 1. Resolve the entity (get channel info)
+                let entity: any;
                 try {
-                    // Race against a timeout
-                    const connectWithTimeout = Promise.race([
-                        client.connect(),
-                        new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error("Connection timeout")), 6000)
-                        ),
-                    ]);
-
-                    await connectWithTimeout;
-                    console.log("TG Connected");
-
-                    const entity: any = await client.getEntity(cleanUsername);
-                    console.log("Entity Resolved:", entity.id?.toString());
-
-                    const telegramId = entity.id.toString();
-                    const name = entity.title || entity.firstName || cleanUsername;
-                    const finalUsername = entity.username || cleanUsername;
-
-                    const channel = await prisma.channel.upsert({
-                        where: { telegramId },
-                        update: { username: finalUsername, name, isActive: true },
-                        create: { telegramId, username: finalUsername, name, isActive: true },
-                    });
-
-                    await client.disconnect();
-                    return NextResponse.json(channel);
+                    entity = await client.getEntity(cleanUsername);
+                    console.log("Entity resolved:", entity.id?.toString(), entity.title);
                 } catch (err: any) {
-                    console.warn("TG resolve failed, saving as pending:", err.message);
-                    try {
-                        await client.disconnect();
-                    } catch (_) { }
-
-                    // Fallback: save with username only (telegramId = username as placeholder)
-                    const fallbackId = `pending_${cleanUsername}_${Date.now()}`;
-                    const channel = await prisma.channel.create({
-                        data: {
-                            telegramId: fallbackId,
-                            username: cleanUsername,
-                            name: cleanUsername,
-                            isActive: true,
-                        },
-                    });
-                    return NextResponse.json({ ...channel, _pending: true });
+                    await client.disconnect();
+                    return NextResponse.json(
+                        { error: `Channel not found: ${err.message}` },
+                        { status: 404 }
+                    );
                 }
-            } else {
-                // No session — save directly with username anyway
-                const fallbackId = `pending_${cleanUsername}_${Date.now()}`;
+
+                const telegramId = entity.id.toString();
+                const name = entity.title || entity.firstName || cleanUsername;
+                const finalUsername = entity.username || cleanUsername;
+
+                // 2. Check if already exists in DB — if so, just re-activate
+                const existing = await prisma.channel.findUnique({
+                    where: { telegramId },
+                });
+                if (existing) {
+                    const updated = await prisma.channel.update({
+                        where: { id: existing.id },
+                        data: { isActive: true, name, username: finalUsername },
+                    });
+                    await client.disconnect();
+                    return NextResponse.json(updated);
+                }
+
+                // 3. Join the channel so the account can receive its messages
+                //    and so it appears in getDialogs() during sync
+                let joinError: string | null = null;
+                try {
+                    await client.invoke(
+                        new Api.channels.JoinChannel({ channel: cleanUsername })
+                    );
+                    console.log("✅ Joined channel:", cleanUsername);
+                } catch (err: any) {
+                    // For private groups/channels JoinChannel may fail — that's OK,
+                    // we still save it. The monitor worker handles private chats too.
+                    joinError = err.message;
+                    console.warn("⚠️ Could not join (likely private/supergroup):", err.message);
+                }
+
+                // 4. Save to DB
                 const channel = await prisma.channel.create({
                     data: {
-                        telegramId: fallbackId,
-                        username: cleanUsername,
-                        name: cleanUsername,
+                        telegramId,
+                        username: finalUsername,
+                        name,
                         isActive: true,
                     },
                 });
-                return NextResponse.json({ ...channel, _pending: true });
+
+                await client.disconnect();
+                return NextResponse.json({
+                    ...channel,
+                    ...(joinError ? { _warning: `Joined with warning: ${joinError}` } : {}),
+                });
+            } catch (err: any) {
+                console.error("TG error:", err.message);
+                try { await client.disconnect(); } catch (_) { }
+                return NextResponse.json({ error: err.message || "Telegram error" }, { status: 500 });
             }
         }
 
@@ -145,32 +141,43 @@ export async function POST(req: Request) {
     }
 }
 
-// PATCH: Toggle status (dedicated endpoint kept for clarity)
-export async function PATCH(req: Request) {
-    try {
-        const { id, isActive } = await req.json();
-        if (!id || isActive === undefined)
-            return NextResponse.json({ error: "id and isActive required" }, { status: 400 });
-
-        const channel = await prisma.channel.update({
-            where: { id },
-            data: { isActive: !!isActive },
-        });
-        return NextResponse.json(channel);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-}
-
-// DELETE: Remove channel from monitoring list
+// DELETE: Remove channel from monitoring list and leave it in Telegram
 export async function DELETE(req: Request) {
     try {
         const { id } = await req.json();
         if (!id) return NextResponse.json({ error: "ID is required" }, { status: 400 });
 
+        const channel = await prisma.channel.findUnique({ where: { id } });
+        if (!channel) return NextResponse.json({ error: "Channel not found" }, { status: 404 });
+
+        // Try to leave the channel in Telegram as well
+        if (channel.username && !channel.telegramId.startsWith("pending_")) {
+            try {
+                const sessionEntry = await prisma.session.findFirst({ where: { isActive: true } });
+                if (sessionEntry) {
+                    const client = new TelegramClient(
+                        new StringSession(sessionEntry.sessionStr),
+                        apiId,
+                        apiHash,
+                        { connectionRetries: 1 }
+                    );
+                    await client.connect();
+                    await client.invoke(
+                        new Api.channels.LeaveChannel({ channel: channel.username })
+                    );
+                    await client.disconnect();
+                    console.log("✅ Left channel:", channel.username);
+                }
+            } catch (err: any) {
+                // Not critical — just log it
+                console.warn("⚠️ Could not leave channel in TG:", err.message);
+            }
+        }
+
         await prisma.channel.delete({ where: { id } });
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error("DELETE error:", error);
         return NextResponse.json({ error: "Failed to delete channel" }, { status: 500 });
     }
 }

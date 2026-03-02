@@ -65,10 +65,10 @@ export default function ChannelsPage() {
             const res = await axios.post("/api/channels", { username: cleanSource });
             setChannels((prev) => [res.data, ...prev]);
             setNewChannel("");
-            if (res.data._pending) {
-                showToast("Channel saved (pending sync — run Sync to resolve full info)", "warn");
+            if (res.data._warning) {
+                showToast(`Added (private channel — join may be limited)`, "warn");
             } else {
-                showToast("Channel added successfully!");
+                showToast("Channel added and joined successfully!");
             }
         } catch (error: any) {
             console.error("Failed to add channel:", error);
@@ -330,23 +330,21 @@ export default function ChannelsPage() {
                                                         >
                                                             {c.isActive ? "Pause" : "Follow"}
                                                         </button>
-                                                        {!c.isActive && (
-                                                            <button
-                                                                onClick={() => deleteChannel(c.id)}
-                                                                className="remove-btn"
-                                                                style={{
-                                                                    color: "rgba(255,69,69,0.5)",
-                                                                    padding: "6px",
-                                                                    borderRadius: "8px",
-                                                                    background: "rgba(255,69,69,0.05)",
-                                                                    border: "none",
-                                                                    cursor: "pointer",
-                                                                    display: "flex",
-                                                                }}
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        )}
+                                                        <button
+                                                            onClick={() => deleteChannel(c.id)}
+                                                            className="remove-btn"
+                                                            style={{
+                                                                color: "rgba(255,69,69,0.5)",
+                                                                padding: "6px",
+                                                                borderRadius: "8px",
+                                                                background: "rgba(255,69,69,0.05)",
+                                                                border: "none",
+                                                                cursor: "pointer",
+                                                                display: "flex",
+                                                            }}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
