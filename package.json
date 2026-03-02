@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "worker": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/worker/monitor.ts"
+    "worker": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/worker/monitor.ts",
+    "seed:keywords": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/scripts/seed_keywords.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
