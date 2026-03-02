@@ -97,6 +97,7 @@ export async function POST(req: Request) {
                 const telegramId = entity.id.toString();
                 const name = entity.title || entity.firstName || cleanUsername;
                 const finalUsername = entity.username || cleanUsername;
+                const channelType = (entity as any).broadcast ? "channel" : "group";
 
                 // 2. Check if already exists in DB — if so, just re-activate
                 const existing = await prisma.channel.findUnique({
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
                 if (existing) {
                     const updated = await prisma.channel.update({
                         where: { id: existing.id },
-                        data: { isActive: true, name, username: finalUsername },
+                        data: { isActive: true, name, username: finalUsername, type: channelType },
                     });
                     await client.disconnect();
                     return NextResponse.json(updated);
@@ -132,6 +133,7 @@ export async function POST(req: Request) {
                         telegramId,
                         username: finalUsername,
                         name,
+                        type: channelType,
                         isActive: true,
                     },
                 });

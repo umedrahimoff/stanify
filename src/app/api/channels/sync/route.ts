@@ -29,15 +29,17 @@ export async function POST() {
         // 3. Get Dialogs (Groups & Channels) from Telegram
         const dialogs = await client.getDialogs();
 
-        // Build a map: telegramId → { name, username }
-        const dialogMap = new Map<string, { name: string; username: string | null }>();
+        // Build a map: telegramId → { name, username, type }
+        const dialogMap = new Map<string, { name: string; username: string | null; type: string }>();
 
         for (const dialog of dialogs) {
             if ((dialog.isChannel || dialog.isGroup) && dialog.id) {
+                const entity = dialog.entity as any;
+                const channelType = entity?.broadcast ? "channel" : "group";
                 dialogMap.set(dialog.id.toString(), {
                     name: dialog.title || "Unknown",
-                    // Only store username if it's non-empty, else null
-                    username: (dialog.entity as any)?.username || null,
+                    username: entity?.username || null,
+                    type: channelType,
                 });
             }
         }
@@ -53,10 +55,9 @@ export async function POST() {
                 const existing = await prisma.channel.findUnique({ where: { telegramId } });
 
                 if (existing) {
-                    // Update name & username in-place
                     await prisma.channel.update({
                         where: { telegramId },
-                        data: { name: info.name, username: info.username },
+                        data: { name: info.name, username: info.username, type: info.type },
                     });
                 } else {
                     // Create only if no other record has the same username (to be safe)
@@ -65,10 +66,9 @@ export async function POST() {
                         : null;
 
                     if (usernameConflict) {
-                        // If username conflict: update that record's telegramId instead
                         await prisma.channel.update({
                             where: { username: info.username! },
-                            data: { telegramId, name: info.name },
+                            data: { telegramId, name: info.name, type: info.type },
                         });
                     } else {
                         await prisma.channel.create({
@@ -76,6 +76,7 @@ export async function POST() {
                                 telegramId,
                                 username: info.username,
                                 name: info.name,
+                                type: info.type,
                                 isActive: false,
                             },
                         });

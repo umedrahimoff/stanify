@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight } from "lucide-react";
+import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
 import axios from "axios";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -11,6 +11,7 @@ interface Channel {
     telegramId: string;
     username: string | null;
     name: string | null;
+    type?: "channel" | "group";
     isActive: boolean;
     createdAt: string;
     lastActivityAt: string | null;
@@ -23,6 +24,7 @@ export default function ChannelsPage() {
     const [adding, setAdding] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [showOnlyActive, setShowOnlyActive] = useState(true);
+    const [typeFilter, setTypeFilter] = useState<"all" | "channel" | "group">("all");
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
 
     const { data: channels = [], isLoading, mutate } = useSWR<Channel[]>("/api/channels");
@@ -99,7 +101,8 @@ export default function ChannelsPage() {
             c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             c.username?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesActive = !showOnlyActive || c.isActive;
-        return matchesSearch && matchesActive;
+        const matchesType = typeFilter === "all" || (c.type || "channel") === typeFilter;
+        return matchesSearch && matchesActive && matchesType;
     });
 
     const toastColor =
@@ -187,26 +190,45 @@ export default function ChannelsPage() {
                     />
                 </div>
 
-                <button
-                    onClick={() => setShowOnlyActive(!showOnlyActive)}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.85rem",
-                        padding: "0.5rem 1rem",
-                        borderRadius: "10px",
-                        background: showOnlyActive ? "rgba(0,163,255,0.1)" : "rgba(255,255,255,0.05)",
-                        border: "1px solid",
-                        borderColor: showOnlyActive ? "rgba(0,163,255,0.3)" : "rgba(255,255,255,0.1)",
-                        color: showOnlyActive ? "#00A3FF" : "rgba(255,255,255,0.6)",
-                        cursor: "pointer",
-                        transition: "0.2s",
-                    }}
-                >
-                    <ListFilter size={16} />
-                    {showOnlyActive ? "Showing: Active Only" : "Showing: All Sources"}
-                </button>
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value as "all" | "channel" | "group")}
+                        style={{
+                            fontSize: "0.85rem",
+                            padding: "0.5rem 1rem",
+                            borderRadius: "10px",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            color: "rgba(255,255,255,0.9)",
+                            cursor: "pointer",
+                        }}
+                    >
+                        <option value="all">All</option>
+                        <option value="channel">Channels</option>
+                        <option value="group">Groups</option>
+                    </select>
+                    <button
+                        onClick={() => setShowOnlyActive(!showOnlyActive)}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            fontSize: "0.85rem",
+                            padding: "0.5rem 1rem",
+                            borderRadius: "10px",
+                            background: showOnlyActive ? "rgba(0,163,255,0.1)" : "rgba(255,255,255,0.05)",
+                            border: "1px solid",
+                            borderColor: showOnlyActive ? "rgba(0,163,255,0.3)" : "rgba(255,255,255,0.1)",
+                            color: showOnlyActive ? "#00A3FF" : "rgba(255,255,255,0.6)",
+                            cursor: "pointer",
+                            transition: "0.2s",
+                        }}
+                    >
+                        <ListFilter size={16} />
+                        {showOnlyActive ? "Active Only" : "All Sources"}
+                    </button>
+                </div>
 
                 <button
                     onClick={handleSync}
@@ -244,7 +266,8 @@ export default function ChannelsPage() {
                         <table className="table-dashboard">
                             <thead>
                                 <tr>
-                                    <th>Channel / Group Name</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
                                     <th>Added</th>
                                     <th>Last Activity</th>
                                     <th>Status</th>
@@ -254,7 +277,7 @@ export default function ChannelsPage() {
                             <tbody>
                                 {filteredChannels.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
+                                        <td colSpan={6} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
                                             No channels found matching the criteria.
                                         </td>
                                     </tr>
@@ -298,6 +321,22 @@ export default function ChannelsPage() {
                                                             </div>
                                                         </div>
                                                     </Link>
+                                                </td>
+                                                <td>
+                                                    <span style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "0.35rem",
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        padding: "0.2rem 0.6rem",
+                                                        borderRadius: "100px",
+                                                        background: (c.type || "channel") === "channel" ? "rgba(0,163,255,0.1)" : "rgba(0,255,117,0.1)",
+                                                        color: (c.type || "channel") === "channel" ? "#00A3FF" : "#00FF75",
+                                                    }}>
+                                                        {(c.type || "channel") === "channel" ? <Hash size={12} /> : <Users size={12} />}
+                                                        {(c.type || "channel") === "channel" ? "Channel" : "Group"}
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

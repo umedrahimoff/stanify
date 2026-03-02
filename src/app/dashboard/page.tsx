@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, Bell, Radio, Hash, ArrowUpRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import useSWR from "swr";
 
 interface Stats {
@@ -54,9 +55,9 @@ export default function Dashboard() {
                 <div className="card" style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
                         <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Real-time Feed</h2>
-                        <button style={{ fontSize: '0.8rem', color: '#00A3FF', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Link href="/dashboard/archive" style={{ fontSize: '0.8rem', color: '#00A3FF', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem', textDecoration: 'none' }}>
                             View All <ArrowUpRight size={14} />
-                        </button>
+                        </Link>
                     </div>
                     {stats.recentAlerts.length === 0 ? (
                         <div className="py-12 text-center text-gray-500">
@@ -64,16 +65,32 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {stats.recentAlerts.map((alert, i) => (
-                                <div key={i} style={{
-                                    padding: '1.25rem',
-                                    background: 'rgba(255,255,255,0.02)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
+                            {stats.recentAlerts.map((alert) => (
+                                <Link
+                                    key={alert.id}
+                                    href={`/dashboard/archive/${alert.id}`}
+                                    style={{
+                                        padding: '1.25rem',
+                                        background: 'rgba(255,255,255,0.02)',
+                                        borderRadius: '16px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        textDecoration: 'none',
+                                        color: 'inherit',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s, border-color 0.2s',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                                        e.currentTarget.style.borderColor = 'rgba(0,163,255,0.2)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                                    }}
+                                >
                                     <div>
                                         <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{alert.channelName}</div>
                                         <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>
@@ -81,7 +98,7 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{new Date(alert.createdAt).toLocaleTimeString()}</div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     )}

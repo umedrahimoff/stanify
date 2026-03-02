@@ -12,6 +12,7 @@ model Channel {
   telegramId String   @unique
   username   String?  @unique
   name       String?
+  type       String   @default("channel") // "channel" | "group"
   isActive   Boolean  @default(false)
   createdAt  DateTime @default(now())
   alerts     Alert[]
