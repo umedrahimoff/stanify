@@ -189,9 +189,9 @@ export default function ChannelsPage() {
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Search</label>
                         <div className="relative">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
                             <input
-                                className={cn("input-field", filterClasses.input, "pl-10 min-w-[180px]")}
+                                className={cn("input-field", filterClasses.input, "pl-[2.5rem] min-w-[180px]")}
                                 placeholder="Quick search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,12 +215,12 @@ export default function ChannelsPage() {
                         <button
                             onClick={() => setShowOnlyActive(!showOnlyActive)}
                             className={cn(
-                                "h-10 px-4 text-[0.9rem] rounded-[10px] flex items-center gap-2 cursor-pointer border",
+                                "inline-flex items-center justify-center gap-2 whitespace-nowrap h-10 px-4 min-w-[120px] text-[0.9rem] rounded-[10px] cursor-pointer border shrink-0",
                                 showOnlyActive ? "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF]" : "bg-white/5 border-white/10 text-white/60"
                             )}
                         >
-                            <ListFilter size={16} />
-                            {showOnlyActive ? "Active Only" : "All Sources"}
+                            <ListFilter size={16} className="shrink-0" />
+                            <span>{showOnlyActive ? "Active Only" : "All Sources"}</span>
                         </button>
                     </div>
                     <button
@@ -228,12 +228,12 @@ export default function ChannelsPage() {
                         disabled={syncing}
                         className={cn(
                             filterClasses.clearBtn,
-                            "flex items-center gap-2",
+                            "min-w-[100px]",
                             syncing && "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF] cursor-not-allowed"
                         )}
                     >
-                        {syncing ? <Loader2 size={16} className="animate-spin" /> : <Radio size={16} />}
-                        {syncing ? "Syncing..." : "Sync"}
+                        {syncing ? <Loader2 size={16} className="animate-spin shrink-0" /> : <Radio size={16} className="shrink-0" />}
+                        <span>{syncing ? "Syncing..." : "Sync"}</span>
                     </button>
                     {(searchQuery.trim() || typeFilter !== "all" || !showOnlyActive) && (
                         <button

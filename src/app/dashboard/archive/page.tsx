@@ -102,10 +102,10 @@ export default function ArchivePage() {
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Keyword</label>
                         <div className="relative">
-                            <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                            <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
                             <input
                                 type="text"
-                                className={cn("input-field", filterClasses.input, "pl-10 min-w-[180px]")}
+                                className={cn("input-field", filterClasses.input, "pl-[2.5rem] min-w-[180px]")}
                                 placeholder="Filter by keyword..."
                                 value={keywordFilter}
                                 onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}

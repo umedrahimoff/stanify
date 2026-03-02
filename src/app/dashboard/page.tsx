@@ -2,6 +2,7 @@
 
 import { Activity, Bell, Radio, Hash, ArrowUpRight, BarChart3 } from "lucide-react";
 import Link from "next/link";
+import { QuickAddKeywords } from "@/components/QuickAddKeywords";
 import useSWR from "swr";
 import { formatDate } from "@/lib/date";
 import {
@@ -103,6 +104,8 @@ export default function Dashboard() {
                 <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Overview</h1>
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>Instant performance overview of your Stanify monitoring network.</p>
             </div>
+
+            <QuickAddKeywords />
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
                 {cards.map((card) => (
