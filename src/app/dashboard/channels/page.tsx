@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
+import { FilterCard, filterStyles } from "@/components/FilterCard";
 import axios from "axios";
 import useSWR, { useSWRConfig } from "swr";
 import { formatDate } from "@/lib/date";
@@ -182,84 +183,84 @@ export default function ChannelsPage() {
                 </div>
             </div>
 
-            <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", alignItems: "center" }}>
-                <div style={{ position: "relative", maxWidth: "300px", width: "100%" }}>
-                    <Search
-                        size={16}
-                        color="rgba(255,255,255,0.3)"
-                        style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}
-                    />
-                    <input
-                        className="input-field"
-                        style={{ paddingLeft: "2.5rem", height: "40px", fontSize: "0.9rem" }}
-                        placeholder="Quick search..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <select
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value as "all" | "channel" | "group")}
-                        style={{
-                            fontSize: "0.85rem",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "10px",
-                            background: "rgba(255,255,255,0.05)",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            color: "rgba(255,255,255,0.9)",
-                            cursor: "pointer",
-                        }}
-                    >
-                        <option value="all">All</option>
-                        <option value="channel">Channels</option>
-                        <option value="group">Groups</option>
-                    </select>
+            <FilterCard>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Search</label>
+                        <div style={{ position: "relative" }}>
+                            <Search size={16} color="rgba(255,255,255,0.3)" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }} />
+                            <input
+                                className="input-field"
+                                placeholder="Quick search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ ...filterStyles.input, paddingLeft: "2.5rem", minWidth: "180px" }}
+                            />
+                        </div>
+                    </div>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Type</label>
+                        <select
+                            value={typeFilter}
+                            onChange={(e) => setTypeFilter(e.target.value as "all" | "channel" | "group")}
+                            className="input-field"
+                            style={filterStyles.input}
+                        >
+                            <option value="all">All</option>
+                            <option value="channel">Channels</option>
+                            <option value="group">Groups</option>
+                        </select>
+                    </div>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Status</label>
+                        <button
+                            onClick={() => setShowOnlyActive(!showOnlyActive)}
+                            style={{
+                                height: "40px",
+                                padding: "0 1rem",
+                                fontSize: "0.9rem",
+                                borderRadius: "10px",
+                                background: showOnlyActive ? "rgba(0,163,255,0.1)" : "rgba(255,255,255,0.05)",
+                                border: `1px solid ${showOnlyActive ? "rgba(0,163,255,0.3)" : "rgba(255,255,255,0.1)"}`,
+                                color: showOnlyActive ? "#00A3FF" : "rgba(255,255,255,0.6)",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                            }}
+                        >
+                            <ListFilter size={16} />
+                            {showOnlyActive ? "Active Only" : "All Sources"}
+                        </button>
+                    </div>
                     <button
-                        onClick={() => setShowOnlyActive(!showOnlyActive)}
+                        onClick={handleSync}
+                        disabled={syncing}
                         style={{
+                            ...filterStyles.clearBtn,
                             display: "flex",
                             alignItems: "center",
                             gap: "0.5rem",
-                            fontSize: "0.85rem",
-                            padding: "0.5rem 1rem",
-                            borderRadius: "10px",
-                            background: showOnlyActive ? "rgba(0,163,255,0.1)" : "rgba(255,255,255,0.05)",
-                            border: "1px solid",
-                            borderColor: showOnlyActive ? "rgba(0,163,255,0.3)" : "rgba(255,255,255,0.1)",
-                            color: showOnlyActive ? "#00A3FF" : "rgba(255,255,255,0.6)",
-                            cursor: "pointer",
-                            transition: "0.2s",
+                            background: syncing ? "rgba(0,163,255,0.1)" : undefined,
+                            borderColor: syncing ? "rgba(0,163,255,0.3)" : undefined,
+                            color: syncing ? "#00A3FF" : undefined,
+                            cursor: syncing ? "not-allowed" : "pointer",
                         }}
                     >
-                        <ListFilter size={16} />
-                        {showOnlyActive ? "Active Only" : "All Sources"}
+                        {syncing ? <Loader2 size={16} className="animate-spin" /> : <Radio size={16} />}
+                        {syncing ? "Syncing..." : "Sync"}
                     </button>
-                </div>
+                    {(searchQuery.trim() || typeFilter !== "all" || !showOnlyActive) && (
+                        <button
+                            onClick={() => { setSearchQuery(""); setTypeFilter("all"); setShowOnlyActive(true); setPage(1); }}
+                            style={filterStyles.clearBtn}
+                        >
+                            Clear
+                        </button>
+                    )}
+                </FilterCard>
 
-                <button
-                    onClick={handleSync}
-                    disabled={syncing}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.85rem",
-                        padding: "0.5rem 1rem",
-                        borderRadius: "10px",
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: syncing ? "#00A3FF" : "rgba(255,255,255,0.6)",
-                        cursor: syncing ? "not-allowed" : "pointer",
-                        transition: "0.2s",
-                    }}
-                >
-                    {syncing ? <Loader2 size={16} className="animate-spin" /> : <Radio size={16} />}
-                    {syncing ? "Syncing..." : "Sync from Telegram"}
-                </button>
-
-                <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "rgba(255,255,255,0.25)" }}>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+                <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.4)" }}>
                     {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}` : "0 channels"}
                 </span>
             </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ExternalLink, Calendar, Radio, Filter, Hash } from "lucide-react";
+import { Loader2, ExternalLink, Calendar, Radio, Hash } from "lucide-react";
+import { FilterCard, filterStyles } from "@/components/FilterCard";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { formatDate } from "@/lib/date";
@@ -62,19 +63,14 @@ export default function ArchivePage() {
                 </p>
             </div>
 
-            <div className="card" style={{ padding: "1.25rem", marginBottom: "1.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.9rem", fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
-                    <Filter size={18} />
-                    Filters
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-end" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Channel</label>
+            <FilterCard>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Channel</label>
                         <select
                             className="input-field"
-                        value={channelFilter}
-                        onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
-                            style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem", minWidth: "180px" }}
+                            value={channelFilter}
+                            onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
+                            style={{ ...filterStyles.input, minWidth: "180px" }}
                         >
                             <option value="">All channels</option>
                             {channels.map((ch) => (
@@ -84,28 +80,28 @@ export default function ArchivePage() {
                             ))}
                         </select>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Date from</label>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Date from</label>
                         <input
                             type="date"
                             className="input-field"
                             value={dateFrom}
                             onChange={(e) => { setDateFrom(e.target.value); resetPage(); }}
-                            style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem", minWidth: "150px" }}
+                            style={filterStyles.input}
                         />
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Date to</label>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Date to</label>
                         <input
                             type="date"
                             className="input-field"
                             value={dateTo}
                             onChange={(e) => { setDateTo(e.target.value); resetPage(); }}
-                            style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem", minWidth: "150px" }}
+                            style={filterStyles.input}
                         />
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Keyword</label>
+                    <div style={filterStyles.field}>
+                        <label style={filterStyles.label}>Keyword</label>
                         <div style={{ position: "relative" }}>
                             <Hash size={16} color="rgba(255,255,255,0.3)" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }} />
                             <input
@@ -114,35 +110,16 @@ export default function ArchivePage() {
                                 placeholder="Filter by keyword..."
                                 value={keywordFilter}
                                 onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
-                                style={{ padding: "0.5rem 1rem 0.5rem 2.5rem", height: "40px", fontSize: "0.9rem", minWidth: "180px" }}
+                                style={{ ...filterStyles.input, paddingLeft: "2.5rem", minWidth: "180px" }}
                             />
                         </div>
                     </div>
                     {hasFilters && (
-                        <button
-                            onClick={() => {
-                                setChannelFilter("");
-                                setDateFrom("");
-                                setDateTo("");
-                                setKeywordFilter("");
-                                setPage(1);
-                            }}
-                            style={{
-                                fontSize: "0.85rem",
-                                padding: "0.5rem 1rem",
-                                height: "40px",
-                                background: "rgba(255,255,255,0.05)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                borderRadius: "10px",
-                                color: "rgba(255,255,255,0.6)",
-                                cursor: "pointer",
-                            }}
-                        >
+                        <button onClick={() => { setChannelFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} style={filterStyles.clearBtn}>
                             Clear
                         </button>
                     )}
-                </div>
-            </div>
+                </FilterCard>
 
             <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>
                 {total > 0

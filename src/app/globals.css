@@ -233,6 +233,12 @@ h4 {
   background: rgba(0,163,255,0.15);
 }
 
+/* Filter card — unified across Alerts, Archive, Channels */
+.filter-card {
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
 /* Landing Page — single viewport, no scroll */
 .landing {
   position: fixed;
