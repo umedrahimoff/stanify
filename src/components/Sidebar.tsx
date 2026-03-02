@@ -1,10 +1,20 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboard, Radio, Bell, Archive, Settings, LogOut } from "lucide-react";
 
 export function Sidebar() {
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            await fetch("/api/auth/logout", { method: "POST" });
+            router.push("/login");
+        } catch {
+            router.push("/login");
+        }
+    };
     const pathname = usePathname();
 
     const links = [
@@ -70,15 +80,19 @@ export function Sidebar() {
                 ))}
             </nav>
 
-            <button className="btn-secondary" style={{
-                marginTop: 'auto',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '0.75rem 1rem',
-                width: '100%',
-                justifyContent: 'flex-start'
-            }}>
+            <button
+                onClick={handleLogout}
+                className="btn-secondary"
+                style={{
+                    marginTop: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.75rem 1rem',
+                    width: '100%',
+                    justifyContent: 'flex-start'
+                }}
+            >
                 <LogOut size={20} />
                 Log Out
             </button>
