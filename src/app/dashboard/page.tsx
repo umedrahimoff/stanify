@@ -26,53 +26,53 @@ interface Stats {
 function DashboardSkeleton() {
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: "2.5rem" }}>
-                <div className="skeleton" style={{ width: "200px", height: "2rem", marginBottom: "0.5rem" }} />
-                <div className="skeleton" style={{ width: "400px", height: "1.1rem", maxWidth: "100%" }} />
+            <div className="mb-10">
+                <div className="skeleton w-[200px] h-8 mb-2" />
+                <div className="skeleton w-[400px] max-w-full h-[1.1rem]" />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
+            <div className="grid grid-cols-4 gap-6 mb-8">
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="card" style={{ padding: "1.5rem" }}>
-                        <div className="skeleton" style={{ width: "48px", height: "48px", borderRadius: "12px", marginBottom: "1.25rem" }} />
-                        <div className="skeleton" style={{ width: "60%", height: "1.75rem", marginBottom: "0.5rem" }} />
-                        <div className="skeleton" style={{ width: "80%", height: "0.85rem" }} />
+                    <div key={i} className="card p-6">
+                        <div className="skeleton w-12 h-12 rounded-xl mb-5" />
+                        <div className="skeleton w-[60%] h-7 mb-2" />
+                        <div className="skeleton w-[80%] h-[0.85rem]" />
                     </div>
                 ))}
             </div>
 
-            <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
-                    <div className="skeleton" style={{ width: "20px", height: "20px", borderRadius: "4px" }} />
-                    <div className="skeleton" style={{ width: "140px", height: "1.1rem" }} />
+            <div className="card p-6 mb-6">
+                <div className="flex items-center gap-2 mb-6">
+                    <div className="skeleton w-5 h-5 rounded" />
+                    <div className="skeleton w-[140px] h-[1.1rem]" />
                 </div>
-                <div className="skeleton" style={{ width: "100%", height: 280, borderRadius: "8px" }} />
+                <div className="skeleton w-full h-[280px] rounded-lg" />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "1.5rem" }}>
-                <div className="card" style={{ padding: "1.5rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
-                        <div className="skeleton" style={{ width: "120px", height: "1.1rem" }} />
-                        <div className="skeleton" style={{ width: "70px", height: "0.8rem" }} />
+            <div className="grid grid-cols-[1.8fr_1.2fr] gap-6">
+                <div className="card p-6">
+                    <div className="flex justify-between mb-6">
+                        <div className="skeleton w-[120px] h-[1.1rem]" />
+                        <div className="skeleton w-[70px] h-[0.8rem]" />
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div className="flex flex-col gap-4">
                         {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} style={{ padding: "1.25rem", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                <div className="skeleton" style={{ width: "40%", height: "1rem", marginBottom: "0.5rem" }} />
-                                <div className="skeleton" style={{ width: "60%", height: "0.85rem" }} />
+                            <div key={i} className="p-5 bg-white/[0.02] rounded-2xl border border-white/5">
+                                <div className="skeleton w-[40%] h-4 mb-2" />
+                                <div className="skeleton w-[60%] h-[0.85rem]" />
                             </div>
                         ))}
                     </div>
                 </div>
-                <div className="card" style={{ padding: "1.5rem" }}>
-                    <div className="skeleton" style={{ width: "120px", height: "1.1rem", marginBottom: "1.5rem" }} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div className="card p-6">
+                    <div className="skeleton w-[120px] h-[1.1rem] mb-6" />
+                    <div className="flex flex-col gap-6">
                         {[1, 2].map((i) => (
-                            <div key={i} style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-                                <div className="skeleton" style={{ width: 8, height: 8, borderRadius: "50%", marginTop: 6, flexShrink: 0 }} />
-                                <div style={{ flex: 1 }}>
-                                    <div className="skeleton" style={{ width: "70%", height: "0.9rem", marginBottom: "0.25rem" }} />
-                                    <div className="skeleton" style={{ width: "100%", height: "0.8rem" }} />
+                            <div key={i} className="flex gap-4 items-start">
+                                <div className="skeleton w-2 h-2 rounded-full mt-1.5 shrink-0" />
+                                <div className="flex-1">
+                                    <div className="skeleton w-[70%] h-[0.9rem] mb-1" />
+                                    <div className="skeleton w-full h-[0.8rem]" />
                                 </div>
                             </div>
                         ))}

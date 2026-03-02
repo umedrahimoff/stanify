@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Hash } from "lucide-react";
+import { FilterCard, filterClasses } from "@/components/FilterCard";
 import { TableSkeleton } from "@/components/TableSkeleton";
-import { FilterCard, filterStyles } from "@/components/FilterCard";
+import { cn } from "@/lib/cn";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { formatDate } from "@/lib/date";
@@ -63,13 +64,12 @@ export default function AlertsHistoryPage() {
             </div>
 
             <FilterCard>
-                    <div style={filterStyles.field}>
-                        <label style={filterStyles.label}>Channel</label>
+                    <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Channel</label>
                         <select
-                            className="input-field"
+                            className={cn("input-field", filterClasses.input, "min-w-[180px]")}
                             value={channelFilter}
                             onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
-                            style={{ ...filterStyles.input, minWidth: "180px" }}
                         >
                             <option value="">All channels</option>
                             {channels.map((ch) => (
@@ -79,42 +79,39 @@ export default function AlertsHistoryPage() {
                             ))}
                         </select>
                     </div>
-                    <div style={filterStyles.field}>
-                        <label style={filterStyles.label}>Date from</label>
+                    <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Date from</label>
                         <input
                             type="date"
-                            className="input-field"
+                            className={cn("input-field", filterClasses.input)}
                             value={dateFrom}
                             onChange={(e) => { setDateFrom(e.target.value); resetPage(); }}
-                            style={filterStyles.input}
                         />
                     </div>
-                    <div style={filterStyles.field}>
-                        <label style={filterStyles.label}>Date to</label>
+                    <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Date to</label>
                         <input
                             type="date"
-                            className="input-field"
+                            className={cn("input-field", filterClasses.input)}
                             value={dateTo}
                             onChange={(e) => { setDateTo(e.target.value); resetPage(); }}
-                            style={filterStyles.input}
                         />
                     </div>
-                    <div style={filterStyles.field}>
-                        <label style={filterStyles.label}>Keyword</label>
-                        <div style={{ position: "relative" }}>
-                            <Hash size={16} color="rgba(255,255,255,0.3)" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }} />
+                    <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Keyword</label>
+                        <div className="relative">
+                            <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                             <input
                                 type="text"
-                                className="input-field"
+                                className={cn("input-field", filterClasses.input, "pl-10 min-w-[180px]")}
                                 placeholder="Filter by keyword..."
                                 value={keywordFilter}
                                 onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
-                                style={{ ...filterStyles.input, paddingLeft: "2.5rem", minWidth: "180px" }}
                             />
                         </div>
                     </div>
                     {hasFilters && (
-                        <button onClick={() => { setChannelFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} style={filterStyles.clearBtn}>
+                        <button onClick={() => { setChannelFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>
                             Clear
                         </button>
                     )}
