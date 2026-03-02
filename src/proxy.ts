@@ -1,41 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyAuthToken, COOKIE_NAME } from "@/lib/auth";
-
-function clearAuthCookie(response: NextResponse) {
-    response.cookies.set(COOKIE_NAME, "", { maxAge: 0, path: "/" });
-}
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
+    // 1. Define paths that require auth
     const isDashboard = pathname.startsWith("/dashboard");
     const isHome = pathname === "/";
 
-    const tokenValue = request.cookies.get(COOKIE_NAME)?.value;
+    // 2. Check auth cookie
+    const auth = request.cookies.get("stanify_auth");
 
-    // Verify JWT if present
-    let isValid = false;
-    if (tokenValue) {
-        try {
-            const payload = await verifyAuthToken(tokenValue);
-            isValid = !!payload;
-        } catch {
-            isValid = false;
-        }
-    }
-
-    if (tokenValue && !isValid) {
-        const res = NextResponse.redirect(new URL("/login", request.url));
-        clearAuthCookie(res);
-        return res;
-    }
-
-    if (isHome && isValid) {
+    // 3. Home: if logged in → dashboard
+    if (isHome && auth?.value) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
-    if (isDashboard && !isValid) {
+    // 4. Dashboard: if not logged in → login
+    if (isDashboard && !auth?.value) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
