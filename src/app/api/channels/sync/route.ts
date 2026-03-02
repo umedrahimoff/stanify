@@ -67,7 +67,7 @@ export async function POST() {
                     if (usernameConflict) {
                         // If username conflict: update that record's telegramId instead
                         await prisma.channel.update({
-                            where: { username: info.username },
+                            where: { username: info.username! },
                             data: { telegramId, name: info.name },
                         });
                     } else {
@@ -96,7 +96,7 @@ export async function POST() {
         });
 
         const leftChannels = allDbChannels.filter(
-            (ch) =>
+            (ch: { id: string; telegramId: string; name: string | null }) =>
                 !ch.telegramId.startsWith("pending_") &&
                 !dialogMap.has(ch.telegramId)
         );
@@ -105,7 +105,7 @@ export async function POST() {
         if (leftChannels.length > 0) {
             console.log(`🚪 Removing ${leftChannels.length} channels no longer in dialogs`);
             await prisma.channel.deleteMany({
-                where: { id: { in: leftChannels.map((c) => c.id) } },
+                where: { id: { in: leftChannels.map((c: { id: string }) => c.id) } },
             });
             removedCount = leftChannels.length;
         }
