@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { TelegramManager } from "../lib/telegram";
 import { PrismaClient } from "@prisma/client";
+import { utils } from "telegram";
 
 const prisma = new PrismaClient();
 const tg = TelegramManager.getInstance();
@@ -35,44 +36,83 @@ async function startMonitoring() {
         const kw = ch.keywords.map((k: { text: string }) => k.text);
         if (ch.username) channelMapByUsername.set(ch.username.toLowerCase(), { id: ch.id, keywords: kw });
         channelMapByTelegramId.set(ch.telegramId, { id: ch.id, keywords: kw });
+        const rawId = ch.telegramId.replace(/^-100/, "");
+        if (rawId !== ch.telegramId) channelMapByTelegramId.set(rawId, { id: ch.id, keywords: kw });
+        channelMapByTelegramId.set("-100" + rawId, { id: ch.id, keywords: kw });
     }
     const totalKeywords = channels.reduce((s, c) => s + c.keywords.length, 0);
+    const channelsWithKeywords = channels.filter((c) => c.keywords.length > 0);
     console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} keywords total.`);
+    if (channelsWithKeywords.length === 0) {
+        console.warn("⚠️ No channels have keywords! Add keywords to channels in the dashboard.");
+    } else {
+        console.log(`   Channels with keywords: ${channelsWithKeywords.map((c) => c.name || c.username || c.id).join(", ")}`);
+    }
 
     const getKeywordsForMessage = (msg: any): string[] => {
-        const username = (msg.peerId?.username || "").toLowerCase();
-        const channelId = msg.peerId?.channelId?.toString();
-        const entry = username ? channelMapByUsername.get(username) : channelMapByTelegramId.get(channelId || "");
+        const peer = msg.peerId || {};
+        const username = (peer.username || "").toLowerCase();
+        let entry = username ? channelMapByUsername.get(username) : null;
+        if (!entry && peer) {
+            try {
+                const fullId = utils.getPeerId(peer);
+                const raw = String(fullId).replace(/^-100/, "");
+                entry = channelMapByTelegramId.get(String(fullId))
+                    || channelMapByTelegramId.get(raw)
+                    || channelMapByTelegramId.get("-100" + raw);
+            } catch (_) {
+                const chatId = msg.chatId?.toString?.() || peer.channelId?.toString?.() || peer.chatId?.toString?.();
+                if (chatId) {
+                    const raw = chatId.replace(/^-100/, "");
+                    entry = channelMapByTelegramId.get(chatId)
+                        || channelMapByTelegramId.get(raw)
+                        || channelMapByTelegramId.get("-100" + raw);
+                }
+            }
+        }
         return entry?.keywords ?? [];
     };
 
     // 4. Setup Listener
     await tg.setupListener(getKeywordsForMessage, async (msg, keyword) => {
-        const channelName = msg.peerId?.username || "Private/Group";
-        console.log(`🔔 Match found in ${channelName}! Keyword: [${keyword}]`);
+        const peer = msg.peerId || {};
+        let channelName = peer.username || "Private/Group";
+        let channelIdForLink: string | null = null;
 
-        // Calculate Post Link
-        let postLink = "";
-        const messageId = msg.id;
-
-        if (msg.peerId?.username) {
-            postLink = `https://t.me/${msg.peerId.username}/${messageId}`;
-        } else if (msg.peerId?.channelId) {
-            const rawId = msg.peerId.channelId.toString().replace("-100", "");
-            postLink = `https://t.me/c/${rawId}/${messageId}`;
+        if (!peer.username && peer.channelId) {
+            const entity = await tg.getEntityByPeer(msg.peerId);
+            if (entity && (entity as any).username) channelName = (entity as any).username;
+            else if (entity && (entity as any).title) channelName = (entity as any).title;
+            channelIdForLink = peer.channelId.toString().replace(/^-100/, "");
         }
 
-        // Find channel to link (by username)
-        const channel = channelName !== "Private/Group"
-            ? await prisma.channel.findFirst({ where: { username: channelName } })
-            : null;
+        console.log(`🔔 Match found in ${channelName}! Keyword: [${keyword}]`);
+
+        let postLink = "";
+        const messageId = msg.id;
+        if (peer.username) {
+            postLink = `https://t.me/${peer.username}/${messageId}`;
+        } else if (channelIdForLink) {
+            postLink = `https://t.me/c/${channelIdForLink}/${messageId}`;
+        }
+
+        const channel = await prisma.channel.findFirst({
+            where: {
+                OR: [
+                    { username: channelName },
+                    { telegramId: peer.channelId?.toString() },
+                    { telegramId: "-100" + (peer.channelId?.toString() || "").replace(/^-100/, "") },
+                ],
+            },
+        });
 
         // Save Alert to DB (linked to channel when found)
+        const content = msg.text ?? msg.message ?? "";
         await prisma.alert.create({
             data: {
                 channelName: channelName,
                 channelId: channel?.id ?? null,
-                content: msg.text,
+                content,
                 matchedWord: keyword,
                 postLink: postLink
             }
@@ -80,8 +120,8 @@ async function startMonitoring() {
 
         // Send Notification to @umedrahimoff (HTML format, escaped)
         const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const content = esc(msg.text ?? "");
-        const contentPreview = content.length > 400 ? content.slice(0, 400) + "…" : content;
+        const contentEsc = esc(content);
+        const contentPreview = contentEsc.length > 400 ? contentEsc.slice(0, 400) + "…" : contentEsc;
         const linkHtml = postLink ? `<a href="${esc(postLink)}">Open post</a>` : "Private";
         const notificationText = [
             "🔔 <b>Stanify Alert</b>",

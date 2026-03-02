@@ -42,12 +42,13 @@ export class TelegramManager {
 
         this.client.addEventHandler(async (event) => {
             const message = event.message;
-            if (!message || !message.text) return;
+            const textRaw = message?.text ?? message?.message ?? "";
+            if (!message || !textRaw) return;
 
             const keywords = getKeywordsForMessage(message);
             if (keywords.length === 0) return;
 
-            const text = message.text.toLowerCase();
+            const text = String(textRaw).toLowerCase();
             for (const keyword of keywords) {
                 if (text.includes(keyword.toLowerCase())) {
                     onMatch(message, keyword);
@@ -63,6 +64,15 @@ export class TelegramManager {
             return await this.client.getEntity(identifier);
         } catch (e) {
             console.error("Error getting peer info:", e);
+            return null;
+        }
+    }
+
+    public async getEntityByPeer(peer: any) {
+        if (!this.client || !peer) return null;
+        try {
+            return await this.client.getEntity(peer);
+        } catch (e) {
             return null;
         }
     }
