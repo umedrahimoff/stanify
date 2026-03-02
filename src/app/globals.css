@@ -249,6 +249,7 @@ h4 {
 
 /* Filter card — unified across Alerts, Archive, Channels */
 .filter-card {
+  width: 100%;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
 }
