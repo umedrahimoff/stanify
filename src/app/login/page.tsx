@@ -6,17 +6,19 @@ import { useRouter } from "next/navigation";
 import { Lock, Smartphone, Loader2, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
-    const [step, setStep] = useState(1); // 1: Request, 2: Code
+    const [step, setStep] = useState(1);
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [codeSentTo, setCodeSentTo] = useState("");
     const router = useRouter();
 
     const requestLogin = async () => {
         setLoading(true);
         setError("");
         try {
-            await axios.post("/api/auth/request");
+            const res = await axios.post("/api/auth/request");
+            setCodeSentTo(res.data?.message?.replace("Code sent to ", "") || "@umedrahimoff");
             setStep(2);
         } catch (err: any) {
             setError(err.response?.data?.error || "Failed to send code");
@@ -86,7 +88,7 @@ export default function LoginPage() {
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.95rem', marginBottom: '2rem' }}>
                     {step === 1
                         ? "Accessing the Stanify command center requires authorization."
-                        : "A 6-digit verification code was sent to @umedrahimoff."}
+                        : `A 6-digit verification code was sent to ${codeSentTo || "@umedrahimoff"}.`}
                 </p>
 
                 {error && (

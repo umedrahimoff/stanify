@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint, Activity } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint, Activity, Send } from "lucide-react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+import axios from "axios";
 
 export default function SettingsPage() {
     const [phone, setPhone] = useState("");
     const [code, setCode] = useState("");
     const [apiId, setApiId] = useState("");
     const [apiHash, setApiHash] = useState("");
-    const [step, setStep] = useState(1); // 1 = API Info, 2 = Phone, 3 = Code (UI only, account already connected)
+    const [step, setStep] = useState(1);
+    const [notificationRecipient, setNotificationRecipient] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
-    // Telegram account is connected via CLI scripts; settings are read-only.
     const isTelegramAccountLocked = true;
+    const { data: settings, mutate } = useSWR<{ notificationRecipient: string }>("/api/settings", fetcher);
+
+    useEffect(() => {
+        if (settings?.notificationRecipient) setNotificationRecipient(settings.notificationRecipient);
+    }, [settings]);
 
     return (
         <div className="animate-fade">
@@ -132,31 +142,51 @@ export default function SettingsPage() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>Instant Alerts</div>
-                                    <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>Notify as soon as a match is found.</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Telegram recipient</label>
+                                <div style={{ display: 'flex', position: 'relative' }}>
+                                    <Send size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+                                    <input
+                                        className="input-field"
+                                        value={notificationRecipient}
+                                        onChange={(e) => setNotificationRecipient(e.target.value)}
+                                        placeholder="@username or user ID"
+                                        style={{ paddingLeft: '3rem' }}
+                                    />
                                 </div>
-                                <div style={{ width: '48px', height: '24px', background: '#00A3FF', borderRadius: '100px', display: 'flex', alignItems: 'center', padding: '0 4px', cursor: 'pointer', transition: 'all 0.4s' }}>
-                                    <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', marginLeft: 'auto' }}></div>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>Browser Notifications</div>
-                                    <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>Show system notifications in your browser.</div>
-                                </div>
-                                <div style={{ width: '48px', height: '24px', background: 'rgba(255,255,255,0.08)', borderRadius: '100px', display: 'flex', alignItems: 'center', padding: '0 4px', cursor: 'pointer', transition: 'all 0.4s' }}>
-                                    <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%' }}></div>
-                                </div>
+                                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+                                    Alerts and login codes will be sent to this user.
+                                </p>
                             </div>
                         </div>
 
-                        <button className="btn-secondary" style={{ width: '100%', marginTop: '2.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                            className="btn-primary"
+                            style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                            onClick={async () => {
+                                setSaving(true);
+                                setSaveMsg(null);
+                                try {
+                                    await axios.post("/api/settings", { notificationRecipient: notificationRecipient.trim() || "umedrahimoff" });
+                                    mutate();
+                                    setSaveMsg({ text: "Saved", ok: true });
+                                } catch {
+                                    setSaveMsg({ text: "Failed to save", ok: false });
+                                } finally {
+                                    setSaving(false);
+                                    setTimeout(() => setSaveMsg(null), 3000);
+                                }
+                            }}
+                            disabled={saving}
+                        >
                             <Save size={18} />
-                            Save Preferences
+                            {saving ? "Saving…" : "Save"}
                         </button>
+                        {saveMsg && (
+                            <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: saveMsg.ok ? "#00FF75" : "#ff4545" }}>
+                                {saveMsg.text}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>

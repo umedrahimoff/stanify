@@ -55,3 +55,9 @@ model VerificationCode {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model AppSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { prisma } from "@/lib/prisma";
+import { getNotificationRecipient } from "@/lib/settings";
 const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
 
@@ -26,6 +27,7 @@ export async function POST() {
         });
 
         await client.connect();
+        const recipient = await getNotificationRecipient();
         const loginMsg = [
             "🔐 <b>Stanify Login Code</b>",
             "",
@@ -33,10 +35,10 @@ export async function POST() {
             "",
             "<i>Expires in 5 minutes.</i>",
         ].join("\n");
-        await client.sendMessage("umedrahimoff", { message: loginMsg, parseMode: "html" });
+        await client.sendMessage(recipient, { message: loginMsg, parseMode: "html" });
         await client.disconnect();
 
-        return NextResponse.json({ success: true, message: "Code sent to @umedrahimoff" });
+        return NextResponse.json({ success: true, message: `Code sent to @${recipient}` });
     } catch (error: any) {
         console.error("Auth Request Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
