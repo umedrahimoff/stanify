@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { prisma } from "@/lib/prisma";
-import { getNotificationRecipient } from "@/lib/settings";
+import { getNotificationRecipients } from "@/lib/settings";
 const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
 
@@ -27,7 +27,7 @@ export async function POST() {
         });
 
         await client.connect();
-        const recipient = await getNotificationRecipient();
+        const recipients = await getNotificationRecipients();
         const loginMsg = [
             "🔐 <b>Stanify Login Code</b>",
             "",
@@ -35,10 +35,17 @@ export async function POST() {
             "",
             "<i>Expires in 5 minutes.</i>",
         ].join("\n");
-        await client.sendMessage(recipient, { message: loginMsg, parseMode: "html" });
+        for (const r of recipients) {
+            try {
+                await client.sendMessage(r, { message: loginMsg, parseMode: "html" });
+            } catch (e) {
+                console.warn(`Failed to send code to @${r}:`, e);
+            }
+        }
         await client.disconnect();
 
-        return NextResponse.json({ success: true, message: `Code sent to @${recipient}` });
+        const recipientList = recipients.map((r) => "@" + r).join(", ");
+        return NextResponse.json({ success: true, message: `Code sent to ${recipientList}` });
     } catch (error: any) {
         console.error("Auth Request Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });

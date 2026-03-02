@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { TelegramManager } from "../lib/telegram";
-import { getNotificationRecipient } from "../lib/settings";
+import { getNotificationRecipients } from "../lib/settings";
 import { PrismaClient } from "@prisma/client";
 import { utils } from "telegram";
 
@@ -119,7 +119,7 @@ async function startMonitoring() {
             }
         });
 
-        const recipient = await getNotificationRecipient();
+        const recipients = await getNotificationRecipients();
         const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         const contentEsc = esc(content);
         const contentPreview = contentEsc.length > 400 ? contentEsc.slice(0, 400) + "…" : contentEsc;
@@ -135,8 +135,14 @@ async function startMonitoring() {
             "",
             `🔗 ${linkHtml}`,
         ].join("\n");
-        await tg.sendMessage(recipient, notificationText);
-        console.log(`🚀 Alert sent to @${recipient}`);
+        for (const r of recipients) {
+            try {
+                await tg.sendMessage(r, notificationText);
+            } catch (e) {
+                console.warn(`Failed to send to @${r}:`, e);
+            }
+        }
+        console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
     });
 
     console.log("🟢 Listener active. Waiting for messages...");
