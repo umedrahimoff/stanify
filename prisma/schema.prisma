@@ -61,3 +61,9 @@ model AppSetting {
   key   String @unique
   value String
 }
+
+model DailyScanStats {
+  id    String   @id @default(cuid())
+  date  DateTime @unique
+  count Int      @default(0)
+}

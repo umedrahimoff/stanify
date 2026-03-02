@@ -74,6 +74,16 @@ async function startMonitoring() {
         return entry?.keywords ?? [];
     };
 
+    const recordScan = () => {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        prisma.dailyScanStats.upsert({
+            where: { date: today },
+            create: { date: today, count: 1 },
+            update: { count: { increment: 1 } },
+        }).catch((e) => console.warn("Failed to record scan:", e.message));
+    };
+
     // 4. Setup Listener
     await tg.setupListener(getKeywordsForMessage, async (msg, keyword) => {
         const peer = msg.peerId || {};
@@ -143,7 +153,7 @@ async function startMonitoring() {
             }
         }
         console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
-    });
+    }, recordScan);
 
     console.log("🟢 Listener active. Waiting for messages...");
 }

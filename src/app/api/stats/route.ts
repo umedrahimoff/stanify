@@ -1,15 +1,41 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+type Period = "all" | "7d" | "30d" | "6m" | "1y";
+
+function getPeriodStart(period: Period): Date | null {
+    const start = new Date();
+    switch (period) {
+        case "7d": start.setDate(start.getDate() - 7); break;
+        case "30d": start.setDate(start.getDate() - 30); break;
+        case "6m": start.setMonth(start.getMonth() - 6); break;
+        case "1y": start.setFullYear(start.getFullYear() - 1); break;
+        default: return null;
+    }
+    start.setUTCHours(0, 0, 0, 0);
+    return start;
+}
+
+export async function GET(req: Request) {
     try {
+        const { searchParams } = new URL(req.url);
+        const period = (searchParams.get("period") || "all") as Period;
+        const periodStart = getPeriodStart(period);
+
+        const dateFilter = periodStart ? { gte: periodStart } : undefined;
+
         const twelveWeeksAgo = new Date();
         twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+        const chartFrom = periodStart && periodStart > twelveWeeksAgo ? periodStart : twelveWeeksAgo;
 
         const alerts = await prisma.alert.findMany({
-            where: { createdAt: { gte: twelveWeeksAgo } },
+            where: { createdAt: { gte: chartFrom } },
             select: { createdAt: true },
         });
+
+        const alertsFiltered = dateFilter
+            ? alerts.filter((a) => a.createdAt >= periodStart!)
+            : alerts;
 
         const getMonday = (d: Date) => {
             const x = new Date(d);
@@ -21,7 +47,7 @@ export async function GET() {
         };
 
         const byWeek: Record<string, number> = {};
-        for (const a of alerts) {
+        for (const a of alertsFiltered) {
             const key = getMonday(a.createdAt);
             byWeek[key] = (byWeek[key] || 0) + 1;
         }
@@ -38,12 +64,23 @@ export async function GET() {
             alertsByWeek.push({ week: `${start}–${end}`, count: byWeek[key] || 0 });
         }
 
+        const totalPostsScanned = periodStart
+            ? (await prisma.dailyScanStats.aggregate({
+                where: { date: { gte: periodStart } },
+                _sum: { count: true },
+            }))._sum.count ?? 0
+            : (await prisma.dailyScanStats.aggregate({ _sum: { count: true } }))._sum.count ?? 0;
+
         const stats = {
-            totalAlerts: await prisma.alert.count(),
+            totalAlerts: dateFilter
+                ? await prisma.alert.count({ where: { createdAt: dateFilter } })
+                : await prisma.alert.count(),
             activeChannels: await prisma.channel.count({ where: { isActive: true } }),
             activeKeywords: await prisma.channelKeyword.count({ where: { isActive: true } }),
             systemHealth: "Optimal",
+            totalPostsScanned,
             recentAlerts: await prisma.alert.findMany({
+                where: dateFilter ? { createdAt: dateFilter } : undefined,
                 orderBy: { createdAt: "desc" },
                 take: 5,
             }),

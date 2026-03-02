@@ -1,6 +1,7 @@
 "use client";
 
-import { Activity, Bell, Radio, Hash, ArrowUpRight, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import { Activity, Bell, Radio, Hash, ArrowUpRight, BarChart3, Eye, Calendar } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
 import { formatDate } from "@/lib/date";
@@ -14,8 +15,11 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
+type Period = "all" | "7d" | "30d" | "6m" | "1y";
+
 interface Stats {
     totalAlerts: number;
+    totalPostsScanned: number;
     activeChannels: number;
     activeKeywords: number;
     systemHealth: string;
@@ -26,53 +30,53 @@ interface Stats {
 function DashboardSkeleton() {
     return (
         <div className="animate-fade">
-            <div className="mb-10">
-                <div className="skeleton w-[200px] h-8 mb-2" />
-                <div className="skeleton w-[400px] max-w-full h-[1.1rem]" />
+            <div style={{ marginBottom: "1.5rem" }}>
+                <div className="skeleton" style={{ width: "160px", height: "1.5rem", marginBottom: "0.5rem" }} />
+                <div className="skeleton" style={{ width: "320px", maxWidth: "100%", height: "0.9rem" }} />
             </div>
 
-            <div className="grid grid-cols-4 gap-6 mb-8">
-                {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="card p-6">
-                        <div className="skeleton w-12 h-12 rounded-xl mb-5" />
-                        <div className="skeleton w-[60%] h-7 mb-2" />
-                        <div className="skeleton w-[80%] h-[0.85rem]" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="card" style={{ padding: "1rem" }}>
+                        <div className="skeleton" style={{ width: "40px", height: "40px", borderRadius: "10px", marginBottom: "0.75rem" }} />
+                        <div className="skeleton" style={{ width: "60%", height: "1.25rem", marginBottom: "0.35rem" }} />
+                        <div className="skeleton" style={{ width: "80%", height: "0.8rem" }} />
                     </div>
                 ))}
             </div>
 
-            <div className="card p-6 mb-6">
-                <div className="flex items-center gap-2 mb-6">
-                    <div className="skeleton w-5 h-5 rounded" />
-                    <div className="skeleton w-[140px] h-[1.1rem]" />
+            <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                    <div className="skeleton" style={{ width: "18px", height: "18px", borderRadius: "4px" }} />
+                    <div className="skeleton" style={{ width: "120px", height: "1rem" }} />
                 </div>
-                <div className="skeleton w-full h-[280px] rounded-lg" />
+                <div className="skeleton" style={{ width: "100%", height: "220px", borderRadius: "8px" }} />
             </div>
 
-            <div className="grid grid-cols-[1.8fr_1.2fr] gap-6">
-                <div className="card p-6">
-                    <div className="flex justify-between mb-6">
-                        <div className="skeleton w-[120px] h-[1.1rem]" />
-                        <div className="skeleton w-[70px] h-[0.8rem]" />
+            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "1rem" }}>
+                <div className="card" style={{ padding: "1rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", alignItems: "center" }}>
+                        <div className="skeleton" style={{ width: "100px", height: "1rem" }} />
+                        <div className="skeleton" style={{ width: "60px", height: "0.8rem" }} />
                     </div>
-                    <div className="flex flex-col gap-4">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                         {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="p-5 bg-white/[0.02] rounded-2xl border border-white/5">
-                                <div className="skeleton w-[40%] h-4 mb-2" />
-                                <div className="skeleton w-[60%] h-[0.85rem]" />
+                            <div key={i} style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div className="skeleton" style={{ width: "40%", height: "0.9rem", marginBottom: "0.4rem" }} />
+                                <div className="skeleton" style={{ width: "60%", height: "0.8rem" }} />
                             </div>
                         ))}
                     </div>
                 </div>
-                <div className="card p-6">
-                    <div className="skeleton w-[120px] h-[1.1rem] mb-6" />
-                    <div className="flex flex-col gap-6">
+                <div className="card" style={{ padding: "1rem" }}>
+                    <div className="skeleton" style={{ width: "110px", height: "1rem", marginBottom: "1rem" }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         {[1, 2].map((i) => (
-                            <div key={i} className="flex gap-4 items-start">
-                                <div className="skeleton w-2 h-2 rounded-full mt-1.5 shrink-0" />
-                                <div className="flex-1">
-                                    <div className="skeleton w-[70%] h-[0.9rem] mb-1" />
-                                    <div className="skeleton w-full h-[0.8rem]" />
+                            <div key={i} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                                <div className="skeleton" style={{ width: "8px", height: "8px", borderRadius: "50%", marginTop: "0.4rem", flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                    <div className="skeleton" style={{ width: "70%", height: "0.9rem", marginBottom: "0.35rem" }} />
+                                    <div className="skeleton" style={{ width: "100%", height: "0.75rem" }} />
                                 </div>
                             </div>
                         ))}
@@ -83,14 +87,25 @@ function DashboardSkeleton() {
     );
 }
 
+const PERIOD_OPTIONS: { value: Period; label: string }[] = [
+    { value: "all", label: "All time" },
+    { value: "7d", label: "Last 7 days" },
+    { value: "30d", label: "Last 30 days" },
+    { value: "6m", label: "Last 6 months" },
+    { value: "1y", label: "Last year" },
+];
+
 export default function Dashboard() {
-    const { data: stats, error, isLoading } = useSWR<Stats>("/api/stats");
+    const [period, setPeriod] = useState<Period>("all");
+    const statsKey = period === "all" ? "/api/stats" : `/api/stats?period=${period}`;
+    const { data: stats, error, isLoading } = useSWR<Stats>(statsKey);
 
     if (isLoading || error || !stats) {
         return <DashboardSkeleton />;
     }
 
     const cards = [
+        { title: "Posts Scanned", value: (stats.totalPostsScanned ?? 0).toLocaleString(), icon: Eye, color: "#00D1FF" },
         { title: "Total Alerts", value: stats.totalAlerts, icon: Bell, color: "#00A3FF" },
         { title: "Active Channels", value: stats.activeChannels, icon: Radio, color: "#00FF75" },
         { title: "Keywords Monitor", value: stats.activeKeywords, icon: Hash, color: "#BF5AF2" },
@@ -99,12 +114,27 @@ export default function Dashboard() {
 
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: '1.5rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>Overview</h1>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Instant performance overview of your Stanify monitoring network.</p>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>Overview</h1>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Instant performance overview of your Stanify monitoring network.</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Calendar size={16} color="rgba(255,255,255,0.4)" />
+                    <select
+                        value={period}
+                        onChange={(e) => setPeriod(e.target.value as Period)}
+                        className="input-field"
+                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', height: 'auto', minWidth: '140px' }}
+                    >
+                        {PERIOD_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1.25rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
                 {cards.map((card) => (
                     <div key={card.title} className="card" style={{ padding: '1rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>

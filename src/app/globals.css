@@ -189,19 +189,23 @@ h4 {
 .table-dashboard {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 .table-dashboard thead tr {
   border-bottom: 1px solid rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.45);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .table-dashboard th {
   text-align: left;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1rem;
   font-weight: 600;
   font-size: 0.75rem;
+  line-height: 1.3;
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 .table-dashboard th.th-right,
 .table-dashboard th:last-child {
@@ -215,9 +219,12 @@ h4 {
   background: rgba(255,255,255,0.02);
 }
 .table-dashboard td {
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: 0.85rem;
+  line-height: 1.3;
   color: rgba(255,255,255,0.85);
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 .table-dashboard .td-right {
   text-align: right;
