@@ -131,7 +131,7 @@ export default function KeywordsPage() {
 
             <div style={{ marginTop: '2rem' }}>
                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
-                    Tip: Monitoring is case-insensitive. Each keyword counts towards global limits.
+                    Tip: English and Russian keywords supported. Case-insensitive.
                 </p>
             </div>
         </div>

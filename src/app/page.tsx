@@ -10,7 +10,7 @@ export default function Home() {
           <span className="landing-badge">Elite Telegram Monitoring</span>
           <h1 className="landing-title">STANIFY</h1>
           <p className="landing-desc">
-            Отслеживайте каналы, задавайте ключевые слова и получайте мгновенные алерты прямо в Telegram.
+            Track channels, set keywords, and get instant alerts in Telegram. Supports English and Russian.
           </p>
         </div>
 

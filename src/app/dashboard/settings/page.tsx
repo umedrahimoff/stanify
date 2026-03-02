@@ -8,10 +8,9 @@ export default function SettingsPage() {
     const [code, setCode] = useState("");
     const [apiId, setApiId] = useState("");
     const [apiHash, setApiHash] = useState("");
-    const [step, setStep] = useState(1); // 1 = API Info, 2 = Phone, 3 = Code (UI only, аккаунт уже подключён)
+    const [step, setStep] = useState(1); // 1 = API Info, 2 = Phone, 3 = Code (UI only, account already connected)
 
-    // Telegram‑аккаунт уже подключён через CLI‑скрипты,
-    // поэтому настройки делаем только для просмотра.
+    // Telegram account is connected via CLI scripts; settings are read-only.
     const isTelegramAccountLocked = true;
 
     return (
@@ -30,7 +29,7 @@ export default function SettingsPage() {
 
                     {isTelegramAccountLocked && (
                         <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem' }}>
-                            Telegram аккаунт уже подключён через серверную конфигурацию и не может быть изменён из админки.
+                            Telegram account is already connected via server configuration and cannot be changed from the admin panel.
                         </p>
                     )}
 

@@ -60,14 +60,14 @@ async function startMonitoring() {
         const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         const content = esc(msg.text ?? "");
         const contentPreview = content.length > 400 ? content.slice(0, 400) + "…" : content;
-        const linkHtml = postLink ? `<a href="${esc(postLink)}">Открыть пост</a>` : "Private";
+        const linkHtml = postLink ? `<a href="${esc(postLink)}">Open post</a>` : "Private";
         const notificationText = [
             "🔔 <b>Stanify Alert</b>",
             "",
-            `📍 <b>Источник:</b> ${esc(channelName)}`,
-            `🔑 <b>Ключевое слово:</b> ${esc(keyword)}`,
+            `📍 <b>Source:</b> ${esc(channelName)}`,
+            `🔑 <b>Keyword:</b> ${esc(keyword)}`,
             "",
-            `📝 <b>Текст:</b>`,
+            `📝 <b>Content:</b>`,
             contentPreview,
             "",
             `🔗 ${linkHtml}`,
