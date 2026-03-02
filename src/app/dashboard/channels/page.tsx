@@ -20,7 +20,7 @@ export default function ChannelsPage() {
     const [newChannel, setNewChannel] = useState("");
     const [adding, setAdding] = useState(false);
     const [syncing, setSyncing] = useState(false);
-    const [showOnlyActive, setShowOnlyActive] = useState(false);
+    const [showOnlyActive, setShowOnlyActive] = useState(true);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
 
     useEffect(() => {
