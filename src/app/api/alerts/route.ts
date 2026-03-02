@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const { searchParams } = new URL(req.url);
+        const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 500);
         const alerts = await prisma.alert.findMany({
             orderBy: { createdAt: 'desc' },
-            take: 50
+            take: limit
         });
         return NextResponse.json(alerts);
     } catch (error) {

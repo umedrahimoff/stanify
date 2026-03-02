@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Hash, Radio, Bell, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Hash, Radio, Bell, Archive, Settings, LogOut } from "lucide-react";
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -12,6 +12,7 @@ export function Sidebar() {
         { name: "Keywords", icon: <Hash size={20} />, href: "/dashboard/keywords" },
         { name: "Channels", icon: <Radio size={20} />, href: "/dashboard/channels" },
         { name: "Alerts", icon: <Bell size={20} />, href: "/dashboard/alerts" },
+        { name: "Archive", icon: <Archive size={20} />, href: "/dashboard/archive" },
         { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/settings" },
     ];
 
@@ -56,10 +57,10 @@ export function Sidebar() {
                             gap: '1rem',
                             padding: '0.75rem 1rem',
                             textDecoration: 'none',
-                            color: pathname === link.href ? 'white' : 'rgba(255,255,255,0.6)',
-                            background: pathname === link.href ? 'rgba(255,255,255,0.08)' : 'transparent',
-                            borderColor: pathname === link.href ? 'rgba(255,255,255,0.15)' : 'transparent',
-                            fontWeight: pathname === link.href ? 600 : 400,
+                            color: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 'white' : 'rgba(255,255,255,0.6)',
+                            background: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            borderColor: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.15)' : 'transparent',
+                            fontWeight: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 600 : 400,
                             fontSize: '0.9rem',
                             transition: 'all 0.2s'
                         }}
