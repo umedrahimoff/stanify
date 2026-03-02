@@ -172,8 +172,8 @@ export default function ChannelDetailPage() {
             </Link>
 
             {!currentChannel ? (
-                <div className="flex justify-center p-12">
-                    <Loader2 className="animate-spin text-blue-500" size={40} />
+                <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
+                    <Loader2 className="animate-spin" size={40} color="#00A3FF" />
                 </div>
             ) : (
                 <>
@@ -242,7 +242,7 @@ export default function ChannelDetailPage() {
                             </button>
                         </div>
                         {keywordsLoading ? (
-                            <div className="flex justify-center py-6"><Loader2 className="animate-spin" size={24} color="#00A3FF" /></div>
+                            <div style={{ display: "flex", justifyContent: "center", padding: "1.5rem 0" }}><Loader2 className="animate-spin" size={24} color="#00A3FF" /></div>
                         ) : (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
                                 {keywords.length > 0 && (
@@ -281,11 +281,11 @@ export default function ChannelDetailPage() {
 
                     <div className="card" style={{ padding: "0" }}>
                         {alertsLoading ? (
-                            <div className="flex justify-center p-12">
-                                <Loader2 className="animate-spin text-blue-500" size={40} />
+                            <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
+                                <Loader2 className="animate-spin" size={40} color="#00A3FF" />
                             </div>
                         ) : alerts.length === 0 ? (
-                            <div className="p-12 text-center text-gray-500">
+                            <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
                                 No posts yet.
                             </div>
                         ) : (

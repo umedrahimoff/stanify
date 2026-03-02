@@ -491,13 +491,6 @@ export default function ChannelsPage() {
                     </button>
                 </div>
             )}
-
-            <style>{`
-                .remove-btn:hover {
-                    color: #FF4545 !important;
-                    background: rgba(255,69,69,0.1) !important;
-                }
-            `}</style>
         </div>
     );
 }

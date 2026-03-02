@@ -28,8 +28,8 @@ export default function Dashboard() {
 
     if (isLoading || error || !stats) {
         return (
-            <div className="flex justify-center p-12 h-full items-center">
-                <Loader2 className="animate-spin text-blue-500" size={48} />
+            <div style={{ display: "flex", justifyContent: "center", padding: "3rem", height: "100%", alignItems: "center" }}>
+                <Loader2 className="animate-spin" size={48} color="#00A3FF" />
             </div>
         );
     }
@@ -101,7 +101,7 @@ export default function Dashboard() {
                         </Link>
                     </div>
                     {stats.recentAlerts.length === 0 ? (
-                        <div className="py-12 text-center text-gray-500">
+                        <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
                             Add keywords to channels to start matching.
                         </div>
                     ) : (

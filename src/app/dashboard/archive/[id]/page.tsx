@@ -27,8 +27,8 @@ export default function ArchiveDetailPage() {
 
     if (isLoading || error) {
         return (
-            <div className="flex justify-center p-12 h-full items-center">
-                <Loader2 className="animate-spin text-blue-500" size={48} />
+            <div style={{ display: "flex", justifyContent: "center", padding: "3rem", height: "100%", alignItems: "center" }}>
+                <Loader2 className="animate-spin" size={48} color="#00A3FF" />
             </div>
         );
     }

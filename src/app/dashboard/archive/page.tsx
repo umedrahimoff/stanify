@@ -152,11 +152,11 @@ export default function ArchivePage() {
 
             <div className="card" style={{ padding: "0" }}>
                 {isLoading ? (
-                    <div className="flex justify-center p-12">
-                        <Loader2 className="animate-spin text-blue-500" size={40} />
+                    <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
+                        <Loader2 className="animate-spin" size={40} color="#00A3FF" />
                     </div>
                 ) : alerts.length === 0 ? (
-                    <div className="p-12 text-center text-gray-500">
+                    <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
                         {hasFilters ? "No posts match the filters." : "No posts in archive yet. Matches will appear here."}
                     </div>
                 ) : (

@@ -24,9 +24,7 @@ export default function Home() {
             const Icon = f.icon;
             return (
               <div key={i} className="landing-feature">
-                <div className="landing-feature-icon">
-                  <Icon size={22} color={f.color} />
-                </div>
+                <Icon size={18} color={f.color} />
                 <span>{f.label}</span>
               </div>
             );

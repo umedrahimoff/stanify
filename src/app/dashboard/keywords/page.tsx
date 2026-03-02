@@ -9,7 +9,7 @@ export default function KeywordsRedirectPage() {
         router.replace("/dashboard/channels");
     }, [router]);
     return (
-        <div className="animate-fade flex justify-center items-center p-12">
+        <div className="animate-fade" style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "3rem" }}>
             <p style={{ color: "rgba(255,255,255,0.5)" }}>Redirecting...</p>
         </div>
     );
