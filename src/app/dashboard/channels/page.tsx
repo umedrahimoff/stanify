@@ -16,6 +16,7 @@ interface Channel {
     createdAt: string;
     lastActivityAt: string | null;
     _pending?: boolean;
+    _count?: { keywords: number };
 }
 
 export default function ChannelsPage() {
@@ -57,7 +58,7 @@ export default function ChannelsPage() {
             const cleanSource = newChannel.trim();
             const res = await axios.post("/api/channels", { username: cleanSource });
             setNewChannel("");
-            mutate([{ ...res.data, lastActivityAt: null }, ...channels], false);
+            mutate([{ ...res.data, lastActivityAt: null, _count: { keywords: 0 } }, ...channels], false);
             mutateStats("/api/stats");
             if (res.data._warning) {
                 showToast(`Added (private channel — join may be limited)`, "warn");
@@ -75,7 +76,7 @@ export default function ChannelsPage() {
     const toggleStatus = async (id: string, currentStatus: boolean) => {
         try {
             const res = await axios.post("/api/channels", { id, isActive: !currentStatus });
-            mutate(channels.map((c) => (c.id === id ? { ...res.data, lastActivityAt: c.lastActivityAt } : c)), false);
+            mutate(channels.map((c) => (c.id === id ? { ...res.data, lastActivityAt: c.lastActivityAt, _count: c._count } : c)), false);
             mutateStats("/api/stats");
         } catch (error) {
             console.error("Failed to toggle channel status:", error);
@@ -268,6 +269,7 @@ export default function ChannelsPage() {
                                 <tr>
                                     <th>Name</th>
                                     <th>Type</th>
+                                    <th style={{ width: "1%", whiteSpace: "nowrap" }}>Kw</th>
                                     <th>Added</th>
                                     <th>Last Activity</th>
                                     <th>Status</th>
@@ -277,7 +279,7 @@ export default function ChannelsPage() {
                             <tbody>
                                 {filteredChannels.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
+                                        <td colSpan={7} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
                                             No channels found matching the criteria.
                                         </td>
                                     </tr>
@@ -337,6 +339,9 @@ export default function ChannelsPage() {
                                                         {(c.type || "channel") === "channel" ? <Hash size={12} /> : <Users size={12} />}
                                                         {(c.type || "channel") === "channel" ? "Channel" : "Group"}
                                                     </span>
+                                                </td>
+                                                <td style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>
+                                                    {c._count?.keywords ?? 0}
                                                 </td>
                                                 <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
