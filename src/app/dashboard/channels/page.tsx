@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
 import axios from "axios";
@@ -28,8 +28,23 @@ export default function ChannelsPage() {
     const [showOnlyActive, setShowOnlyActive] = useState(true);
     const [typeFilter, setTypeFilter] = useState<"all" | "channel" | "group">("all");
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
+    const [page, setPage] = useState(1);
 
-    const { data: channels = [], isLoading, mutate } = useSWR<Channel[]>("/api/channels");
+    const PAGE_SIZE = 20;
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("pageSize", String(PAGE_SIZE));
+    params.set("showOnlyActive", String(showOnlyActive));
+    params.set("typeFilter", typeFilter);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+
+    const channelsKey = `/api/channels?${params.toString()}`;
+    const { data, isLoading, mutate } = useSWR<{ items: Channel[]; total: number; page: number; pageSize: number }>(channelsKey);
+    const channels = data?.items ?? [];
+    const total = data?.total ?? 0;
+    const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+
+    useEffect(() => setPage(1), [searchQuery, showOnlyActive, typeFilter]);
     const { mutate: mutateStats } = useSWRConfig();
 
     const showToast = (msg: string, type: "success" | "error" | "warn" = "success") => {
@@ -59,7 +74,7 @@ export default function ChannelsPage() {
             const cleanSource = newChannel.trim();
             const res = await axios.post("/api/channels", { username: cleanSource });
             setNewChannel("");
-            mutate([{ ...res.data, lastActivityAt: null, _count: { keywords: 0 } }, ...channels], false);
+            mutate();
             mutateStats("/api/stats");
             if (res.data._warning) {
                 showToast(`Added (private channel — join may be limited)`, "warn");
@@ -77,7 +92,7 @@ export default function ChannelsPage() {
     const toggleStatus = async (id: string, currentStatus: boolean) => {
         try {
             const res = await axios.post("/api/channels", { id, isActive: !currentStatus });
-            mutate(channels.map((c) => (c.id === id ? { ...res.data, lastActivityAt: c.lastActivityAt, _count: c._count } : c)), false);
+            mutate();
             mutateStats("/api/stats");
         } catch (error) {
             console.error("Failed to toggle channel status:", error);
@@ -89,7 +104,7 @@ export default function ChannelsPage() {
         if (!confirm("Are you sure you want to remove this channel?")) return;
         try {
             await axios.delete("/api/channels", { data: { id } });
-            mutate(channels.filter((c) => c.id !== id), false);
+            mutate();
             mutateStats("/api/stats");
             showToast("Channel removed.");
         } catch (error) {
@@ -97,15 +112,6 @@ export default function ChannelsPage() {
             showToast("Failed to remove channel", "error");
         }
     };
-
-    const filteredChannels = channels.filter((c) => {
-        const matchesSearch =
-            c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.username?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesActive = !showOnlyActive || c.isActive;
-        const matchesType = typeFilter === "all" || (c.type || "channel") === typeFilter;
-        return matchesSearch && matchesActive && matchesType;
-    });
 
     const toastColor =
         toast?.type === "error"
@@ -254,7 +260,7 @@ export default function ChannelsPage() {
                 </button>
 
                 <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "rgba(255,255,255,0.25)" }}>
-                    {filteredChannels.length} / {channels.length} channels
+                    {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}` : "0 channels"}
                 </span>
             </div>
 
@@ -278,14 +284,14 @@ export default function ChannelsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredChannels.length === 0 ? (
+                                {channels.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
                                             No channels found matching the criteria.
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredChannels.map((c) => {
+                                    channels.map((c) => {
                                         const isPending = c.telegramId?.startsWith("pending_");
                                         return (
                                             <tr key={c.id}>
@@ -425,6 +431,66 @@ export default function ChannelsPage() {
                     </div>
                 )}
             </div>
+
+            {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", marginTop: "1rem" }}>
+                    <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page <= 1}
+                        style={{
+                            padding: "0.35rem 0.6rem",
+                            fontSize: "0.8rem",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "6px",
+                            color: page <= 1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+                            cursor: page <= 1 ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        ←
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let p: number;
+                        if (totalPages <= 5) p = i + 1;
+                        else if (page <= 3) p = i + 1;
+                        else if (page >= totalPages - 2) p = totalPages - 4 + i;
+                        else p = page - 2 + i;
+                        return (
+                            <button
+                                key={p}
+                                onClick={() => setPage(p)}
+                                style={{
+                                    padding: "0.35rem 0.6rem",
+                                    fontSize: "0.8rem",
+                                    minWidth: "32px",
+                                    background: page === p ? "rgba(0,163,255,0.2)" : "rgba(255,255,255,0.05)",
+                                    border: `1px solid ${page === p ? "rgba(0,163,255,0.4)" : "rgba(255,255,255,0.1)"}`,
+                                    borderRadius: "6px",
+                                    color: page === p ? "#00A3FF" : "rgba(255,255,255,0.7)",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                {p}
+                            </button>
+                        );
+                    })}
+                    <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages}
+                        style={{
+                            padding: "0.35rem 0.6rem",
+                            fontSize: "0.8rem",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "6px",
+                            color: page >= totalPages ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+                            cursor: page >= totalPages ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        →
+                    </button>
+                </div>
+            )}
 
             <style>{`
                 .remove-btn:hover {

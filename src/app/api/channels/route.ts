@@ -7,12 +7,44 @@ const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
 
 // GET all channels (newest first) with last activity from alerts
-export async function GET() {
+// With page/pageSize: returns { items, total, page, pageSize }
+// Without: returns full array (for dropdowns)
+export async function GET(req: Request) {
     try {
-        const channels = await prisma.channel.findMany({
-            orderBy: { createdAt: "desc" },
-            include: { _count: { select: { keywords: true } } },
-        });
+        const { searchParams } = new URL(req.url);
+        const pageParam = searchParams.get("page");
+        const pageSizeParam = searchParams.get("pageSize");
+        const search = searchParams.get("search")?.trim().toLowerCase() || undefined;
+        const showOnlyActive = searchParams.get("showOnlyActive") === "true";
+        const typeFilter = searchParams.get("typeFilter") || "all";
+
+        const where: { isActive?: boolean; type?: string; OR?: object[] } = {};
+        if (showOnlyActive) where.isActive = true;
+        if (typeFilter !== "all") where.type = typeFilter;
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: "insensitive" } },
+                { username: { contains: search, mode: "insensitive" } },
+            ];
+        }
+        const whereClause = Object.keys(where).length > 0 ? where : undefined;
+
+        const [channels, total] = pageParam
+            ? await Promise.all([
+                prisma.channel.findMany({
+                    where: whereClause,
+                    orderBy: { createdAt: "desc" },
+                    include: { _count: { select: { keywords: true } } },
+                    skip: (Math.max(1, parseInt(pageParam, 10)) - 1) * Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10))),
+                    take: Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10))),
+                }),
+                prisma.channel.count({ where: whereClause }),
+            ])
+            : [await prisma.channel.findMany({
+                where: whereClause,
+                orderBy: { createdAt: "desc" },
+                include: { _count: { select: { keywords: true } } },
+            }), 0];
 
         const [byChannelId, byChannelName] = await Promise.all([
             prisma.alert.groupBy({
@@ -37,6 +69,11 @@ export async function GET() {
             lastActivityAt: activityById[c.id] ?? (c.username && activityByName[c.username]) ?? (c.name && activityByName[c.name]) ?? null,
         }));
 
+        if (pageParam) {
+            const page = Math.max(1, parseInt(pageParam, 10));
+            const pageSize = Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10)));
+            return NextResponse.json({ items: channelsWithActivity, total, page, pageSize });
+        }
         return NextResponse.json(channelsWithActivity);
     } catch (error) {
         console.error("GET Error:", error);
