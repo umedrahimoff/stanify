@@ -3,5 +3,7 @@ export const formatDate = (d: Date | string) => {
     const day = x.getDate().toString().padStart(2, "0");
     const month = (x.getMonth() + 1).toString().padStart(2, "0");
     const year = x.getFullYear();
-    return `${day}:${month}:${year}`;
+    const h = x.getHours().toString().padStart(2, "0");
+    const m = x.getMinutes().toString().padStart(2, "0");
+    return `${day}.${month}.${year} ${h}:${m}`;
 };
