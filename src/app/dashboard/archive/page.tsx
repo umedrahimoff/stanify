@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, ExternalLink, Calendar, Radio, Hash } from "lucide-react";
+import { useState } from "react";
+import { Loader2, ExternalLink, Calendar, Radio, Filter } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
@@ -8,27 +9,55 @@ import Link from "next/link";
 interface Alert {
     id: string;
     channelName: string;
+    channelId: string | null;
     content: string;
     matchedWord: string;
     postLink: string | null;
     createdAt: string;
 }
 
+interface Channel {
+    id: string;
+    name: string | null;
+    username: string | null;
+}
+
 export default function ArchivePage() {
-    const { data: alerts = [], isLoading } = useSWR<Alert[]>(
-        "/api/alerts?limit=200",
-        fetcher
-    );
+    const [channelFilter, setChannelFilter] = useState<string>("");
+
+    const alertsKey = channelFilter
+        ? `/api/alerts?limit=200&channelId=${channelFilter}`
+        : "/api/alerts?limit=200";
+    const { data: alerts = [], isLoading } = useSWR<Alert[]>(alertsKey, fetcher);
+    const { data: channels = [] } = useSWR<Channel[]>("/api/channels", fetcher);
 
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: "2.5rem" }}>
-                <h1 style={{ fontSize: "2.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>
-                    Archive
-                </h1>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>
-                    Historical posts matched by keywords. Click View to see full content.
-                </p>
+            <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
+                <div>
+                    <h1 style={{ fontSize: "2.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+                        Archive
+                    </h1>
+                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>
+                        Historical posts matched by keywords. Click View to see full content.
+                    </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: "220px" }}>
+                    <Filter size={18} color="rgba(255,255,255,0.4)" />
+                    <select
+                        className="input-field"
+                        value={channelFilter}
+                        onChange={(e) => setChannelFilter(e.target.value)}
+                        style={{ padding: "0.5rem 1rem", height: "40px", fontSize: "0.9rem" }}
+                    >
+                        <option value="">All channels</option>
+                        {channels.map((ch) => (
+                            <option key={ch.id} value={ch.id}>
+                                {ch.name || ch.username || ch.id}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             <div className="card" style={{ padding: "0" }}>

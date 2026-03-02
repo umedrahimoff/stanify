@@ -46,10 +46,16 @@ async function startMonitoring() {
             postLink = `https://t.me/c/${rawId}/${messageId}`;
         }
 
-        // Save Alert to DB
+        // Find channel to link (by username)
+        const channel = channelName !== "Private/Group"
+            ? await prisma.channel.findFirst({ where: { username: channelName } })
+            : null;
+
+        // Save Alert to DB (linked to channel when found)
         await prisma.alert.create({
             data: {
                 channelName: channelName,
+                channelId: channel?.id ?? null,
                 content: msg.text,
                 matchedWord: keyword,
                 postLink: postLink

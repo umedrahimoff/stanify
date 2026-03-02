@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity } from "lucide-react";
+import Link from "next/link";
+import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight } from "lucide-react";
 import axios from "axios";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -267,7 +268,10 @@ export default function ChannelsPage() {
                                                 style={{ background: "rgba(255,255,255,0.02)", transition: "background 0.2s" }}
                                             >
                                                 <td style={{ padding: "1rem 1.5rem" }}>
-                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+                                                    <Link
+                                                        href={`/dashboard/channels/${c.id}`}
+                                                        style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "0.8rem" }}
+                                                    >
                                                         <div style={{
                                                             width: "36px",
                                                             height: "36px",
@@ -286,6 +290,7 @@ export default function ChannelsPage() {
                                                         <div>
                                                             <div style={{ fontWeight: 600, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                                 {c.name || "Unknown"}
+                                                                <ChevronRight size={16} color="rgba(255,255,255,0.3)" />
                                                                 {isPending && (
                                                                     <span style={{ fontSize: "0.7rem", color: "#FF9F0A", background: "rgba(255,159,10,0.1)", border: "1px solid rgba(255,159,10,0.2)", padding: "0.1rem 0.4rem", borderRadius: "6px" }}>
                                                                         PENDING SYNC
@@ -296,7 +301,7 @@ export default function ChannelsPage() {
                                                                 {c.username ? `@${c.username}` : `ID: ${c.telegramId}`}
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </Link>
                                                 </td>
                                                 <td style={{ padding: "1rem 1.5rem" }}>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>

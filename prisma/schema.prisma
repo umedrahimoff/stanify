@@ -14,6 +14,7 @@ model Channel {
   name       String?
   isActive   Boolean  @default(false)
   createdAt  DateTime @default(now())
+  alerts     Alert[]
 }
 
 model Keyword {
@@ -26,6 +27,8 @@ model Keyword {
 model Alert {
   id          String   @id @default(cuid())
   channelName String
+  channelId   String?
+  channel     Channel? @relation(fields: [channelId], references: [id])
   content     String
   matchedWord String
   postLink    String?

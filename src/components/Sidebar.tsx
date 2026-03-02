@@ -57,10 +57,10 @@ export function Sidebar() {
                             gap: '1rem',
                             padding: '0.75rem 1rem',
                             textDecoration: 'none',
-                            color: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 'white' : 'rgba(255,255,255,0.6)',
-                            background: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.08)' : 'transparent',
-                            borderColor: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.15)' : 'transparent',
-                            fontWeight: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href))) ? 600 : 400,
+                            color: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 'white' : 'rgba(255,255,255,0.6)',
+                            background: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            borderColor: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.15)' : 'transparent',
+                            fontWeight: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 600 : 400,
                             fontSize: '0.9rem',
                             transition: 'all 0.2s'
                         }}
