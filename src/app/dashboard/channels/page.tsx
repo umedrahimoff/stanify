@@ -151,22 +151,22 @@ export default function ChannelsPage() {
                 </div>
             )}
 
-            <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+            <div style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                 <div>
-                    <h1 style={{ fontSize: "2.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>Source Channels</h1>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>Manage and monitor your Telegram network.</p>
+                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Source Channels</h1>
+                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>Manage and monitor your Telegram network.</p>
                 </div>
 
-                <div style={{ display: "flex", gap: "1rem", width: "100%", maxWidth: "500px", alignItems: "stretch" }}>
+                <div style={{ display: "flex", gap: "0.75rem", width: "100%", maxWidth: "420px", alignItems: "stretch" }}>
                     <div style={{ position: "relative", flex: 1 }}>
                         <LinkIcon
-                            size={18}
+                            size={16}
                             color="rgba(255,255,255,0.3)"
-                            style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)" }}
+                            style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}
                         />
                         <input
-                            className="input-field"
-                            style={{ paddingLeft: "3rem", height: "44px", boxSizing: "border-box" }}
+                            className="input-field text-[0.85rem]"
+                            style={{ paddingLeft: "2.5rem", height: "36px", boxSizing: "border-box" }}
                             placeholder="Add @username or Link..."
                             value={newChannel}
                             onChange={(e) => setNewChannel(e.target.value)}
@@ -178,9 +178,9 @@ export default function ChannelsPage() {
                         className="btn-primary"
                         onClick={handleAdd}
                         disabled={adding || !newChannel.trim()}
-                        style={{ width: "60px", minWidth: "60px", height: "44px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        style={{ width: "48px", minWidth: "48px", height: "36px", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
-                        {adding ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} />}
+                        {adding ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
                     </button>
                 </div>
             </div>
@@ -189,9 +189,9 @@ export default function ChannelsPage() {
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Search</label>
                         <div className="relative">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
+                            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
                             <input
-                                className={cn("input-field", filterClasses.input, "pl-[2.5rem] min-w-[180px]")}
+                                className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[140px]")}
                                 placeholder="Quick search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,7 +215,7 @@ export default function ChannelsPage() {
                         <button
                             onClick={() => setShowOnlyActive(!showOnlyActive)}
                             className={cn(
-                                "inline-flex items-center justify-center gap-x-3 flex-nowrap whitespace-nowrap h-11 min-h-[44px] px-4 min-w-[140px] text-[0.9rem] leading-normal rounded-[10px] cursor-pointer border shrink-0 [&>svg]:shrink-0 [&>span]:shrink-0",
+                                "inline-flex items-center justify-center gap-x-2 flex-nowrap whitespace-nowrap h-8 min-h-[32px] px-3 min-w-[110px] text-[0.8rem] leading-normal rounded-lg cursor-pointer border shrink-0 [&>svg]:shrink-0 [&>span]:shrink-0",
                                 showOnlyActive ? "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF]" : "bg-white/5 border-white/10 text-white/60"
                             )}
                         >
@@ -229,7 +229,7 @@ export default function ChannelsPage() {
                             disabled={syncing}
                             className={cn(
                                 filterClasses.clearBtn,
-                                "min-w-[120px]",
+                                "min-w-[100px]",
                                 syncing && "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF] cursor-not-allowed"
                             )}
                         >
@@ -247,13 +247,13 @@ export default function ChannelsPage() {
                     </div>
                 </FilterCard>
 
-            <div className="flex items-center mb-4">
-                <span className="text-[0.85rem] text-white/40">
+            <div className="flex items-center mb-3">
+                <span className="text-[0.8rem] text-white/40">
                     {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}` : "0 channels"}
                 </span>
             </div>
 
-            <div className="card" style={{ padding: "0.5rem" }}>
+            <div className="card" style={{ padding: "0.4rem" }}>
                 {isLoading ? (
                     <TableSkeleton columns={7} rows={12} />
                 ) : (

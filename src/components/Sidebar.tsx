@@ -18,29 +18,29 @@ export function Sidebar() {
     const pathname = usePathname();
 
     const links = [
-        { name: "Overview", icon: <LayoutDashboard size={20} />, href: "/dashboard" },
-        { name: "Channels", icon: <Radio size={20} />, href: "/dashboard/channels" },
-        { name: "Alerts", icon: <Bell size={20} />, href: "/dashboard/alerts" },
-        { name: "Archive", icon: <Archive size={20} />, href: "/dashboard/archive" },
-        { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/settings" },
+        { name: "Overview", icon: <LayoutDashboard size={18} />, href: "/dashboard" },
+        { name: "Channels", icon: <Radio size={18} />, href: "/dashboard/channels" },
+        { name: "Alerts", icon: <Bell size={18} />, href: "/dashboard/alerts" },
+        { name: "Archive", icon: <Archive size={18} />, href: "/dashboard/archive" },
+        { name: "Settings", icon: <Settings size={18} />, href: "/dashboard/settings" },
     ];
 
     return (
         <aside className="glass" style={{
-            width: '260px',
+            width: '240px',
             height: '100vh',
             position: 'fixed',
             left: 0,
             top: 0,
-            padding: '2rem 1.5rem',
+            padding: '1.25rem 1rem',
             display: 'flex',
             flexDirection: 'column',
-            gap: '2rem',
+            gap: '1.25rem',
             zIndex: 100
         }}>
             <div style={{ padding: '0 0.5rem' }}>
                 <h1 style={{
-                    fontSize: '1.5rem',
+                    fontSize: '1.35rem',
                     fontWeight: 800,
                     background: 'linear-gradient(45deg, #00A3FF, #00D1FF)',
                     WebkitBackgroundClip: 'text',
@@ -64,13 +64,13 @@ export function Sidebar() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '1rem',
-                            padding: '0.75rem 1rem',
+                            padding: '0.6rem 0.85rem',
                             textDecoration: 'none',
                             color: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 'white' : 'rgba(255,255,255,0.6)',
                             background: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.08)' : 'transparent',
                             borderColor: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.15)' : 'transparent',
                             fontWeight: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href))) ? 600 : 400,
-                            fontSize: '0.9rem',
+                            fontSize: '0.85rem',
                             transition: 'all 0.2s'
                         }}
                     >

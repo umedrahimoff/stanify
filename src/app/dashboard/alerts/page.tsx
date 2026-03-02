@@ -56,9 +56,9 @@ export default function AlertsHistoryPage() {
 
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: "2.5rem" }}>
-                <h1 style={{ fontSize: "2.25rem", fontWeight: 800, marginBottom: "0.5rem" }}>Alerts History</h1>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1.1rem" }}>
+            <div style={{ marginBottom: "1.5rem" }}>
+                <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Alerts History</h1>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
                     Historical record of all keyword matches. Filter by date, channel, or keyword.
                 </p>
             </div>
@@ -67,7 +67,7 @@ export default function AlertsHistoryPage() {
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Channel</label>
                         <select
-                            className={cn("input-field", filterClasses.input, "min-w-[180px]")}
+                            className={cn("input-field", filterClasses.input, "min-w-[130px]")}
                             value={channelFilter}
                             onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
                         >
@@ -100,10 +100,10 @@ export default function AlertsHistoryPage() {
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Keyword</label>
                         <div className="relative">
-                            <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
+                            <Hash size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
                             <input
                                 type="text"
-                                className={cn("input-field", filterClasses.input, "pl-[2.5rem] min-w-[180px]")}
+                                className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[140px]")}
                                 placeholder="Filter by keyword..."
                                 value={keywordFilter}
                                 onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
@@ -117,7 +117,7 @@ export default function AlertsHistoryPage() {
                     )}
                 </FilterCard>
 
-            <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>
                 {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}` : "0 alerts"}
             </p>
 

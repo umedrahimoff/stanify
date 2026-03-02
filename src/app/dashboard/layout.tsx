@@ -11,8 +11,8 @@ export default function DashboardLayout({
         <div style={{ display: 'flex' }}>
             <Sidebar />
             <main style={{
-                marginLeft: '260px',
-                padding: '2.5rem',
+                marginLeft: '240px',
+                padding: '1.5rem',
                 flex: 1,
                 minHeight: '100vh',
                 background: 'rgba(0,0,0,0.3)',

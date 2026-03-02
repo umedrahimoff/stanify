@@ -99,31 +99,31 @@ export default function Dashboard() {
 
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Overview</h1>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>Instant performance overview of your Stanify monitoring network.</p>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>Overview</h1>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Instant performance overview of your Stanify monitoring network.</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", marginBottom: "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1.25rem" }}>
                 {cards.map((card) => (
-                    <div key={card.title} className="card" style={{ padding: '1.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                            <div style={{ background: `${card.color}15`, padding: '0.75rem', borderRadius: '12px' }}>
-                                <card.icon color={card.color} size={24} />
+                    <div key={card.title} className="card" style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                            <div style={{ background: `${card.color}15`, padding: '0.5rem', borderRadius: '10px' }}>
+                                <card.icon color={card.color} size={20} />
                             </div>
                         </div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>{card.value}</div>
-                        <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{card.title}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.15rem' }}>{card.value}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{card.title}</div>
                     </div>
                 ))}
             </div>
 
-            <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
-                    <BarChart3 size={20} color="#00A3FF" />
-                    <h2 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Posts per week</h2>
+            <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                    <BarChart3 size={18} color="#00A3FF" />
+                    <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Posts per week</h2>
                 </div>
-                <div style={{ width: "100%", height: 280 }}>
+                <div style={{ width: "100%", height: 220 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={stats.alertsByWeek ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -148,10 +148,10 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "1.5rem" }}>
-                <div className="card" style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-                        <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Real-time Feed</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "1rem" }}>
+                <div className="card" style={{ padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
+                        <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>Real-time Feed</h2>
                         <Link href="/dashboard/archive" style={{ fontSize: '0.8rem', color: '#00A3FF', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem', textDecoration: 'none' }}>
                             View All <ArrowUpRight size={14} />
                         </Link>
@@ -161,13 +161,13 @@ export default function Dashboard() {
                             Add keywords to channels to start matching.
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {stats.recentAlerts.map((alert) => (
                                 <Link
                                     key={alert.id}
                                     href={`/dashboard/archive/${alert.id}`}
                                     style={{
-                                        padding: '1.25rem',
+                                        padding: '0.9rem 1rem',
                                         background: 'rgba(255,255,255,0.02)',
                                         borderRadius: '16px',
                                         border: '1px solid rgba(255,255,255,0.05)',
@@ -201,9 +201,9 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem' }}>System Status</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="card" style={{ padding: '1rem' }}>
+                    <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>System Status</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00FF75', marginTop: '6px' }}></div>
                             <div>

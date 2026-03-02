@@ -35,16 +35,16 @@ export default function SettingsPage() {
 
     return (
         <div className="animate-fade">
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Settings</h1>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>Configure your Telegram user account and monitoring settings.</p>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>Settings</h1>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>Configure your Telegram user account and monitoring settings.</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                <div className="card" style={{ padding: '2rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                        <Fingerprint size={28} color="#00A3FF" />
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Telegram Account</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <div className="card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                        <Fingerprint size={22} color="#00A3FF" />
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Telegram Account</h2>
                     </div>
 
                     {isTelegramAccountLocked && (
@@ -64,7 +64,7 @@ export default function SettingsPage() {
                                     value={apiId}
                                     onChange={(e) => setApiId(e.target.value)}
                                     placeholder="Enter your API ID"
-                                    style={{ paddingLeft: '3rem' }}
+                                    style={{ paddingLeft: '2.5rem' }}
                                     disabled={isTelegramAccountLocked}
                                     readOnly={isTelegramAccountLocked}
                                 />
@@ -80,7 +80,7 @@ export default function SettingsPage() {
                                     value={apiHash}
                                     onChange={(e) => setApiHash(e.target.value)}
                                     placeholder="Enter your API HASH"
-                                    style={{ paddingLeft: '3rem' }}
+                                    style={{ paddingLeft: '2.5rem' }}
                                     disabled={isTelegramAccountLocked}
                                     readOnly={isTelegramAccountLocked}
                                 />
@@ -96,7 +96,7 @@ export default function SettingsPage() {
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="+1 234 567 890"
-                                    style={{ paddingLeft: '3rem' }}
+                                    style={{ paddingLeft: '2.5rem' }}
                                     disabled={isTelegramAccountLocked}
                                     readOnly={isTelegramAccountLocked}
                                 />
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                                         value={code}
                                         onChange={(e) => setCode(e.target.value)}
                                         placeholder="12345"
-                                        style={{ paddingLeft: '3rem' }}
+                                        style={{ paddingLeft: '2.5rem' }}
                                         disabled={isTelegramAccountLocked}
                                         readOnly={isTelegramAccountLocked}
                                     />
@@ -144,19 +144,19 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div className="card" style={{ padding: '2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                            <Activity size={28} color="#00FF94" />
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Notification Settings</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div className="card" style={{ padding: '1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                            <Activity size={22} color="#00FF94" />
+                            <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Notification Settings</h2>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 <label style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Telegram recipients</label>
                                 <div
                                     className="input-field tag-input-wrapper"
-                                    style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', minHeight: '44px', cursor: 'text' }}
+                                    style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.85rem', minHeight: '36px', cursor: 'text' }}
                                     onClick={(e) => (e.target as HTMLElement).querySelector('input')?.focus()}
                                 >
                                     {recipients.map((r, i) => (
@@ -195,7 +195,7 @@ export default function SettingsPage() {
 
                         <button
                             className="btn-primary"
-                            style={{ width: '100%', marginTop: '2rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                            style={{ width: '100%', marginTop: '1.25rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
                             onClick={async () => {
                                 setSaving(true);
                                 setSaveMsg(null);
