@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, ExternalLink, Calendar, Radio, Filter, Hash } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { formatDate } from "@/lib/date";
 import Link from "next/link";
 
 interface Alert {
@@ -175,7 +176,7 @@ export default function ArchivePage() {
                                         <td>
                                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                 <Calendar size={14} color="rgba(255,255,255,0.4)" />
-                                                {new Date(alert.createdAt).toLocaleDateString()}
+                                                {formatDate(alert.createdAt)}
                                             </div>
                                         </td>
                                         <td>

@@ -3,6 +3,7 @@
 import { Activity, Bell, Radio, Hash, ArrowUpRight, Loader2, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import useSWR from "swr";
+import { formatDate } from "@/lib/date";
 import {
     BarChart,
     Bar,
@@ -73,7 +74,7 @@ export default function Dashboard() {
                             <XAxis
                                 dataKey="date"
                                 tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                                tickFormatter={(v) => new Date(v).toLocaleDateString("ru-RU", { day: "2-digit", month: "short" })}
+                                tickFormatter={(v) => formatDate(v)}
                             />
                             <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
                             <Tooltip
@@ -84,7 +85,7 @@ export default function Dashboard() {
                                 }}
                                 labelStyle={{ color: "rgba(255,255,255,0.6)" }}
                                 formatter={(value) => [value ?? 0, "Posts"]}
-                                labelFormatter={(label) => new Date(label).toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}
+                                labelFormatter={(label) => formatDate(label)}
                             />
                             <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
                         </BarChart>
@@ -138,7 +139,7 @@ export default function Dashboard() {
                                             Matched: <span style={{ color: '#00A3FF' }}>{alert.matchedWord}</span>
                                         </div>
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{new Date(alert.createdAt).toLocaleTimeString()}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{formatDate(alert.createdAt)}</div>
                                 </Link>
                             ))}
                         </div>

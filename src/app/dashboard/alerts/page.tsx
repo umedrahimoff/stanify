@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { formatDate } from "@/lib/date";
 import Link from "next/link";
 
 interface Alert {
@@ -84,7 +85,7 @@ export default function AlertsHistoryPage() {
                                             )}
                                         </td>
                                         <td className="td-right" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
-                                            {new Date(alert.createdAt).toLocaleString()}
+                                            {formatDate(alert.createdAt)}
                                         </td>
                                     </tr>
                                 ))}

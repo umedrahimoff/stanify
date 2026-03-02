@@ -5,6 +5,7 @@ import { Loader2, ArrowLeft, Radio, Hash, Calendar, ExternalLink } from "lucide-
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
+import { formatDate } from "@/lib/date";
 
 interface Alert {
     id: string;
@@ -87,7 +88,7 @@ export default function ArchiveDetailPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                         <Calendar size={18} color="rgba(255,255,255,0.4)" />
                         <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)" }}>
-                            {new Date(alert.createdAt).toLocaleString()}
+                            {formatDate(alert.createdAt)}
                         </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>

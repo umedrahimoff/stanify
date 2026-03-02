@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
 import axios from "axios";
 import useSWR, { useSWRConfig } from "swr";
+import { formatDate } from "@/lib/date";
 
 interface Channel {
     id: string;
@@ -346,14 +347,14 @@ export default function ChannelsPage() {
                                                 <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                         <Calendar size={14} color="rgba(255,255,255,0.4)" />
-                                                        {new Date(c.createdAt).toLocaleDateString()}
+                                                        {formatDate(c.createdAt)}
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                         <Activity size={14} color="rgba(255,255,255,0.4)" />
                                                         {c.lastActivityAt
-                                                            ? new Date(c.lastActivityAt).toLocaleDateString()
+                                                            ? formatDate(c.lastActivityAt)
                                                             : "—"}
                                                     </div>
                                                 </td>

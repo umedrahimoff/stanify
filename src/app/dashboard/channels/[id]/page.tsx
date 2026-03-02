@@ -7,6 +7,7 @@ import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
 import axios from "axios";
+import { formatDate } from "@/lib/date";
 
 function parseTags(input: string): string[] {
     return [...new Set(input.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))];
@@ -203,7 +204,7 @@ export default function ChannelDetailPage() {
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem", fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>
                                     <Calendar size={14} />
-                                    Added {new Date(currentChannel.createdAt).toLocaleDateString()}
+                                    Added {formatDate(currentChannel.createdAt)}
                                 </div>
                             </div>
                         </div>
@@ -302,7 +303,7 @@ export default function ChannelDetailPage() {
                                         {alerts.map((alert) => (
                                             <tr key={alert.id}>
                                                 <td style={{ color: "rgba(255,255,255,0.7)" }}>
-                                                    {new Date(alert.createdAt).toLocaleString()}
+                                                    {formatDate(alert.createdAt)}
                                                 </td>
                                                 <td>
                                                     <span className="keyword-badge">{alert.matchedWord}</span>
