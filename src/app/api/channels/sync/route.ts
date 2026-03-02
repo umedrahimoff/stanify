@@ -32,7 +32,7 @@ export async function POST() {
         let count = 0;
 
         for (const dialog of dialogs) {
-            if (dialog.isChannel || dialog.isGroup) {
+            if ((dialog.isChannel || dialog.isGroup) && dialog.id) {
                 const title = dialog.title || "Unknown Title";
                 const telegramId = dialog.id.toString();
                 const username = (dialog.entity as any)?.username || null;
