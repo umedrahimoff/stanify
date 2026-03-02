@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
-import { Lock, Smartphone, Loader2, ArrowRight } from "lucide-react";
+import { Lock, Loader2, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
     const [step, setStep] = useState(1);
@@ -11,7 +10,6 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [codeSentTo, setCodeSentTo] = useState("");
-    const router = useRouter();
 
     const requestLogin = async () => {
         setLoading(true);
@@ -31,9 +29,9 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
         try {
-            const res = await axios.post("/api/auth/verify", { code });
+            const res = await axios.post("/api/auth/verify", { code: code.trim() });
             if (res.data.success) {
-                router.push(res.data.redirect);
+                window.location.href = res.data.redirect || "/dashboard";
             }
         } catch (err: any) {
             setError(err.response?.data?.error || "Invalid code");

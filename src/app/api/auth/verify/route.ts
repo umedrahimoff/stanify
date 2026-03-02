@@ -5,12 +5,13 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
     try {
         const { code } = await req.json();
-        if (!code) return NextResponse.json({ error: "Code is required" }, { status: 400 });
+        const codeStr = typeof code === "string" ? code.trim() : String(code || "").trim();
+        if (!codeStr) return NextResponse.json({ error: "Code is required" }, { status: 400 });
 
         // 1. Check code in DB
         const verification = await prisma.verificationCode.findFirst({
             where: {
-                code: code,
+                code: codeStr,
                 expiresAt: { gt: new Date() }
             },
             orderBy: { createdAt: 'desc' }
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
         cookieStore.set("stanify_auth", "1", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
             path: "/",
             maxAge: 60 * 60 * 24 * 7 // 1 week
         });
