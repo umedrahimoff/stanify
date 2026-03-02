@@ -376,28 +376,42 @@ export default function ChannelsPage() {
                                                     </div>
                                                 </td>
                                                 <td className="td-right">
-                                                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", alignItems: "center" }}>
+                                                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.35rem", alignItems: "center" }}>
                                                         <button
                                                             onClick={() => toggleStatus(c.id, c.isActive)}
-                                                            className={c.isActive ? "btn-secondary" : "btn-primary"}
-                                                            style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", height: "32px" }}
+                                                            title={c.isActive ? "Pause" : "Follow"}
+                                                            style={{
+                                                                padding: "0.35rem 0.5rem",
+                                                                fontSize: "0.7rem",
+                                                                height: "28px",
+                                                                minWidth: "auto",
+                                                                borderRadius: "6px",
+                                                                background: c.isActive ? "rgba(255,255,255,0.06)" : "rgba(0,163,255,0.2)",
+                                                                border: `1px solid ${c.isActive ? "rgba(255,255,255,0.1)" : "rgba(0,163,255,0.3)"}`,
+                                                                color: c.isActive ? "rgba(255,255,255,0.6)" : "#00A3FF",
+                                                                cursor: "pointer",
+                                                                fontWeight: 500,
+                                                            }}
                                                         >
                                                             {c.isActive ? "Pause" : "Follow"}
                                                         </button>
                                                         <button
                                                             onClick={() => deleteChannel(c.id)}
+                                                            title="Remove"
                                                             className="remove-btn"
                                                             style={{
                                                                 color: "rgba(255,69,69,0.5)",
-                                                                padding: "6px",
-                                                                borderRadius: "8px",
+                                                                padding: "0.35rem",
+                                                                borderRadius: "6px",
                                                                 background: "rgba(255,69,69,0.05)",
                                                                 border: "none",
                                                                 cursor: "pointer",
                                                                 display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
                                                             }}
                                                         >
-                                                            <Trash2 size={16} />
+                                                            <Trash2 size={14} />
                                                         </button>
                                                     </div>
                                                 </td>

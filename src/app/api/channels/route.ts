@@ -14,17 +14,27 @@ export async function GET() {
             include: { _count: { select: { keywords: true } } },
         });
 
-        const lastActivities = await prisma.alert.groupBy({
-            by: ["channelName"],
-            _max: { createdAt: true },
-        });
-        const activityMap = Object.fromEntries(
-            lastActivities.map((a) => [a.channelName, a._max.createdAt])
+        const [byChannelId, byChannelName] = await Promise.all([
+            prisma.alert.groupBy({
+                by: ["channelId"],
+                where: { channelId: { not: null } },
+                _max: { createdAt: true },
+            }),
+            prisma.alert.groupBy({
+                by: ["channelName"],
+                _max: { createdAt: true },
+            }),
+        ]);
+        const activityById = Object.fromEntries(
+            byChannelId.map((a) => [a.channelId!, a._max.createdAt])
+        );
+        const activityByName = Object.fromEntries(
+            byChannelName.map((a) => [a.channelName, a._max.createdAt])
         );
 
         const channelsWithActivity = channels.map((c) => ({
             ...c,
-            lastActivityAt: (c.username && activityMap[c.username]) ?? null,
+            lastActivityAt: activityById[c.id] ?? (c.username && activityByName[c.username]) ?? (c.name && activityByName[c.name]) ?? null,
         }));
 
         return NextResponse.json(channelsWithActivity);
