@@ -8,7 +8,11 @@ export default function SettingsPage() {
     const [code, setCode] = useState("");
     const [apiId, setApiId] = useState("");
     const [apiHash, setApiHash] = useState("");
-    const [step, setStep] = useState(1); // 1 = API Info, 2 = Phone, 3 = Code
+    const [step, setStep] = useState(1); // 1 = API Info, 2 = Phone, 3 = Code (UI only, аккаунт уже подключён)
+
+    // Telegram‑аккаунт уже подключён через CLI‑скрипты,
+    // поэтому настройки делаем только для просмотра.
+    const isTelegramAccountLocked = true;
 
     return (
         <div className="animate-fade">
@@ -24,6 +28,12 @@ export default function SettingsPage() {
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Telegram Account</h2>
                     </div>
 
+                    {isTelegramAccountLocked && (
+                        <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem' }}>
+                            Telegram аккаунт уже подключён через серверную конфигурацию и не может быть изменён из админки.
+                        </p>
+                    )}
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         {/* Step 1: API Information */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -36,6 +46,8 @@ export default function SettingsPage() {
                                     onChange={(e) => setApiId(e.target.value)}
                                     placeholder="Enter your API ID"
                                     style={{ paddingLeft: '3rem' }}
+                                    disabled={isTelegramAccountLocked}
+                                    readOnly={isTelegramAccountLocked}
                                 />
                             </div>
                         </div>
@@ -50,6 +62,8 @@ export default function SettingsPage() {
                                     onChange={(e) => setApiHash(e.target.value)}
                                     placeholder="Enter your API HASH"
                                     style={{ paddingLeft: '3rem' }}
+                                    disabled={isTelegramAccountLocked}
+                                    readOnly={isTelegramAccountLocked}
                                 />
                             </div>
                         </div>
@@ -64,6 +78,8 @@ export default function SettingsPage() {
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="+1 234 567 890"
                                     style={{ paddingLeft: '3rem' }}
+                                    disabled={isTelegramAccountLocked}
+                                    readOnly={isTelegramAccountLocked}
                                 />
                             </div>
                         </div>
@@ -79,6 +95,8 @@ export default function SettingsPage() {
                                         onChange={(e) => setCode(e.target.value)}
                                         placeholder="12345"
                                         style={{ paddingLeft: '3rem' }}
+                                        disabled={isTelegramAccountLocked}
+                                        readOnly={isTelegramAccountLocked}
                                     />
                                 </div>
                             </div>
@@ -88,9 +106,20 @@ export default function SettingsPage() {
                             <button
                                 className="btn-primary"
                                 style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
-                                onClick={() => setStep(step + 1)}
+                                onClick={() => {
+                                    if (!isTelegramAccountLocked) {
+                                        setStep(step + 1);
+                                    }
+                                }}
+                                disabled={isTelegramAccountLocked}
                             >
-                                {step === 1 ? "Start Session" : step === 2 ? "Send OTP" : "Complete Authentication"}
+                                {isTelegramAccountLocked
+                                    ? "Telegram account is already connected"
+                                    : step === 1
+                                    ? "Start Session"
+                                    : step === 2
+                                    ? "Send OTP"
+                                    : "Complete Authentication"}
                             </button>
                         </div>
                     </div>
