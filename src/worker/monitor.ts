@@ -56,8 +56,22 @@ async function startMonitoring() {
             }
         });
 
-        // Send Notification to @umedrahimoff
-        const notificationText = `🔔 *Stanify Alert!*\n\n📍 *Source:* ${channelName}\n🔑 *Keyword:* #${keyword}\n\n📝 *Content:* ${msg.text}\n\n🔗 *Link:* ${postLink || "Private"}`;
+        // Send Notification to @umedrahimoff (HTML format, escaped)
+        const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const content = esc(msg.text ?? "");
+        const contentPreview = content.length > 400 ? content.slice(0, 400) + "…" : content;
+        const linkHtml = postLink ? `<a href="${esc(postLink)}">Открыть пост</a>` : "Private";
+        const notificationText = [
+            "🔔 <b>Stanify Alert</b>",
+            "",
+            `📍 <b>Источник:</b> ${esc(channelName)}`,
+            `🔑 <b>Ключевое слово:</b> ${esc(keyword)}`,
+            "",
+            `📝 <b>Текст:</b>`,
+            contentPreview,
+            "",
+            `🔗 ${linkHtml}`,
+        ].join("\n");
         await tg.sendMessage("umedrahimoff", notificationText);
         console.log(`🚀 Alert with link sent to @umedrahimoff`);
     });

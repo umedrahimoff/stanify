@@ -74,10 +74,10 @@ export class TelegramManager {
         }
     }
 
-    public async sendMessage(to: string, text: string) {
+    public async sendMessage(to: string, text: string, parseMode: "html" | "md" = "html") {
         if (!this.client) throw new Error("Client not initialized");
         try {
-            await this.client.sendMessage(to, { message: text });
+            await this.client.sendMessage(to, { message: text, parseMode });
             return true;
         } catch (e) {
             console.error("Error sending message:", e);
