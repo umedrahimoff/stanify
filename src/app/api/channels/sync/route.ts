@@ -12,7 +12,7 @@ export async function POST() {
 
         // 1. Get Session from DB
         const session = await prisma.session.findFirst({
-            where: { isActive: true }
+            where: { isActive: true },
         });
 
         if (!session) {
@@ -26,37 +26,65 @@ export async function POST() {
 
         await client.connect();
 
-        // 3. Get Dialogs (Groups & Channels)
+        // 3. Get Dialogs (Groups & Channels) from Telegram
         const dialogs = await client.getDialogs();
-        let count = 0;
+
+        // Collect all telegramIds currently in the user's dialogs
+        const activeTelegramIds = new Set<string>();
+        let upsertCount = 0;
 
         for (const dialog of dialogs) {
             if ((dialog.isChannel || dialog.isGroup) && dialog.id) {
-                const title = dialog.title || "Unknown Title";
                 const telegramId = dialog.id.toString();
+                const title = dialog.title || "Unknown Title";
                 const username = (dialog.entity as any)?.username || null;
 
+                activeTelegramIds.add(telegramId);
+
                 await prisma.channel.upsert({
-                    where: { telegramId: telegramId },
-                    update: {
-                        name: title,
-                        username: username
-                    },
+                    where: { telegramId },
+                    update: { name: title, username },
                     create: {
+                        telegramId,
+                        username,
                         name: title,
-                        username: username,
-                        telegramId: telegramId,
-                        isActive: false
-                    }
+                        isActive: false,
+                    },
                 });
-                count++;
+                upsertCount++;
             }
         }
 
-        await client.disconnect();
-        console.log(`✅ Sync finished. ${count} channels updated.`);
+        // 4. Find channels in DB that are NO LONGER in user's dialogs
+        //    (i.e., user has left/was kicked from them)
+        //    Only consider real channels (not pending_ ones added manually)
+        const allDbChannels = await prisma.channel.findMany({
+            select: { id: true, telegramId: true, name: true },
+        });
 
-        return NextResponse.json({ success: true, count });
+        const leftChannels = allDbChannels.filter(
+            (ch) => !ch.telegramId.startsWith("pending_") && !activeTelegramIds.has(ch.telegramId)
+        );
+
+        let removedCount = 0;
+        if (leftChannels.length > 0) {
+            console.log(`🚪 Removing ${leftChannels.length} channels user has left:`, leftChannels.map((c) => c.name));
+            await prisma.channel.deleteMany({
+                where: {
+                    id: { in: leftChannels.map((c) => c.id) },
+                },
+            });
+            removedCount = leftChannels.length;
+        }
+
+        await client.disconnect();
+        console.log(`✅ Sync finished. ${upsertCount} upserted, ${removedCount} removed.`);
+
+        return NextResponse.json({
+            success: true,
+            upserted: upsertCount,
+            removed: removedCount,
+        });
     } catch (error: any) {
         console.error("Sync API Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
