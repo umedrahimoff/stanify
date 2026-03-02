@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint } from "lucide-react";
+import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint, Activity } from "lucide-react";
 
 export default function SettingsPage() {
     const [phone, setPhone] = useState("");
