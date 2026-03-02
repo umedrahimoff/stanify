@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { createAuthToken, COOKIE_NAME } from "@/lib/auth";
 
 export async function POST(req: Request) {
     try {
@@ -20,16 +21,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid or expired code" }, { status: 401 });
         }
 
-        // 2. Clear used code (optional-ish)
+        // 2. Clear used code
         await prisma.verificationCode.delete({ where: { id: verification.id } });
 
-        // 3. Set Auth Cookie (simple JWT or value)
+        // 3. Create signed JWT and set cookie
+        const token = await createAuthToken("umedrahimoff");
         const cookieStore = await cookies();
-        cookieStore.set("stanify_token", "authorized_umed_" + Date.now(), {
+        cookieStore.set(COOKIE_NAME, token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             path: "/",
-            maxAge: 60 * 60 * 24 * 7 // 1 week
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+            sameSite: "lax",
         });
 
         return NextResponse.json({ success: true, redirect: "/dashboard" });
