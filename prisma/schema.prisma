@@ -8,11 +8,12 @@ datasource db {
 }
 
 model Channel {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  title     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  telegramId String   @unique
+  username   String?  @unique
+  name       String?
+  isActive   Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
 model Keyword {

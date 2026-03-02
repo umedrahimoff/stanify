@@ -1,97 +1,116 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, Search, ExternalLink, Calendar, Hash, MoreVertical, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, Search, Loader2 } from "lucide-react";
+import axios from "axios";
 
-export default function AlertsPage() {
-    const [alerts, setAlerts] = useState([
-        { id: "1", channel: "@TechInsider", content: "Bitcoin hits new all-time high of $75,000 as institutional interest surges.", keyword: "bitcoin", time: "2 hours ago", date: "Oct 24, 2026" },
-        { id: "2", channel: "@Bloomberg", content: "Federal Reserve signals potential rate cut in December meeting.", keyword: "market", time: "4 hours ago", date: "Oct 24, 2026" },
-        { id: "3", channel: "@CryptoNews", content: "Ethereum foundation clarifies staking roadmap updates for Q4.", keyword: "ethereum", time: "6 hours ago", date: "Oct 24, 2026" },
-        { id: "4", channel: "@MarketMojo", content: "New AI startup raises $50M in Series A led by top tier VCs.", keyword: "startup", time: "1 day ago", date: "Oct 23, 2026" },
-        { id: "5", channel: "@Verge", content: "Apple announces GPT-4o integration into Siri for upcoming iOS update.", keyword: "ai", time: "1 day ago", date: "Oct 23, 2026" },
-    ]);
+interface Alert {
+    id: string;
+    channelName: string;
+    content: string;
+    matchedWord: string;
+    createdAt: string;
+}
+
+export default function AlertsHistoryPage() {
+    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAlerts = async () => {
+            try {
+                const res = await axios.get("/api/alerts");
+                setAlerts(res.data);
+            } catch (error) {
+                console.error("Failed to fetch alerts:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAlerts();
+
+        // Refresh alerts every 10 seconds
+        const interval = setInterval(fetchAlerts, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="animate-fade">
             <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Alerts</h1>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>Browse the history of matched news items.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '400px', width: '100%' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
-                        <input className="input-field" placeholder="Search alerts..." style={{ paddingLeft: '3rem' }} />
-                    </div>
-                    <button className="btn-secondary" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <Trash2 size={18} />
-                        Clear
-                    </button>
+                    <h1 style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Alerts History</h1>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem' }}>Historical record of all keyword matches.</p>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {alerts.map((alert) => (
-                    <div key={alert.id} className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <div style={{ padding: '0.75rem', background: 'rgba(0, 163, 255, 0.1)', borderRadius: '0.75rem', color: '#00A3FF' }}>
-                                    <Bell size={20} />
-                                </div>
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                                        <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>{alert.channel}</span>
-                                        <span style={{ height: '4px', width: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></span>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#00D1FF', fontSize: '0.8rem', fontWeight: 600, background: 'rgba(0, 209, 255, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '100px' }}>
-                                            <Hash size={12} />
-                                            {alert.keyword.toUpperCase()}
-                                        </div>
-                                    </div>
-                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Calendar size={14} />
-                                        {alert.date}
-                                        <span style={{ padding: '0 0.5rem' }}>|</span>
-                                        {alert.time}
-                                    </div>
-                                </div>
-                            </div>
-                            <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}>
-                                <MoreVertical size={20} />
-                            </button>
-                        </div>
-
-                        <div style={{
-                            background: 'rgba(255,255,255,0.02)',
-                            padding: '1.25rem',
-                            borderRadius: '0.75rem',
-                            fontSize: '1rem',
-                            lineHeight: 1.6,
-                            color: 'rgba(255,255,255,0.8)',
-                            border: '1px solid rgba(255,255,255,0.05)'
-                        }}>
-                            {alert.content}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button
-                                className="btn-secondary"
-                                style={{
-                                    padding: '0.5rem 1rem',
-                                    fontSize: '0.85rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    fontWeight: 600
-                                }}
-                            >
-                                <ExternalLink size={16} />
-                                Open Message
-                            </button>
-                        </div>
+            <div className="card" style={{ padding: '0' }}>
+                {loading ? (
+                    <div className="flex justify-center p-12">
+                        <Loader2 className="animate-spin text-blue-500" size={40} />
                     </div>
-                ))}
+                ) : alerts.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                        No alerts detected yet. Monitoring is active.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                                    <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Source Channel</th>
+                                    <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Keyword</th>
+                                    <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Message Snippet</th>
+                                    <th style={{ textAlign: 'right', padding: '1.5rem', fontWeight: 600 }}>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {alerts.map((alert) => (
+                                    <tr key={alert.id} className="alert-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                        <td style={{ padding: '1.5rem' }}>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{alert.channelName}</div>
+                                        </td>
+                                        <td style={{ padding: '1.5rem' }}>
+                                            <span style={{
+                                                background: 'rgba(0,163,255,0.1)',
+                                                color: '#00A3FF',
+                                                padding: '0.2rem 0.6rem',
+                                                borderRadius: '100px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700,
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                {alert.matchedWord}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '1.5rem' }}>
+                                            <div style={{
+                                                fontSize: '0.85rem',
+                                                color: 'rgba(255,255,255,0.7)',
+                                                maxWidth: '400px',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}>
+                                                {alert.content}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '1.5rem', textAlign: 'right', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
+                                            {new Date(alert.createdAt).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
+
+            <style>{`
+                .alert-row:hover {
+                    background: rgba(255,255,255,0.02);
+                }
+            `}</style>
         </div>
     );
 }

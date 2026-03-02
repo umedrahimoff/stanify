@@ -13,11 +13,14 @@
     "@prisma/client": "^6.2.1",
     "axios": "^1.13.6",
     "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
     "framer-motion": "^12.34.4",
     "input": "^1.0.1",
     "lucide-react": "^0.576.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
+    "qrcode-terminal": "^0.12.0",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.5.0",
@@ -31,6 +34,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "prisma": "^6.2.1",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5",
+    "vercel": "^50.25.4"
   }
 }
