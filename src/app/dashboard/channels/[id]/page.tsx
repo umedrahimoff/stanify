@@ -55,10 +55,15 @@ export default function ChannelDetailPage() {
         fetcher
     );
 
-    const { data: alerts = [], isLoading: alertsLoading } = useSWR<Alert[]>(
-        id ? `/api/alerts?limit=200&channelId=${id}` : null,
+    const [alertsPage, setAlertsPage] = useState(1);
+    const ALERTS_PAGE_SIZE = 15;
+    const { data: alertsData, isLoading: alertsLoading } = useSWR<{ items: Alert[]; total: number }>(
+        id ? `/api/alerts?page=${alertsPage}&pageSize=${ALERTS_PAGE_SIZE}&channelId=${id}` : null,
         fetcher
     );
+    const alerts = alertsData?.items ?? [];
+    const alertsTotal = alertsData?.total ?? 0;
+    const alertsTotalPages = Math.ceil(alertsTotal / ALERTS_PAGE_SIZE) || 1;
 
     const addTag = (tag: string) => {
         const t = tag.trim().toLowerCase();
@@ -270,7 +275,7 @@ export default function ChannelDetailPage() {
                     </div>
 
                     <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
-                        Posts ({alerts.length})
+                        Posts ({alertsTotal})
                     </h2>
 
                     <div className="card" style={{ padding: "0" }}>
@@ -317,6 +322,28 @@ export default function ChannelDetailPage() {
                             </div>
                         )}
                     </div>
+
+                    {alertsTotalPages > 1 && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", marginTop: "1rem" }}>
+                            <button
+                                onClick={() => setAlertsPage((p) => Math.max(1, p - 1))}
+                                disabled={alertsPage <= 1}
+                                style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: alertsPage <= 1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", cursor: alertsPage <= 1 ? "not-allowed" : "pointer" }}
+                            >
+                                ←
+                            </button>
+                            <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", padding: "0 0.5rem" }}>
+                                {alertsPage} / {alertsTotalPages}
+                            </span>
+                            <button
+                                onClick={() => setAlertsPage((p) => Math.min(alertsTotalPages, p + 1))}
+                                disabled={alertsPage >= alertsTotalPages}
+                                style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: alertsPage >= alertsTotalPages ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", cursor: alertsPage >= alertsTotalPages ? "not-allowed" : "pointer" }}
+                            >
+                                →
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
         </div>
