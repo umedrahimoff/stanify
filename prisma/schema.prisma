@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Channel {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  title     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Keyword {
+  id        String   @id @default(cuid())
+  text      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  channelName String
+  content     String
+  matchedWord String
+  createdAt   DateTime @default(now())
+}
+
+model Session {
+  id           String @id @default(cuid())
+  sessionStr   String
+  phoneNumber  String @unique
+  isActive     Boolean @default(true)
+  updatedAt    DateTime @updatedAt
+}
