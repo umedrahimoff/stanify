@@ -29,41 +29,70 @@ export async function POST() {
         // 3. Get Dialogs (Groups & Channels) from Telegram
         const dialogs = await client.getDialogs();
 
-        // Map of telegramId -> { name, username } for all current dialogs
+        // Build a map: telegramId → { name, username }
         const dialogMap = new Map<string, { name: string; username: string | null }>();
 
         for (const dialog of dialogs) {
             if ((dialog.isChannel || dialog.isGroup) && dialog.id) {
                 dialogMap.set(dialog.id.toString(), {
-                    name: dialog.title || "Unknown Title",
+                    name: dialog.title || "Unknown",
+                    // Only store username if it's non-empty, else null
                     username: (dialog.entity as any)?.username || null,
                 });
             }
         }
 
-        console.log(`📦 Found ${dialogMap.size} channels/groups in Telegram dialogs`);
+        console.log(`📦 Found ${dialogMap.size} channels/groups in Telegram`);
 
-        // 4. Upsert all dialogs into DB (update name/username, create if new)
+        // 4. Sync each dialog into DB:
+        //    - If telegramId exists → update name/username
+        //    - If not → create new record (username can be null, no upsert to avoid unique clash)
         let upsertCount = 0;
         for (const [telegramId, info] of dialogMap.entries()) {
-            await prisma.channel.upsert({
-                where: { telegramId },
-                update: { name: info.name, username: info.username },
-                create: {
-                    telegramId,
-                    username: info.username,
-                    name: info.name,
-                    isActive: false,
-                },
-            });
-            upsertCount++;
+            try {
+                const existing = await prisma.channel.findUnique({ where: { telegramId } });
+
+                if (existing) {
+                    // Update name & username in-place
+                    await prisma.channel.update({
+                        where: { telegramId },
+                        data: { name: info.name, username: info.username },
+                    });
+                } else {
+                    // Create only if no other record has the same username (to be safe)
+                    const usernameConflict = info.username
+                        ? await prisma.channel.findUnique({ where: { username: info.username } })
+                        : null;
+
+                    if (usernameConflict) {
+                        // If username conflict: update that record's telegramId instead
+                        await prisma.channel.update({
+                            where: { username: info.username },
+                            data: { telegramId, name: info.name },
+                        });
+                    } else {
+                        await prisma.channel.create({
+                            data: {
+                                telegramId,
+                                username: info.username,
+                                name: info.name,
+                                isActive: false,
+                            },
+                        });
+                    }
+                }
+                upsertCount++;
+            } catch (err: any) {
+                // Skip individual failures so one bad entry doesn't abort the whole sync
+                console.warn(`⚠️ Skipped channel ${telegramId} (${info.name}):`, err.message);
+            }
         }
 
-        // 5. Find DB channels that are NOT in current dialogs
-        //    → user has left / been kicked from them
-        //    Only process real channels (not pending_ ones)
+        // 5. Find DB channels that are no longer in Telegram dialogs
+        //    (user has left / been kicked) and remove them.
+        //    Skip pending_ records (manually added, not yet synced).
         const allDbChannels = await prisma.channel.findMany({
-            select: { id: true, telegramId: true, name: true, isActive: true },
+            select: { id: true, telegramId: true, name: true },
         });
 
         const leftChannels = allDbChannels.filter(
@@ -74,10 +103,7 @@ export async function POST() {
 
         let removedCount = 0;
         if (leftChannels.length > 0) {
-            console.log(
-                `🚪 Channels no longer in dialogs (removing): `,
-                leftChannels.map((c) => c.name)
-            );
+            console.log(`🚪 Removing ${leftChannels.length} channels no longer in dialogs`);
             await prisma.channel.deleteMany({
                 where: { id: { in: leftChannels.map((c) => c.id) } },
             });
@@ -85,11 +111,11 @@ export async function POST() {
         }
 
         await client.disconnect();
-        console.log(`✅ Sync done. Upserted: ${upsertCount}, Removed: ${removedCount}`);
+        console.log(`✅ Sync done. Updated: ${upsertCount}, Removed: ${removedCount}`);
 
         return NextResponse.json({
             success: true,
-            upserted: upsertCount,
+            updated: upsertCount,
             removed: removedCount,
         });
     } catch (error: any) {
