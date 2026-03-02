@@ -147,14 +147,19 @@ export async function POST(req: Request) {
                 const finalUsername = entity.username || cleanUsername;
                 const channelType = (entity as any).broadcast ? "channel" : "group";
 
-                // 2. Check if already exists in DB — if so, just re-activate
-                const existing = await prisma.channel.findUnique({
-                    where: { telegramId },
+                // 2. Check if already exists in DB — by telegramId or username
+                const existing = await prisma.channel.findFirst({
+                    where: {
+                        OR: [
+                            { telegramId },
+                            ...(finalUsername ? [{ username: finalUsername }] : []),
+                        ],
+                    },
                 });
                 if (existing) {
                     const updated = await prisma.channel.update({
                         where: { id: existing.id },
-                        data: { isActive: true, name, username: finalUsername, type: channelType },
+                        data: { isActive: true, name, username: finalUsername, telegramId, type: channelType },
                     });
                     await client.disconnect();
                     return NextResponse.json(updated);
@@ -176,21 +181,32 @@ export async function POST(req: Request) {
                 }
 
                 // 4. Save to DB
-                const channel = await prisma.channel.create({
-                    data: {
-                        telegramId,
-                        username: finalUsername,
-                        name,
-                        type: channelType,
-                        isActive: true,
-                    },
-                });
+                try {
+                    const channel = await prisma.channel.create({
+                        data: {
+                            telegramId,
+                            username: finalUsername,
+                            name,
+                            type: channelType,
+                            isActive: true,
+                        },
+                    });
 
-                await client.disconnect();
-                return NextResponse.json({
-                    ...channel,
-                    ...(joinError ? { _warning: `Joined with warning: ${joinError}` } : {}),
-                });
+                    await client.disconnect();
+                    return NextResponse.json({
+                        ...channel,
+                        ...(joinError ? { _warning: `Joined with warning: ${joinError}` } : {}),
+                    });
+                } catch (createErr: any) {
+                    await client.disconnect();
+                    if (createErr?.code === "P2002") {
+                        return NextResponse.json(
+                            { error: "This channel is already in your list" },
+                            { status: 409 }
+                        );
+                    }
+                    throw createErr;
+                }
             } catch (err: any) {
                 console.error("TG error:", err.message);
                 try { await client.disconnect(); } catch (_) { }

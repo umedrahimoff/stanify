@@ -215,34 +215,36 @@ export default function ChannelsPage() {
                         <button
                             onClick={() => setShowOnlyActive(!showOnlyActive)}
                             className={cn(
-                                "inline-flex items-center justify-center gap-2 whitespace-nowrap h-10 px-4 min-w-[120px] text-[0.9rem] rounded-[10px] cursor-pointer border shrink-0",
+                                "inline-flex items-center justify-center gap-x-3 flex-nowrap whitespace-nowrap h-11 min-h-[44px] px-4 min-w-[140px] text-[0.9rem] leading-normal rounded-[10px] cursor-pointer border shrink-0 [&>svg]:shrink-0 [&>span]:shrink-0",
                                 showOnlyActive ? "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF]" : "bg-white/5 border-white/10 text-white/60"
                             )}
                         >
-                            <ListFilter size={16} className="shrink-0" />
+                            <ListFilter size={16} />
                             <span>{showOnlyActive ? "Active Only" : "All Sources"}</span>
                         </button>
                     </div>
-                    <button
-                        onClick={handleSync}
-                        disabled={syncing}
-                        className={cn(
-                            filterClasses.clearBtn,
-                            "min-w-[100px]",
-                            syncing && "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF] cursor-not-allowed"
-                        )}
-                    >
-                        {syncing ? <Loader2 size={16} className="animate-spin shrink-0" /> : <Radio size={16} className="shrink-0" />}
-                        <span>{syncing ? "Syncing..." : "Sync"}</span>
-                    </button>
-                    {(searchQuery.trim() || typeFilter !== "all" || !showOnlyActive) && (
+                    <div className={filterClasses.actions}>
                         <button
-                            onClick={() => { setSearchQuery(""); setTypeFilter("all"); setShowOnlyActive(true); setPage(1); }}
-                            className={filterClasses.clearBtn}
+                            onClick={handleSync}
+                            disabled={syncing}
+                            className={cn(
+                                filterClasses.clearBtn,
+                                "min-w-[120px]",
+                                syncing && "bg-[#00A3FF]/10 border-[#00A3FF]/30 text-[#00A3FF] cursor-not-allowed"
+                            )}
                         >
-                            Clear
+                            {syncing ? <Loader2 size={16} className="animate-spin" /> : <Radio size={16} />}
+                            <span>{syncing ? "Syncing..." : "Sync"}</span>
                         </button>
-                    )}
+                        {(searchQuery.trim() || typeFilter !== "all" || !showOnlyActive) && (
+                            <button
+                                onClick={() => { setSearchQuery(""); setTypeFilter("all"); setShowOnlyActive(true); setPage(1); }}
+                                className={filterClasses.clearBtn}
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
                 </FilterCard>
 
             <div className="flex items-center mb-4">
