@@ -40,6 +40,19 @@ export default function LoginPage() {
         }
     };
 
+    const handleResend = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            await axios.post("/api/auth/request");
+            setCode("");
+        } catch (err: any) {
+            setError(err.response?.data?.error || "Failed to send code");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{
             minHeight: '100vh',
@@ -97,30 +110,35 @@ export default function LoginPage() {
                         style={{ width: '100%', height: '52px', fontSize: '1rem' }}
                         disabled={loading}
                     >
-                        {loading ? <Loader2 className="animate-spin" /> : "Request Login Code"}
+                        {loading ? <Loader2 className="animate-spin" size={20} /> : "Request Login Code"}
                     </button>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <input
                             className="input-field"
-                            placeholder="6-digit code..."
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            placeholder="000000"
                             style={{ textAlign: 'center', letterSpacing: '0.5em', fontSize: '1.25rem', height: '60px' }}
                             value={code}
                             maxLength={6}
-                            onChange={(e) => setCode(e.target.value)}
+                            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                             onKeyDown={(e) => e.key === 'Enter' && verifyCode()}
                         />
                         <button
                             className="btn-primary"
                             onClick={verifyCode}
-                            style={{ width: '100%', height: '52px', fontSize: '1rem', display: 'flex', gap: '0.5rem' }}
+                            style={{ width: '100%', height: '52px', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                             disabled={loading || code.length !== 6}
                         >
-                            {loading ? <Loader2 className="animate-spin" /> : <>Verify & Enter <ArrowRight size={18} /></>}
+                            {loading ? <Loader2 className="animate-spin" size={20} /> : <>Verify & Enter <ArrowRight size={18} /></>}
                         </button>
                         <button
-                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem', cursor: 'pointer' }}
-                            onClick={() => setStep(1)}
+                            type="button"
+                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
+                            onClick={handleResend}
+                            disabled={loading}
                         >
                             Resend code
                         </button>
