@@ -40,14 +40,17 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: 
+  background:
     radial-gradient(circle at 0% 0%, hsla(210, 100%, 50%, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 100% 100%, hsla(280, 100%, 50%, 0.1) 0%, transparent 40%);
   pointer-events: none;
   z-index: -1;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: 'Outfit', sans-serif;
   letter-spacing: -0.02em;
 }
@@ -110,8 +113,15 @@ h1, h2, h3, h4 {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade {
@@ -149,4 +159,8 @@ h1, h2, h3, h4 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
+}
+
+.remove-btn:hover {
+  color: white !important;
 }

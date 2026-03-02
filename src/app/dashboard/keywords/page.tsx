@@ -73,8 +73,7 @@ export default function KeywordsPage() {
                                         cursor: 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        padding: '2px',
-                                        hover: { color: 'white' }
+                                        padding: '2px'
                                     }}
                                 >
                                     <X size={14} />
