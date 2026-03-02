@@ -71,125 +71,35 @@ export default function ArchivePage() {
                     </div>
                 ) : (
                     <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <table className="table-dashboard">
                             <thead>
-                                <tr
-                                    style={{
-                                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                                        color: "rgba(255,255,255,0.4)",
-                                        fontSize: "0.8rem",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                    }}
-                                >
-                                    <th
-                                        style={{
-                                            textAlign: "left",
-                                            padding: "1rem 1.5rem",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Date
-                                    </th>
-                                    <th
-                                        style={{
-                                            textAlign: "left",
-                                            padding: "1rem 1.5rem",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Source
-                                    </th>
-                                    <th
-                                        style={{
-                                            textAlign: "left",
-                                            padding: "1rem 1.5rem",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Keyword
-                                    </th>
-                                    <th
-                                        style={{
-                                            textAlign: "right",
-                                            padding: "1rem 1.5rem",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Action
-                                    </th>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Source</th>
+                                    <th>Keyword</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {alerts.map((alert) => (
-                                    <tr
-                                        key={alert.id}
-                                        style={{
-                                            borderBottom: "1px solid rgba(255,255,255,0.03)",
-                                            transition: "background 0.2s",
-                                        }}
-                                        className="archive-row"
-                                    >
-                                        <td style={{ padding: "1rem 1.5rem" }}>
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "0.5rem",
-                                                    fontSize: "0.9rem",
-                                                    color: "rgba(255,255,255,0.7)",
-                                                }}
-                                            >
+                                    <tr key={alert.id}>
+                                        <td>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                 <Calendar size={14} color="rgba(255,255,255,0.4)" />
                                                 {new Date(alert.createdAt).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        <td style={{ padding: "1rem 1.5rem" }}>
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "0.5rem",
-                                                    fontWeight: 600,
-                                                    fontSize: "0.9rem",
-                                                }}
-                                            >
+                                        <td>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 600 }}>
                                                 <Radio size={14} color="#00A3FF" />
                                                 {alert.channelName}
                                             </div>
                                         </td>
-                                        <td style={{ padding: "1rem 1.5rem" }}>
-                                            <span
-                                                style={{
-                                                    background: "rgba(0,163,255,0.1)",
-                                                    color: "#00A3FF",
-                                                    padding: "0.2rem 0.6rem",
-                                                    borderRadius: "100px",
-                                                    fontSize: "0.75rem",
-                                                    fontWeight: 600,
-                                                }}
-                                            >
-                                                {alert.matchedWord}
-                                            </span>
+                                        <td>
+                                            <span className="keyword-badge">{alert.matchedWord}</span>
                                         </td>
-                                        <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
-                                            <Link
-                                                href={`/dashboard/archive/${alert.id}`}
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    gap: "0.4rem",
-                                                    padding: "0.4rem 0.9rem",
-                                                    borderRadius: "8px",
-                                                    background: "rgba(0,163,255,0.1)",
-                                                    color: "#00A3FF",
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 600,
-                                                    textDecoration: "none",
-                                                    border: "1px solid rgba(0,163,255,0.2)",
-                                                    transition: "all 0.2s",
-                                                }}
-                                            >
+                                        <td className="td-right">
+                                            <Link href={`/dashboard/archive/${alert.id}`} className="btn-link">
                                                 View <ExternalLink size={14} />
                                             </Link>
                                         </td>
@@ -200,12 +110,6 @@ export default function ArchivePage() {
                     </div>
                 )}
             </div>
-
-            <style>{`
-                .archive-row:hover {
-                    background: rgba(255,255,255,0.02);
-                }
-            `}</style>
         </div>
     );
 }

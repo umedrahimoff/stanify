@@ -38,70 +38,40 @@ export default function AlertsHistoryPage() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <table className="table-dashboard">
                             <thead>
-                                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-                                    <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Source Channel</th>
-                                    <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Keyword</th>
-                                    <th style={{ textAlign: 'left', padding: '1.5rem', fontWeight: 600 }}>Message Snippet</th>
-                                    <th style={{ textAlign: 'right', padding: '1.5rem', fontWeight: 600 }}>Link</th>
-                                    <th style={{ textAlign: 'right', padding: '1.5rem', fontWeight: 600 }}>Timestamp</th>
+                                <tr>
+                                    <th>Source Channel</th>
+                                    <th>Keyword</th>
+                                    <th>Message Snippet</th>
+                                    <th className="th-right">Link</th>
+                                    <th className="th-right">Timestamp</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {alerts.map((alert) => (
-                                    <tr key={alert.id} className="alert-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                                        <td style={{ padding: '1.5rem' }}>
-                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{alert.channelName}</div>
+                                    <tr key={alert.id}>
+                                        <td>
+                                            <div style={{ fontWeight: 600 }}>{alert.channelName}</div>
                                         </td>
-                                        <td style={{ padding: '1.5rem' }}>
-                                            <span style={{
-                                                background: 'rgba(0,163,255,0.1)',
-                                                color: '#00A3FF',
-                                                padding: '0.2rem 0.6rem',
-                                                borderRadius: '100px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 700,
-                                                textTransform: 'uppercase'
-                                            }}>
-                                                {alert.matchedWord}
-                                            </span>
+                                        <td>
+                                            <span className="keyword-badge">{alert.matchedWord}</span>
                                         </td>
-                                        <td style={{ padding: '1.5rem' }}>
-                                            <div style={{
-                                                fontSize: '0.85rem',
-                                                color: 'rgba(255,255,255,0.7)',
-                                                maxWidth: '300px',
-                                                whiteSpace: 'nowrap',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis'
-                                            }}>
+                                        <td>
+                                            <div style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {alert.content}
                                             </div>
                                         </td>
-                                        <td style={{ padding: '1.5rem', textAlign: 'right' }}>
+                                        <td className="td-right">
                                             {alert.postLink ? (
-                                                <a
-                                                    href={alert.postLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={{
-                                                        color: '#00A3FF',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: 600,
-                                                        textDecoration: 'none',
-                                                        border: '1px solid rgba(0,163,255,0.3)',
-                                                        padding: '0.4rem 0.8rem',
-                                                        borderRadius: '8px'
-                                                    }}
-                                                >
+                                                <a href={alert.postLink} target="_blank" rel="noopener noreferrer" className="btn-link">
                                                     View Post
                                                 </a>
                                             ) : (
-                                                <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>N/A</span>
+                                                <span style={{ color: 'rgba(255,255,255,0.3)' }}>N/A</span>
                                             )}
                                         </td>
-                                        <td style={{ padding: '1.5rem', textAlign: 'right', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
+                                        <td className="td-right" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
                                             {new Date(alert.createdAt).toLocaleString()}
                                         </td>
                                     </tr>
@@ -111,12 +81,6 @@ export default function AlertsHistoryPage() {
                     </div>
                 )}
             </div>
-
-            <style>{`
-                .alert-row:hover {
-                    background: rgba(255,255,255,0.02);
-                }
-            `}</style>
         </div>
     );
 }

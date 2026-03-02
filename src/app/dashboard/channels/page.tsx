@@ -241,14 +241,14 @@ export default function ChannelsPage() {
                     </div>
                 ) : (
                     <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 0.25rem" }}>
+                        <table className="table-dashboard">
                             <thead>
-                                <tr style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Channel / Group Name</th>
-                                    <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Added</th>
-                                    <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Last Activity</th>
-                                    <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Status</th>
-                                    <th style={{ textAlign: "right", padding: "1rem 1.5rem", fontWeight: 600 }}>Action</th>
+                                <tr>
+                                    <th>Channel / Group Name</th>
+                                    <th>Added</th>
+                                    <th>Last Activity</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -262,12 +262,8 @@ export default function ChannelsPage() {
                                     filteredChannels.map((c) => {
                                         const isPending = c.telegramId?.startsWith("pending_");
                                         return (
-                                            <tr
-                                                key={c.id}
-                                                className="table-row-hover"
-                                                style={{ background: "rgba(255,255,255,0.02)", transition: "background 0.2s" }}
-                                            >
-                                                <td style={{ padding: "1rem 1.5rem" }}>
+                                            <tr key={c.id}>
+                                                <td>
                                                     <Link
                                                         href={`/dashboard/channels/${c.id}`}
                                                         style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "0.8rem" }}
@@ -303,21 +299,21 @@ export default function ChannelsPage() {
                                                         </div>
                                                     </Link>
                                                 </td>
-                                                <td style={{ padding: "1rem 1.5rem" }}>
-                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>
+                                                <td>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                         <Calendar size={14} color="rgba(255,255,255,0.4)" />
                                                         {new Date(c.createdAt).toLocaleDateString()}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: "1rem 1.5rem" }}>
-                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>
+                                                <td>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                         <Activity size={14} color="rgba(255,255,255,0.4)" />
                                                         {c.lastActivityAt
                                                             ? new Date(c.lastActivityAt).toLocaleDateString()
                                                             : "—"}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: "1rem 1.5rem" }}>
+                                                <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                                         <span style={{
                                                             width: "6px",
@@ -335,7 +331,7 @@ export default function ChannelsPage() {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
+                                                <td className="td-right">
                                                     <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", alignItems: "center" }}>
                                                         <button
                                                             onClick={() => toggleStatus(c.id, c.isActive)}
@@ -372,9 +368,6 @@ export default function ChannelsPage() {
             </div>
 
             <style>{`
-                .table-row-hover:hover {
-                    background: rgba(255,255,255,0.05) !important;
-                }
                 .remove-btn:hover {
                     color: #FF4545 !important;
                     background: rgba(255,69,69,0.1) !important;
