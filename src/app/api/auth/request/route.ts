@@ -26,9 +26,14 @@ export async function POST() {
         });
 
         await client.connect();
-        await client.sendMessage("umedrahimoff", {
-            message: `🔐 *Stanify Login Code:*\n\nYour code is: \`${code}\`\n\n_Expires in 5 minutes._`
-        });
+        const loginMsg = [
+            "🔐 <b>Stanify Login Code</b>",
+            "",
+            `Your code is: <code>${code}</code>`,
+            "",
+            "<i>Expires in 5 minutes.</i>",
+        ].join("\n");
+        await client.sendMessage("umedrahimoff", { message: loginMsg, parseMode: "html" });
         await client.disconnect();
 
         return NextResponse.json({ success: true, message: "Code sent to @umedrahimoff" });
