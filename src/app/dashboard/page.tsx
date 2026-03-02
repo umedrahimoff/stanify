@@ -60,7 +60,6 @@ export default function Dashboard() {
                             <div style={{ background: `${card.color}15`, padding: '0.75rem', borderRadius: '12px' }}>
                                 <card.icon color={card.color} size={24} />
                             </div>
-                            <div style={{ fontSize: '0.8rem', color: '#00FF75', fontWeight: 600 }}>+12%</div>
                         </div>
                         <div style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>{card.value}</div>
                         <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{card.title}</div>
