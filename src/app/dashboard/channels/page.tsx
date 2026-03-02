@@ -170,9 +170,9 @@ export default function ChannelsPage() {
                         className="btn-primary"
                         onClick={handleAdd}
                         disabled={adding || !newChannel.trim()}
-                        style={{ width: "56px", minWidth: "56px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        style={{ width: "60px", minWidth: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
-                        {adding ? <Loader2 className="animate-spin" size={20} /> : <Plus size={20} />}
+                        {adding ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} />}
                     </button>
                 </div>
             </div>
