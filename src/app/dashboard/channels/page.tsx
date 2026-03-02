@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle } from "lucide-react";
+import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity } from "lucide-react";
 import axios from "axios";
 import useSWR, { useSWRConfig } from "swr";
 
@@ -11,6 +11,8 @@ interface Channel {
     username: string | null;
     name: string | null;
     isActive: boolean;
+    createdAt: string;
+    lastActivityAt: string | null;
     _pending?: boolean;
 }
 
@@ -52,7 +54,7 @@ export default function ChannelsPage() {
             const cleanSource = newChannel.trim();
             const res = await axios.post("/api/channels", { username: cleanSource });
             setNewChannel("");
-            mutate([res.data, ...channels], false);
+            mutate([{ ...res.data, lastActivityAt: null }, ...channels], false);
             mutateStats("/api/stats");
             if (res.data._warning) {
                 showToast(`Added (private channel — join may be limited)`, "warn");
@@ -70,7 +72,7 @@ export default function ChannelsPage() {
     const toggleStatus = async (id: string, currentStatus: boolean) => {
         try {
             const res = await axios.post("/api/channels", { id, isActive: !currentStatus });
-            mutate(channels.map((c) => (c.id === id ? res.data : c)), false);
+            mutate(channels.map((c) => (c.id === id ? { ...res.data, lastActivityAt: c.lastActivityAt } : c)), false);
             mutateStats("/api/stats");
         } catch (error) {
             console.error("Failed to toggle channel status:", error);
@@ -242,6 +244,8 @@ export default function ChannelsPage() {
                             <thead>
                                 <tr style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                                     <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Channel / Group Name</th>
+                                    <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Added</th>
+                                    <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Last Activity</th>
                                     <th style={{ textAlign: "left", padding: "1rem 1.5rem", fontWeight: 600 }}>Status</th>
                                     <th style={{ textAlign: "right", padding: "1rem 1.5rem", fontWeight: 600 }}>Action</th>
                                 </tr>
@@ -249,7 +253,7 @@ export default function ChannelsPage() {
                             <tbody>
                                 {filteredChannels.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
+                                        <td colSpan={5} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
                                             No channels found matching the criteria.
                                         </td>
                                     </tr>
@@ -292,6 +296,20 @@ export default function ChannelsPage() {
                                                                 {c.username ? `@${c.username}` : `ID: ${c.telegramId}`}
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: "1rem 1.5rem" }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>
+                                                        <Calendar size={14} color="rgba(255,255,255,0.4)" />
+                                                        {new Date(c.createdAt).toLocaleDateString()}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: "1rem 1.5rem" }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "rgba(255,255,255,0.6)" }}>
+                                                        <Activity size={14} color="rgba(255,255,255,0.4)" />
+                                                        {c.lastActivityAt
+                                                            ? new Date(c.lastActivityAt).toLocaleDateString()
+                                                            : "—"}
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: "1rem 1.5rem" }}>

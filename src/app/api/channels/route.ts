@@ -6,13 +6,27 @@ import { prisma } from "@/lib/prisma";
 const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
 
-// GET all channels
+// GET all channels (newest first) with last activity from alerts
 export async function GET() {
     try {
         const channels = await prisma.channel.findMany({
-            orderBy: { name: "asc" },
+            orderBy: { createdAt: "desc" },
         });
-        return NextResponse.json(channels);
+
+        const lastActivities = await prisma.alert.groupBy({
+            by: ["channelName"],
+            _max: { createdAt: true },
+        });
+        const activityMap = Object.fromEntries(
+            lastActivities.map((a) => [a.channelName, a._max.createdAt])
+        );
+
+        const channelsWithActivity = channels.map((c) => ({
+            ...c,
+            lastActivityAt: (c.username && activityMap[c.username]) ?? null,
+        }));
+
+        return NextResponse.json(channelsWithActivity);
     } catch (error) {
         console.error("GET Error:", error);
         return NextResponse.json({ error: "Failed to fetch channels" }, { status: 500 });
