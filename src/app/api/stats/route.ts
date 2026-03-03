@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type Period = "all" | "7d" | "30d" | "6m" | "1y";
+type Period = "all" | "24h" | "3d" | "7d" | "30d";
 
 function getPeriodStart(period: Period): Date | null {
-    const start = new Date();
+    const now = Date.now();
     switch (period) {
-        case "7d": start.setDate(start.getDate() - 7); break;
-        case "30d": start.setDate(start.getDate() - 30); break;
-        case "6m": start.setMonth(start.getMonth() - 6); break;
-        case "1y": start.setFullYear(start.getFullYear() - 1); break;
+        case "24h": return new Date(now - 24 * 60 * 60 * 1000);
+        case "3d": return new Date(now - 3 * 24 * 60 * 60 * 1000);
+        case "7d": return new Date(now - 7 * 24 * 60 * 60 * 1000);
+        case "30d": return new Date(now - 30 * 24 * 60 * 60 * 1000);
         default: return null;
     }
-    start.setUTCHours(0, 0, 0, 0);
-    return start;
 }
 
 export async function GET(req: Request) {
@@ -24,18 +22,12 @@ export async function GET(req: Request) {
 
         const dateFilter = periodStart ? { gte: periodStart } : undefined;
 
-        const twelveWeeksAgo = new Date();
-        twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
-        const chartFrom = periodStart && periodStart > twelveWeeksAgo ? periodStart : twelveWeeksAgo;
-
+        const chartFrom = periodStart || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
         const alerts = await prisma.alert.findMany({
             where: { createdAt: { gte: chartFrom } },
             select: { createdAt: true },
         });
-
-        const alertsFiltered = dateFilter
-            ? alerts.filter((a) => a.createdAt >= periodStart!)
-            : alerts;
+        const alertsFiltered = dateFilter ? alerts.filter((a) => a.createdAt >= periodStart!) : alerts;
 
         const getMonday = (d: Date) => {
             const x = new Date(d);
@@ -52,8 +44,9 @@ export async function GET(req: Request) {
             byWeek[key] = (byWeek[key] || 0) + 1;
         }
 
+        const weekCount = period === "24h" ? 1 : period === "3d" || period === "7d" ? 1 : period === "30d" ? 4 : 12;
         const alertsByWeek: { week: string; count: number }[] = [];
-        for (let i = 11; i >= 0; i--) {
+        for (let i = weekCount - 1; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i * 7);
             const key = getMonday(d);
@@ -101,17 +94,37 @@ export async function GET(req: Request) {
             .slice(0, 8)
             .map(([keyword, count]) => ({ keyword, count }));
 
+        const byHour: Record<string, number> = {};
+        if (period === "24h") {
+            for (const a of alertsWithMeta) {
+                const d = new Date(a.createdAt);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}`;
+                byHour[key] = (byHour[key] || 0) + 1;
+            }
+        }
+
         const alertsByDay: { day: string; count: number }[] = [];
-        for (let i = 13; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            d.setUTCHours(0, 0, 0, 0);
-            const key = d.toISOString().slice(0, 10);
-            const [y, m, day] = key.split("-").map(Number);
-            alertsByDay.push({
-                day: `${day.toString().padStart(2, "0")}.${m.toString().padStart(2, "0")}`,
-                count: byDay[key] || 0,
-            });
+        const dayCount = period === "24h" ? 24 : period === "3d" ? 3 : period === "7d" ? 7 : period === "30d" ? 30 : 14;
+        if (period === "24h") {
+            const now = new Date();
+            for (let i = 23; i >= 0; i--) {
+                const d = new Date(now.getTime() - i * 60 * 60 * 1000);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}`;
+                const label = `${String(d.getHours()).padStart(2, "0")}:00`;
+                alertsByDay.push({ day: label, count: byHour[key] || 0 });
+            }
+        } else {
+            for (let i = dayCount - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                d.setUTCHours(0, 0, 0, 0);
+                const key = d.toISOString().slice(0, 10);
+                const [y, m, day] = key.split("-").map(Number);
+                alertsByDay.push({
+                    day: `${day.toString().padStart(2, "0")}.${m.toString().padStart(2, "0")}`,
+                    count: byDay[key] || 0,
+                });
+            }
         }
 
         const lastScan = await prisma.dailyScanStats.findFirst({

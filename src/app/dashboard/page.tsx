@@ -17,7 +17,7 @@ import {
     Line,
 } from "recharts";
 
-type Period = "all" | "7d" | "30d" | "6m" | "1y";
+type Period = "all" | "24h" | "3d" | "7d" | "30d";
 
 interface Stats {
     totalAlerts: number;
@@ -94,15 +94,15 @@ function DashboardSkeleton() {
 }
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-    { value: "all", label: "All time" },
-    { value: "7d", label: "Last 7 days" },
-    { value: "30d", label: "Last 30 days" },
-    { value: "6m", label: "Last 6 months" },
-    { value: "1y", label: "Last year" },
+    { value: "24h", label: "24 часа" },
+    { value: "3d", label: "3 дня" },
+    { value: "7d", label: "7 дней" },
+    { value: "30d", label: "Месяц" },
+    { value: "all", label: "Всё время" },
 ];
 
 export default function Dashboard() {
-    const [period, setPeriod] = useState<Period>("all");
+    const [period, setPeriod] = useState<Period>("7d");
     const statsKey = period === "all" ? "/api/stats" : `/api/stats?period=${period}`;
     const { data: stats, error, isLoading } = useSWR<Stats>(statsKey);
 
@@ -173,9 +173,9 @@ export default function Dashboard() {
                     </div>
                 </div>
                 <div className="card" style={{ padding: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
                         <Activity size={18} color="#00FF75" />
-                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Alerts per day (14d)</h2>
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>{period === "24h" ? "Alerts по часам" : "Alerts по дням"}</h2>
                     </div>
                     <div style={{ width: "100%", height: 220 }}>
                         <ResponsiveContainer width="100%" height="100%">
