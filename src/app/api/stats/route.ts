@@ -71,12 +71,17 @@ export async function GET(req: Request) {
             }))._sum.count ?? 0
             : (await prisma.dailyScanStats.aggregate({ _sum: { count: true } }))._sum.count ?? 0;
 
+        const uniqueKeywords = await prisma.channelKeyword.groupBy({
+            by: ["text"],
+            where: { isActive: true },
+        });
+
         const stats = {
             totalAlerts: dateFilter
                 ? await prisma.alert.count({ where: { createdAt: dateFilter } })
                 : await prisma.alert.count(),
             activeChannels: await prisma.channel.count({ where: { isActive: true } }),
-            activeKeywords: await prisma.channelKeyword.count({ where: { isActive: true } }),
+            activeKeywords: uniqueKeywords.length,
             systemHealth: "Optimal",
             totalPostsScanned,
             recentAlerts: await prisma.alert.findMany({
