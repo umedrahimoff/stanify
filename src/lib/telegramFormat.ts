@@ -50,3 +50,21 @@ export function messageToHtml(text: string, entities?: any[]): string {
     if (pos < text.length) result += escapeHtml(text.slice(pos));
     return result;
 }
+
+/**
+ * Convert Telegram-style markdown in plain text to HTML for display.
+ * Handles: **bold**, *italic*, __underline__, ~~strikethrough~~, `code`, [text](url)
+ */
+export function markdownToHtml(text: string, opts?: { breakLines?: boolean }): string {
+    if (!text) return "";
+    let s = escapeHtml(text);
+    s = s.replace(/\*\*(.+?)\*\*/gs, "<b>$1</b>");
+    s = s.replace(/__(.+?)__/gs, "<u>$1</u>");
+    s = s.replace(/~~(.+?)~~/gs, "<s>$1</s>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*(.+?)\*/gs, "<i>$1</i>");
+    s = s.replace(/_(.+?)_/gs, "<i>$1</i>");
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, (_, t, u) => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`);
+    if (opts?.breakLines !== false) s = s.replace(/\n/g, "<br/>");
+    return s;
+}

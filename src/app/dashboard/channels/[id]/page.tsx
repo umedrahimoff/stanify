@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Loader2, ArrowLeft, Calendar, ExternalLink, Hash, Plus, X } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { markdownToHtml } from "@/lib/telegramFormat";
 import Link from "next/link";
 import axios from "axios";
 import { formatDate } from "@/lib/date";
@@ -238,7 +239,7 @@ export default function ChannelDetailPage() {
                                                     <span className="keyword-badge">{alert.matchedWord}</span>
                                                 </td>
                                                 <td style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                    {alert.content || "(no text)"}
+                                                    <span dangerouslySetInnerHTML={{ __html: markdownToHtml(alert.content || "(no text)", { breakLines: false }) }} />
                                                 </td>
                                                 <td className="td-right">
                                                     <Link href={`/dashboard/archive/${alert.id}`} className="btn-link" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>

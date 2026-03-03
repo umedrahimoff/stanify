@@ -7,6 +7,7 @@ import { TableSkeleton } from "@/components/TableSkeleton";
 import { cn } from "@/lib/cn";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { markdownToHtml } from "@/lib/telegramFormat";
 import { formatDate } from "@/lib/date";
 import Link from "next/link";
 
@@ -150,9 +151,7 @@ export default function AlertsHistoryPage() {
                                             <span className="keyword-badge">{alert.matchedWord}</span>
                                         </td>
                                         <td>
-                                            <div style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {alert.content}
-                                            </div>
+                                            <div style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} dangerouslySetInnerHTML={{ __html: markdownToHtml(alert.content || "", { breakLines: false }) }} />
                                         </td>
                                         <td className="td-right">
                                             <Link href={`/dashboard/archive/${alert.id}`} className="btn-link" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>

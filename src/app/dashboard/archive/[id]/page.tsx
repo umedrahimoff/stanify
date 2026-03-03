@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
 import { formatDate } from "@/lib/date";
+import { markdownToHtml } from "@/lib/telegramFormat";
 
 interface Alert {
     id: string;
@@ -157,9 +158,10 @@ export default function ArchiveDetailPage() {
                             whiteSpace: "pre-wrap",
                             wordBreak: "break-word",
                         }}
-                    >
-                        {alert.content || "(No text)"}
-                    </div>
+                        dangerouslySetInnerHTML={{
+                            __html: markdownToHtml(alert.content || "(No text)"),
+                        }}
+                    />
                 </div>
             </div>
         </div>
