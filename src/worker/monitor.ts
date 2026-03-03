@@ -120,6 +120,7 @@ async function startMonitoring() {
 
         const channel = await prisma.channel.findFirst({
             where: {
+                isActive: true,
                 OR: [
                     { username: channelName },
                     { telegramId: peer.channelId?.toString() },
@@ -127,6 +128,11 @@ async function startMonitoring() {
                 ],
             },
         });
+
+        if (!channel) {
+            console.log(`⏭️ Skipping match from unsubscribed/paused channel: ${channelName}`);
+            return;
+        }
 
         // Save Alert to DB (linked to channel when found)
         const content = msg.text ?? msg.message ?? "";
