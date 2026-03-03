@@ -410,7 +410,8 @@ export default function KeywordsPage() {
                     style={{
                         position: "fixed",
                         inset: 0,
-                        background: "rgba(0,0,0,0.6)",
+                        background: "rgba(0,0,0,0.75)",
+                        backdropFilter: "blur(4px)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -419,8 +420,15 @@ export default function KeywordsPage() {
                     onClick={() => !saving && setEditKw(null)}
                 >
                     <div
-                        className="card"
-                        style={{ padding: "1.25rem", minWidth: "360px", maxWidth: "90vw" }}
+                        style={{
+                            padding: "1.25rem",
+                            minWidth: "360px",
+                            maxWidth: "90vw",
+                            background: "#1a1a2e",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            borderRadius: "12px",
+                            boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+                        }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>

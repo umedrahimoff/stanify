@@ -14,7 +14,8 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const pageParam = searchParams.get("page");
         const pageSizeParam = searchParams.get("pageSize");
-        const search = searchParams.get("search")?.trim().toLowerCase() || undefined;
+        let search = searchParams.get("search")?.trim().toLowerCase() || undefined;
+        if (search?.startsWith("@")) search = search.slice(1) || undefined;
         const showOnlyActive = searchParams.get("showOnlyActive") === "true";
         const typeFilter = searchParams.get("typeFilter") || "all";
 
