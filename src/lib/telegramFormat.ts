@@ -58,12 +58,12 @@ export function messageToHtml(text: string, entities?: any[]): string {
 export function markdownToHtml(text: string, opts?: { breakLines?: boolean }): string {
     if (!text) return "";
     let s = escapeHtml(text);
-    s = s.replace(/\*\*(.+?)\*\*/gs, "<b>$1</b>");
-    s = s.replace(/__(.+?)__/gs, "<u>$1</u>");
-    s = s.replace(/~~(.+?)~~/gs, "<s>$1</s>");
+    s = s.replace(/\*\*([\s\S]+?)\*\*/g, "<b>$1</b>");
+    s = s.replace(/__([\s\S]+?)__/g, "<u>$1</u>");
+    s = s.replace(/~~([\s\S]+?)~~/g, "<s>$1</s>");
     s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/\*(.+?)\*/gs, "<i>$1</i>");
-    s = s.replace(/_(.+?)_/gs, "<i>$1</i>");
+    s = s.replace(/\*([\s\S]+?)\*/g, "<i>$1</i>");
+    s = s.replace(/_([\s\S]+?)_/g, "<i>$1</i>");
     s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, (_, t, u) => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`);
     if (opts?.breakLines !== false) s = s.replace(/\n/g, "<br/>");
     return s;
