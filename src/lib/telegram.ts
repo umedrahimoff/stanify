@@ -31,15 +31,21 @@ export class TelegramManager {
         });
 
         await this.client.connect();
+        await this.client.getMe();
         return this.client;
     }
 
     public async setupListener(
         getKeywordsForMessage: (msg: any) => string[],
         onMatch: (msg: any, keyword: string) => void,
-        onScan?: (msg: any) => void | Promise<void>
+        onScan?: (msg: any) => void | Promise<void>,
+        chatIds?: (string | number)[]
     ) {
         if (!this.client) throw new Error("Client not initialized");
+
+        const eventFilter = chatIds?.length
+            ? new NewMessage({ incoming: true, chats: chatIds })
+            : new NewMessage({ incoming: true });
 
         this.client.addEventHandler(async (event) => {
             const message = event.message;
@@ -58,7 +64,7 @@ export class TelegramManager {
                     break;
                 }
             }
-        }, new NewMessage({}));
+        }, eventFilter);
     }
 
     public async getPeerInfo(identifier: string) {

@@ -43,11 +43,22 @@ async function startMonitoring() {
     }
     const totalKeywords = channels.reduce((s, c) => s + c.keywords.length, 0);
     const channelsWithKeywords = channels.filter((c) => c.keywords.length > 0);
+    const chatIdsForListener: (string | number)[] = [];
+    for (const ch of channels) {
+        if (ch.username) chatIdsForListener.push(ch.username);
+        else if (ch.telegramId && !ch.telegramId.startsWith("pending_")) {
+            const num = parseInt(ch.telegramId, 10);
+            if (!isNaN(num)) chatIdsForListener.push(num);
+        }
+    }
     console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} keywords total.`);
     if (channelsWithKeywords.length === 0) {
         console.warn("⚠️ No channels have keywords! Add keywords to channels in the dashboard.");
     } else {
         console.log(`   Channels with keywords: ${channelsWithKeywords.map((c) => c.name || c.username || c.id).join(", ")}`);
+    }
+    if (chatIdsForListener.length > 0) {
+        console.log(`   Listening to chats: ${chatIdsForListener.slice(0, 5).join(", ")}${chatIdsForListener.length > 5 ? "..." : ""}`);
     }
 
     const getKeywordsForMessage = (msg: any): string[] => {
@@ -84,7 +95,7 @@ async function startMonitoring() {
         }).catch((e) => console.warn("Failed to record scan:", e.message));
     };
 
-    // 4. Setup Listener
+    // 4. Setup Listener (explicit chats for reliable channel updates)
     await tg.setupListener(getKeywordsForMessage, async (msg, keyword) => {
         const peer = msg.peerId || {};
         let channelName = peer.username || "Private/Group";
@@ -153,7 +164,7 @@ async function startMonitoring() {
             }
         }
         console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
-    }, recordScan);
+    }, recordScan, chatIdsForListener.length > 0 ? chatIdsForListener : undefined);
 
     console.log("🟢 Listener active. Waiting for messages...");
 }
