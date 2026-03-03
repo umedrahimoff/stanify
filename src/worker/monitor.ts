@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { TelegramManager } from "../lib/telegram";
 import { getNotificationRecipients } from "../lib/settings";
+import { messageToHtml } from "../lib/telegramFormat";
 import { PrismaClient } from "@prisma/client";
 import { utils } from "telegram";
 
@@ -148,8 +149,8 @@ async function startMonitoring() {
 
         const recipients = await getNotificationRecipients();
         const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const contentEsc = esc(content);
-        const contentPreview = contentEsc.length > 400 ? contentEsc.slice(0, 400) + "…" : contentEsc;
+        const contentFormatted = messageToHtml(content, (msg as any).entities);
+        const contentPreview = contentFormatted.length > 400 ? contentFormatted.slice(0, 400) + "…" : contentFormatted;
         const linkHtml = postLink ? `<a href="${esc(postLink)}">Open post</a>` : "Private";
         const notificationText = [
             "🔔 <b>Stanify Alert</b>",

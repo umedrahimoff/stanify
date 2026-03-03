@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, ArrowLeft, Calendar, ExternalLink, Hash } from "lucide-react";
-import useSWR from "swr";
+import { Loader2, ArrowLeft, Calendar, ExternalLink, Hash, Plus, X } from "lucide-react";
+import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
+import axios from "axios";
 import { formatDate } from "@/lib/date";
 
 interface Channel {
@@ -38,10 +39,42 @@ export default function ChannelDetailPage() {
     const { data: channels = [] } = useSWR<Channel[]>(id ? "/api/channels" : null, fetcher);
     const currentChannel = channels.find((c) => c.id === id);
 
-    const { data: keywords = [], isLoading: keywordsLoading } = useSWR<ChannelKeyword[]>(
+    const { data: keywords = [], isLoading: keywordsLoading, mutate: mutateKeywords } = useSWR<ChannelKeyword[]>(
         id ? `/api/channels/${id}/keywords` : null,
         fetcher
     );
+    const { mutate: mutateStats } = useSWRConfig();
+    const [keywordInput, setKeywordInput] = useState("");
+    const [addingKw, setAddingKw] = useState(false);
+
+    const parseKeywords = (s: string) =>
+        [...new Set(s.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean))];
+
+    const addKeyword = async () => {
+        const texts = parseKeywords(keywordInput);
+        if (!texts.length || !id) return;
+        setAddingKw(true);
+        try {
+            await axios.post(`/api/channels/${id}/keywords`, { texts });
+            setKeywordInput("");
+            mutateKeywords();
+            mutateStats("/api/stats");
+        } catch (e) {
+            console.error("Failed to add keyword:", e);
+        } finally {
+            setAddingKw(false);
+        }
+    };
+
+    const removeKeyword = async (kwId: string) => {
+        try {
+            await axios.delete(`/api/channels/${id}/keywords`, { data: { ids: [kwId] } });
+            mutateKeywords();
+            mutateStats("/api/stats");
+        } catch (e) {
+            console.error("Failed to remove keyword:", e);
+        }
+    };
 
     const [alertsPage, setAlertsPage] = useState(1);
     const ALERTS_PAGE_SIZE = 15;
@@ -130,16 +163,41 @@ export default function ChannelDetailPage() {
                                 Manage in Keywords →
                             </Link>
                         </div>
+                        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+                            <input
+                                className="input-field"
+                                placeholder="keyword1, keyword2..."
+                                value={keywordInput}
+                                onChange={(e) => setKeywordInput(e.target.value)}
+                                onKeyDown={(e: KeyboardEvent) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
+                                style={{ flex: 1, minWidth: "180px", height: "36px", fontSize: "0.85rem" }}
+                            />
+                            <button
+                                onClick={addKeyword}
+                                disabled={addingKw || !keywordInput.trim()}
+                                className="btn-primary"
+                                style={{ height: "36px", padding: "0 1rem", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+                            >
+                                {addingKw ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                                Add
+                            </button>
+                        </div>
                         {keywordsLoading ? (
                             <div style={{ display: "flex", justifyContent: "center", padding: "1rem 0" }}><Loader2 className="animate-spin" size={20} color="#00A3FF" /></div>
                         ) : keywords.length === 0 ? (
-                            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No keywords. Add them in the Keywords section.</span>
+                            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No keywords. Add above or in Keywords section.</span>
                         ) : (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                                 {keywords.map((kw) => (
-                                    <span key={kw.id} style={{ background: "rgba(0,163,255,0.1)", color: "#00A3FF", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                                    <span key={kw.id} style={{ background: "rgba(0,163,255,0.1)", color: "#00A3FF", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.35rem", border: "1px solid rgba(0,163,255,0.2)" }}>
                                         <Hash size={12} />
                                         {kw.text}
+                                        <button
+                                            onClick={() => removeKeyword(kw.id)}
+                                            style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0, display: "flex", opacity: 0.7 }}
+                                        >
+                                            <X size={12} />
+                                        </button>
                                     </span>
                                 ))}
                             </div>
