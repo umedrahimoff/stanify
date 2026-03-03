@@ -49,13 +49,15 @@ export class TelegramManager {
 
         this.client.addEventHandler(async (event) => {
             const message = event.message;
+            if (!message) return;
+
+            onScan?.(message);
+
             const textRaw = message?.text ?? message?.message ?? "";
-            if (!message || !textRaw) return;
+            if (!textRaw) return;
 
             const keywords = getKeywordsForMessage(message);
             if (keywords.length === 0) return;
-
-            onScan?.(message);
 
             const text = String(textRaw).toLowerCase();
             for (const keyword of keywords) {
