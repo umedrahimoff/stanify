@@ -4,8 +4,8 @@ let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
     if (!client) {
-        const key = process.env.OPENAI_API_KEY;
-        if (!key) throw new Error("OPENAI_API_KEY is not set");
+        const key = process.env.OPENAI_API_KEY?.trim();
+        if (!key || key.length < 10) throw new Error("OPENAI_API_KEY is not set");
         client = new OpenAI({ apiKey: key });
     }
     return client;

@@ -36,7 +36,7 @@ export async function POST(
         return NextResponse.json({ language });
     } catch (e: any) {
         if (e.message?.includes("OPENAI_API_KEY")) {
-            return NextResponse.json({ error: "OpenAI не настроен" }, { status: 500 });
+            return NextResponse.json({ error: "OpenAI не настроен. Добавьте OPENAI_API_KEY в Vercel → Settings → Environment Variables и сделайте Redeploy." }, { status: 500 });
         }
         console.error("Detect language error:", e);
         return NextResponse.json({ error: e.message || "Ошибка" }, { status: 500 });
