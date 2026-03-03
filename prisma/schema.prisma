@@ -14,6 +14,7 @@ model Channel {
   name       String?
   type       String   @default("channel") // "channel" | "group"
   isActive   Boolean  @default(false)
+  language   String?  // detected via OpenAI
   createdAt  DateTime @default(now())
   alerts     Alert[]
   keywords   ChannelKeyword[]

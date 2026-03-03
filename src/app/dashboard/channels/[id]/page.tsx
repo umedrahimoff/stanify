@@ -2,7 +2,7 @@
 
 import { useState, KeyboardEvent } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, ArrowLeft, Calendar, ExternalLink, Hash, Plus, X } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar, ExternalLink, Hash, Plus, X, Sparkles, Languages } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { markdownToHtml } from "@/lib/telegramFormat";
@@ -16,6 +16,7 @@ interface Channel {
     username: string | null;
     telegramId: string;
     isActive: boolean;
+    language: string | null;
     createdAt: string;
 }
 
@@ -77,6 +78,45 @@ export default function ChannelDetailPage() {
         }
     };
 
+    const suggestKeywords = async () => {
+        setSuggesting(true);
+        setSuggestedKeywords([]);
+        try {
+            const { data } = await axios.post<{ keywords: string[] }>(`/api/channels/${id}/suggest-keywords`);
+            setSuggestedKeywords(data.keywords ?? []);
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Ошибка");
+        } finally {
+            setSuggesting(false);
+        }
+    };
+
+    const detectLanguage = async () => {
+        setDetectingLang(true);
+        try {
+            await axios.post(`/api/channels/${id}/detect-language`);
+            mutateStats("/api/channels");
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Ошибка");
+        } finally {
+            setDetectingLang(false);
+        }
+    };
+
+    const addSuggestedKeyword = async (kw: string) => {
+        try {
+            await axios.post(`/api/channels/${id}/keywords`, { texts: [kw] });
+            setSuggestedKeywords((prev) => prev.filter((k) => k !== kw));
+            mutateKeywords();
+            mutateStats("/api/stats");
+        } catch (e) {
+            console.error("Failed to add:", e);
+        }
+    };
+
+    const [suggesting, setSuggesting] = useState(false);
+    const [detectingLang, setDetectingLang] = useState(false);
+    const [suggestedKeywords, setSuggestedKeywords] = useState<string[]>([]);
     const [alertsPage, setAlertsPage] = useState(1);
     const ALERTS_PAGE_SIZE = 15;
     const { data: alertsData, isLoading: alertsLoading } = useSWR<{ items: Alert[]; total: number }>(
@@ -146,24 +186,66 @@ export default function ChannelDetailPage() {
                                 <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>
                                     {currentChannel.username ? `@${currentChannel.username}` : `ID: ${currentChannel.telegramId}`}
                                 </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.35rem", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
-                                    <Calendar size={14} />
-                                    Added {formatDate(currentChannel.createdAt)}
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.35rem", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", flexWrap: "wrap" }}>
+                                    <span style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                                        <Calendar size={14} />
+                                        Added {formatDate(currentChannel.createdAt)}
+                                    </span>
+                                    {currentChannel.language && (
+                                        <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(191,90,242,0.15)", color: "#BF5AF2", padding: "0.15rem 0.5rem", borderRadius: "100px", fontWeight: 600 }}>
+                                            <Languages size={12} />
+                                            {currentChannel.language}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
                             <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Keywords</h2>
-                            <Link
-                                href="/dashboard/keywords"
-                                style={{ fontSize: "0.8rem", color: "#00A3FF", textDecoration: "none", fontWeight: 500 }}
-                            >
-                                Manage in Keywords →
-                            </Link>
+                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                <button
+                                    onClick={suggestKeywords}
+                                    disabled={suggesting}
+                                    style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.35rem 0.75rem", fontSize: "0.8rem", background: "rgba(191,90,242,0.15)", border: "1px solid rgba(191,90,242,0.3)", borderRadius: "8px", color: "#BF5AF2", cursor: suggesting ? "not-allowed" : "pointer" }}
+                                >
+                                    {suggesting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                    Подсказать
+                                </button>
+                                <button
+                                    onClick={detectLanguage}
+                                    disabled={detectingLang}
+                                    style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.35rem 0.75rem", fontSize: "0.8rem", background: "rgba(191,90,242,0.15)", border: "1px solid rgba(191,90,242,0.3)", borderRadius: "8px", color: "#BF5AF2", cursor: detectingLang ? "not-allowed" : "pointer" }}
+                                >
+                                    {detectingLang ? <Loader2 size={14} className="animate-spin" /> : <Languages size={14} />}
+                                    Язык
+                                </button>
+                                <Link
+                                    href="/dashboard/keywords"
+                                    style={{ fontSize: "0.8rem", color: "#00A3FF", textDecoration: "none", fontWeight: 500 }}
+                                >
+                                    Manage in Keywords →
+                                </Link>
+                            </div>
                         </div>
+                        {suggestedKeywords.length > 0 && (
+                            <div style={{ marginBottom: "0.75rem", padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                                <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem" }}>Подсказки:</div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                                    {suggestedKeywords.map((kw) => (
+                                        <button
+                                            key={kw}
+                                            onClick={() => addSuggestedKeyword(kw)}
+                                            style={{ background: "rgba(191,90,242,0.2)", color: "#BF5AF2", padding: "0.2rem 0.5rem", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 600, border: "1px solid rgba(191,90,242,0.4)", cursor: "pointer" }}
+                                        >
+                                            + {kw}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap", alignItems: "flex-end" }}>
                             <input
                                 className="input-field"
