@@ -8,16 +8,29 @@ datasource db {
 }
 
 model Channel {
-  id         String   @id @default(cuid())
-  telegramId String   @unique
-  username   String?  @unique
-  name       String?
-  type       String   @default("channel") // "channel" | "group"
-  isActive   Boolean  @default(false)
-  language   String?  // detected via OpenAI
-  createdAt  DateTime @default(now())
-  alerts     Alert[]
-  keywords   ChannelKeyword[]
+  id          String        @id @default(cuid())
+  telegramId  String        @unique
+  username    String?       @unique
+  name        String?
+  type        String        @default("channel") // "channel" | "group"
+  isActive    Boolean       @default(false)
+  language    String?       // detected via OpenAI
+  createdAt   DateTime      @default(now())
+  alerts      Alert[]
+  keywords    ChannelKeyword[]
+  channelPosts ChannelPost[]
+}
+
+model ChannelPost {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  content   String
+  messageId Int?
+  postLink  String?
+  createdAt DateTime @default(now())
+
+  @@index([channelId, createdAt])
 }
 
 model ChannelKeyword {

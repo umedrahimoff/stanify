@@ -15,14 +15,11 @@ export async function POST(
         const channel = await prisma.channel.findUnique({ where: { id } });
         if (!channel) return NextResponse.json({ error: "Channel not found" }, { status: 404 });
 
-        const alerts = await prisma.alert.findMany({
-            where: { channelId: id },
-            orderBy: { createdAt: "desc" },
-            take: 20,
-            select: { content: true },
-        });
-
-        const content = alerts.map((a) => a.content).join("\n\n");
+        const [alerts, posts] = await Promise.all([
+            prisma.alert.findMany({ where: { channelId: id }, orderBy: { createdAt: "desc" }, take: 20, select: { content: true } }),
+            prisma.channelPost.findMany({ where: { channelId: id }, orderBy: { createdAt: "desc" }, take: 30, select: { content: true } }),
+        ]);
+        const content = [...alerts.map((a) => a.content), ...posts.map((p) => p.content)].filter(Boolean).slice(0, 50).join("\n\n");
         if (!content.trim()) {
             return NextResponse.json({ error: "Нет контента для анализа. Добавьте ключевые слова и дождитесь постов." }, { status: 400 });
         }

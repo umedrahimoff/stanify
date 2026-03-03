@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint, Activity } from "lucide-react";
+import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint, Activity, Database, Download, Trash2, AlertTriangle } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
@@ -25,6 +25,12 @@ export default function SettingsPage() {
         me?.role === "admin" ? "/api/settings" : null,
         fetcher
     );
+    const { data: dataStats, mutate: mutateData } = useSWR<{ count: number; mb: number; limitMb: number; limitReached: boolean }>(
+        me?.role === "admin" ? "/api/data" : null,
+        fetcher,
+        { refreshInterval: 30000 }
+    );
+    const [clearing, setClearing] = useState(false);
 
     useEffect(() => {
         if (me && me.role !== "admin") router.replace("/dashboard");
@@ -236,6 +242,55 @@ export default function SettingsPage() {
                             <p style={{ marginTop: "0.4rem", fontSize: "0.8rem", color: saveMsg.ok ? "#00FF75" : "#ff4545" }}>
                                 {saveMsg.text}
                             </p>
+                        )}
+                    </div>
+
+                    <div className="card" style={{ padding: '1rem', marginTop: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                            <Database size={18} color="#BF5AF2" />
+                            <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Хранилище постов</h2>
+                        </div>
+                        {dataStats && (
+                            <>
+                                <div style={{ fontSize: '0.9rem', marginBottom: '0.75rem' }}>
+                                    <span style={{ fontWeight: 600 }}>{dataStats.count.toLocaleString()}</span> постов · <span style={{ fontWeight: 600 }}>{dataStats.mb.toFixed(2)} MB</span> / {dataStats.limitMb} MB
+                                </div>
+                                {dataStats.limitReached && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', background: 'rgba(255,159,10,0.15)', borderRadius: '10px', marginBottom: '1rem', color: '#FF9F0A', fontSize: '0.85rem' }}>
+                                        <AlertTriangle size={18} />
+                                        Лимит достигнут. Выгрузите данные в CSV и очистите хранилище.
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                    <a
+                                        href="/api/data/export"
+                                        download
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', fontSize: '0.85rem', background: 'rgba(0,163,255,0.15)', border: '1px solid rgba(0,163,255,0.3)', borderRadius: '8px', color: '#00A3FF', textDecoration: 'none', cursor: 'pointer' }}
+                                    >
+                                        <Download size={14} />
+                                        Выгрузить CSV
+                                    </a>
+                                    <button
+                                        onClick={async () => {
+                                            if (!confirm('Удалить все сохранённые посты? Это освободит место. Алерты не затронуты.')) return;
+                                            setClearing(true);
+                                            try {
+                                                await axios.post('/api/data/clear');
+                                                mutateData();
+                                            } catch (e) {
+                                                alert('Ошибка');
+                                            } finally {
+                                                setClearing(false);
+                                            }
+                                        }}
+                                        disabled={clearing}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', fontSize: '0.85rem', background: 'rgba(255,69,69,0.15)', border: '1px solid rgba(255,69,69,0.3)', borderRadius: '8px', color: '#FF4545', cursor: clearing ? 'not-allowed' : 'pointer' }}
+                                    >
+                                        <Trash2 size={14} />
+                                        {clearing ? '…' : 'Очистить'}
+                                    </button>
+                                </div>
+                            </>
                         )}
                     </div>
                 </div>

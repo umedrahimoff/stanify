@@ -34,14 +34,48 @@ async function startMonitoring() {
 
     const channelMapByUsername = new Map<string, { id: string; keywords: string[] }>();
     const channelMapByTelegramId = new Map<string, { id: string; keywords: string[] }>();
+    const channelIdOnlyByUsername = new Map<string, string>();
+    const channelIdOnlyByTelegramId = new Map<string, string>();
     for (const ch of channels) {
         const kw = ch.keywords.map((k: { text: string }) => k.text);
-        if (ch.username) channelMapByUsername.set(ch.username.toLowerCase(), { id: ch.id, keywords: kw });
+        if (ch.username) {
+            channelMapByUsername.set(ch.username.toLowerCase(), { id: ch.id, keywords: kw });
+            channelIdOnlyByUsername.set(ch.username.toLowerCase(), ch.id);
+        }
         channelMapByTelegramId.set(ch.telegramId, { id: ch.id, keywords: kw });
+        channelIdOnlyByTelegramId.set(ch.telegramId, ch.id);
         const rawId = ch.telegramId.replace(/^-100/, "");
-        if (rawId !== ch.telegramId) channelMapByTelegramId.set(rawId, { id: ch.id, keywords: kw });
+        if (rawId !== ch.telegramId) {
+            channelMapByTelegramId.set(rawId, { id: ch.id, keywords: kw });
+            channelIdOnlyByTelegramId.set(rawId, ch.id);
+        }
         channelMapByTelegramId.set("-100" + rawId, { id: ch.id, keywords: kw });
+        channelIdOnlyByTelegramId.set("-100" + rawId, ch.id);
     }
+
+    const getChannelIdForMessage = (msg: any): string | null => {
+        const peer = msg.peerId || {};
+        const username = (peer.username || "").toLowerCase();
+        if (username) return channelIdOnlyByUsername.get(username) ?? null;
+        try {
+            const fullId = utils.getPeerId(peer);
+            const raw = String(fullId).replace(/^-100/, "");
+            return channelIdOnlyByTelegramId.get(String(fullId))
+                || channelIdOnlyByTelegramId.get(raw)
+                || channelIdOnlyByTelegramId.get("-100" + raw)
+                || null;
+        } catch (_) {
+            const chatId = msg.chatId?.toString?.() || peer.channelId?.toString?.() || peer.chatId?.toString?.();
+            if (chatId) {
+                const raw = chatId.replace(/^-100/, "");
+                return channelIdOnlyByTelegramId.get(chatId)
+                    || channelIdOnlyByTelegramId.get(raw)
+                    || channelIdOnlyByTelegramId.get("-100" + raw)
+                    || null;
+            }
+        }
+        return null;
+    };
     const totalKeywords = channels.reduce((s, c) => s + c.keywords.length, 0);
     const channelsWithKeywords = channels.filter((c) => c.keywords.length > 0);
     const chatIdsForListener: (string | number)[] = [];
@@ -94,6 +128,40 @@ async function startMonitoring() {
             create: { date: today, count: 1 },
             update: { count: { increment: 1 } },
         }).catch((e) => console.warn("Failed to record scan:", e.message));
+    };
+
+    const saveEveryPost = async (msg: any) => {
+        const channelId = getChannelIdForMessage(msg);
+        if (!channelId) return;
+        const content = msg.text ?? msg.message ?? "";
+        if (!content.trim()) return;
+
+        const peer = msg.peerId || {};
+        let linkUsername: string | null = peer.username || null;
+        let channelIdForLink: string | null = null;
+        if (!peer.username && peer.channelId) {
+            const entity = await tg.getEntityByPeer(msg.peerId);
+            if (entity && (entity as any).username) linkUsername = (entity as any).username;
+            channelIdForLink = peer.channelId.toString().replace(/^-100/, "");
+        }
+
+        let postLink = "";
+        const messageId = msg.id;
+        if (linkUsername) {
+            postLink = `https://t.me/${linkUsername}/${messageId}`;
+        } else if (channelIdForLink) {
+            postLink = `https://t.me/c/${channelIdForLink}/${messageId}`;
+        }
+
+        const channel = await prisma.channel.findUnique({ where: { id: channelId } });
+        if (channel?.username && (!postLink || postLink.startsWith("https://t.me/c/"))) {
+            postLink = `https://t.me/${channel.username}/${messageId}`;
+        }
+
+        // Save to ChannelPost
+        prisma.channelPost.create({
+            data: { channelId, content, messageId, postLink },
+        }).catch((e) => console.warn("Failed to save post:", e.message));
     };
 
     // 4. Setup Listener
@@ -180,7 +248,7 @@ async function startMonitoring() {
             }
         }
         console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
-    }, recordScan, chatIdsForListener.length > 0 ? chatIdsForListener : undefined);
+    }, recordScan, chatIdsForListener.length > 0 ? chatIdsForListener : undefined, saveEveryPost);
 
     tg.startReconnectInterval?.();
 

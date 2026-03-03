@@ -51,7 +51,8 @@ export class TelegramManager {
         getKeywordsForMessage: (msg: any) => string[],
         onMatch: (msg: any, keyword: string) => void,
         onScan?: (msg: any) => void | Promise<void>,
-        chatIds?: (string | number)[]
+        chatIds?: (string | number)[],
+        onEveryMessage?: (msg: any) => void | Promise<void>
     ) {
         if (!this.client) throw new Error("Client not initialized");
 
@@ -69,6 +70,8 @@ export class TelegramManager {
             if (!textRaw) return;
 
             const keywords = getKeywordsForMessage(message);
+            onEveryMessage?.(message);
+
             if (keywords.length === 0) return;
 
             const text = String(textRaw).toLowerCase();
