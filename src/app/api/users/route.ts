@@ -49,3 +49,23 @@ export async function DELETE(req: Request) {
     });
     return NextResponse.json({ success: true });
 }
+
+export async function PATCH(req: Request) {
+    const admin = await requireAdmin();
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const body = await req.json();
+    const id = body?.id;
+    if (!id) return NextResponse.json({ error: "User id is required" }, { status: 400 });
+
+    const user = await prisma.appUser.findUnique({ where: { id } });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (user.role === "admin") return NextResponse.json({ error: "Cannot modify admin" }, { status: 400 });
+
+    const isActive = !!body?.isActive;
+    await prisma.appUser.update({
+        where: { id },
+        data: { isActive },
+    });
+    return NextResponse.json({ success: true, isActive });
+}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, Trash2, Shield, UserCog, AlertCircle } from "lucide-react";
+import { Plus, Loader2, Shield, UserCog, AlertCircle, Pause, Play } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
@@ -57,19 +57,28 @@ export default function UsersPage() {
         }
     };
 
-    const removeUser = async (id: string, u: AppUser) => {
-        if (!confirm(`Remove @${u.username}?`)) return;
+    const suspendUser = async (id: string, u: AppUser) => {
+        if (!confirm(`Приостановить @${u.username}? Он не сможет войти, но будет получать оповещения.`)) return;
         try {
             await axios.delete("/api/users", { data: { id } });
             mutate();
             mutateMe("/api/auth/me");
-            showToast("User removed");
+            showToast("Пользователь приостановлен");
         } catch (e: any) {
-            showToast(e.response?.data?.error || "Failed to remove", "error");
+            showToast(e.response?.data?.error || "Ошибка", "error");
         }
     };
 
-    const activeUsers = users.filter((u) => u.isActive);
+    const restoreUser = async (id: string, u: AppUser) => {
+        try {
+            await axios.patch("/api/users", { id, isActive: true });
+            mutate();
+            mutateMe("/api/auth/me");
+            showToast(`@${u.username} восстановлен`);
+        } catch (e: any) {
+            showToast(e.response?.data?.error || "Ошибка", "error");
+        }
+    };
     const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
     const isOnline = (lastActivityAt: string | null) =>
         lastActivityAt && Date.now() - new Date(lastActivityAt).getTime() < ONLINE_THRESHOLD_MS;
@@ -103,7 +112,7 @@ export default function UsersPage() {
             <div style={{ marginBottom: "1.5rem" }}>
                 <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Users</h1>
                 <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
-                    Add moderators. They can access the dashboard via username + one-time code.
+                    Добавляйте модераторов. Приостановленные не могут войти, но получают оповещения.
                 </p>
             </div>
 
@@ -157,8 +166,8 @@ export default function UsersPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {activeUsers.map((u) => (
-                                    <tr key={u.id}>
+                                {users.map((u) => (
+                                    <tr key={u.id} style={{ opacity: u.isActive ? 1 : 0.6 }}>
                                         <td>
                                             <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>@{u.username}</span>
                                         </td>
@@ -184,46 +193,71 @@ export default function UsersPage() {
                                             {u.lastLoginAt ? formatDate(u.lastLoginAt) : "—"}
                                         </td>
                                         <td>
-                                            <span
-                                                style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    gap: "0.35rem",
-                                                    fontSize: "0.75rem",
-                                                    fontWeight: 600,
-                                                    color: isOnline(u.lastActivityAt) ? "#00FF75" : "rgba(255,255,255,0.4)",
-                                                }}
-                                            >
+                                            {u.isActive ? (
                                                 <span
                                                     style={{
-                                                        width: "6px",
-                                                        height: "6px",
-                                                        borderRadius: "50%",
-                                                        background: isOnline(u.lastActivityAt) ? "#00FF75" : "rgba(255,255,255,0.2)",
-                                                        boxShadow: isOnline(u.lastActivityAt) ? "0 0 6px rgba(0,255,117,0.5)" : "none",
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        gap: "0.35rem",
+                                                        fontSize: "0.75rem",
+                                                        fontWeight: 600,
+                                                        color: isOnline(u.lastActivityAt) ? "#00FF75" : "rgba(255,255,255,0.4)",
                                                     }}
-                                                />
-                                                {isOnline(u.lastActivityAt) ? "Online" : "Offline"}
-                                            </span>
+                                                >
+                                                    <span
+                                                        style={{
+                                                            width: "6px",
+                                                            height: "6px",
+                                                            borderRadius: "50%",
+                                                            background: isOnline(u.lastActivityAt) ? "#00FF75" : "rgba(255,255,255,0.2)",
+                                                            boxShadow: isOnline(u.lastActivityAt) ? "0 0 6px rgba(0,255,117,0.5)" : "none",
+                                                        }}
+                                                    />
+                                                    {isOnline(u.lastActivityAt) ? "Online" : "Offline"}
+                                                </span>
+                                            ) : (
+                                                <span style={{ fontSize: "0.75rem", color: "rgba(255,159,10,0.9)", fontWeight: 600 }}>
+                                                    Приостановлен
+                                                </span>
+                                            )}
                                         </td>
                                         <td>
                                             {u.role !== "admin" && (
-                                                <button
-                                                    onClick={() => removeUser(u.id, u)}
-                                                    title="Remove"
-                                                    style={{
-                                                        background: "none",
-                                                        border: "none",
-                                                        color: "rgba(255,69,69,0.6)",
-                                                        cursor: "pointer",
-                                                        padding: "0.35rem",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                    }}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
+                                                u.isActive ? (
+                                                    <button
+                                                        onClick={() => suspendUser(u.id, u)}
+                                                        title="Приостановить"
+                                                        style={{
+                                                            background: "none",
+                                                            border: "none",
+                                                            color: "rgba(255,159,10,0.8)",
+                                                            cursor: "pointer",
+                                                            padding: "0.35rem",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                        }}
+                                                    >
+                                                        <Pause size={14} />
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => restoreUser(u.id, u)}
+                                                        title="Восстановить"
+                                                        style={{
+                                                            background: "none",
+                                                            border: "none",
+                                                            color: "rgba(0,255,117,0.8)",
+                                                            cursor: "pointer",
+                                                            padding: "0.35rem",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                        }}
+                                                    >
+                                                        <Play size={14} />
+                                                    </button>
+                                                )
                                             )}
                                         </td>
                                     </tr>
