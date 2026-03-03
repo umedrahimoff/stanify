@@ -50,11 +50,13 @@ model Session {
 }
 
 model AppUser {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  role      String   @default("moderator") // "admin" | "moderator"
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id             String    @id @default(cuid())
+  username       String    @unique
+  role           String    @default("moderator") // "admin" | "moderator"
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  lastLoginAt    DateTime?
+  lastActivityAt DateTime?
 }
 
 model VerificationCode {

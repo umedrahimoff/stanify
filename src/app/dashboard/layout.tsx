@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/Sidebar";
 import { SWRProvider } from "@/components/SWRProvider";
+import { ActivityPinger } from "@/components/ActivityPinger";
 
 export default function DashboardLayout({
     children,
@@ -8,6 +9,7 @@ export default function DashboardLayout({
 }) {
     return (
         <SWRProvider>
+        <ActivityPinger />
         <div style={{ display: 'flex' }}>
             <Sidebar />
             <main style={{

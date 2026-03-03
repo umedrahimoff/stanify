@@ -34,6 +34,12 @@ export async function POST(req: Request) {
 
         await prisma.verificationCode.delete({ where: { id: verification.id } });
 
+        const now = new Date();
+        await prisma.appUser.update({
+            where: { id: user.id },
+            data: { lastLoginAt: now, lastActivityAt: now },
+        });
+
         const cookieStore = await cookies();
         cookieStore.set("stanify_auth", user.id, {
             httpOnly: true,

@@ -6,6 +6,7 @@ import { Plus, Loader2, Trash2, Shield, UserCog, AlertCircle } from "lucide-reac
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
+import { formatDate } from "@/lib/date";
 
 interface AppUser {
     id: string;
@@ -13,6 +14,8 @@ interface AppUser {
     role: string;
     isActive: boolean;
     createdAt: string;
+    lastLoginAt: string | null;
+    lastActivityAt: string | null;
 }
 
 export default function UsersPage() {
@@ -24,7 +27,8 @@ export default function UsersPage() {
     const { data: me } = useSWR<{ role: string }>("/api/auth/me", fetcher);
     const { data: users = [], isLoading, mutate, error } = useSWR<AppUser[]>(
         me?.role === "admin" ? "/api/users" : null,
-        fetcher
+        fetcher,
+        { refreshInterval: 15000 }
     );
 
     useEffect(() => {
@@ -66,6 +70,9 @@ export default function UsersPage() {
     };
 
     const activeUsers = users.filter((u) => u.isActive);
+    const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+    const isOnline = (lastActivityAt: string | null) =>
+        lastActivityAt && Date.now() - new Date(lastActivityAt).getTime() < ONLINE_THRESHOLD_MS;
 
     return (
         <div className="animate-fade">
@@ -144,6 +151,8 @@ export default function UsersPage() {
                                 <tr>
                                     <th>Username</th>
                                     <th>Role</th>
+                                    <th>Last login</th>
+                                    <th>Status</th>
                                     <th style={{ width: "80px" }}></th>
                                 </tr>
                             </thead>
@@ -169,6 +178,32 @@ export default function UsersPage() {
                                             >
                                                 {u.role === "admin" ? <Shield size={12} /> : <UserCog size={12} />}
                                                 {u.role === "admin" ? "Admin" : "Moderator"}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+                                            {u.lastLoginAt ? formatDate(u.lastLoginAt) : "—"}
+                                        </td>
+                                        <td>
+                                            <span
+                                                style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "0.35rem",
+                                                    fontSize: "0.75rem",
+                                                    fontWeight: 600,
+                                                    color: isOnline(u.lastActivityAt) ? "#00FF75" : "rgba(255,255,255,0.4)",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        width: "6px",
+                                                        height: "6px",
+                                                        borderRadius: "50%",
+                                                        background: isOnline(u.lastActivityAt) ? "#00FF75" : "rgba(255,255,255,0.2)",
+                                                        boxShadow: isOnline(u.lastActivityAt) ? "0 0 6px rgba(0,255,117,0.5)" : "none",
+                                                    }}
+                                                />
+                                                {isOnline(u.lastActivityAt) ? "Online" : "Offline"}
                                             </span>
                                         </td>
                                         <td>
