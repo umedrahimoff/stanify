@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { TelegramManager } from "../lib/telegram";
 import { getNotificationRecipients } from "../lib/settings";
-import { messageToHtml } from "../lib/telegramFormat";
+import { stripMarkdown } from "../lib/telegramFormat";
 import { PrismaClient } from "@prisma/client";
 import { utils } from "telegram";
 
@@ -148,20 +148,18 @@ async function startMonitoring() {
         });
 
         const recipients = await getNotificationRecipients();
-        const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const contentFormatted = messageToHtml(content, (msg as any).entities);
-        const contentPreview = contentFormatted.length > 400 ? contentFormatted.slice(0, 400) + "…" : contentFormatted;
-        const linkHtml = postLink ? `<a href="${esc(postLink)}">Open post</a>` : "Private";
+        const contentPlain = stripMarkdown(content);
+        const contentPreview = contentPlain.length > 400 ? contentPlain.slice(0, 400) + "…" : contentPlain;
         const notificationText = [
-            "🔔 <b>Stanify Alert</b>",
+            "🔔 Stanify Alert",
             "",
-            `📍 <b>Source:</b> ${esc(channelName)}`,
-            `🔑 <b>Keyword:</b> ${esc(keyword)}`,
+            `📍 Source: ${channelName}`,
+            `🔑 Keyword: ${keyword}`,
             "",
-            `📝 <b>Content:</b>`,
+            "📝 Content:",
             contentPreview,
             "",
-            `🔗 ${linkHtml}`,
+            postLink ? `🔗 Open post: ${postLink}` : "🔗 Private",
         ].join("\n");
         for (const r of recipients) {
             try {

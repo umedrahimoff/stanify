@@ -52,6 +52,20 @@ export function messageToHtml(text: string, entities?: any[]): string {
 }
 
 /**
+ * Strip Telegram markdown symbols from text (*, **, _, __, ~~, `)
+ */
+export function stripMarkdown(text: string): string {
+    if (!text) return "";
+    return String(text)
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .replace(/__/g, "")
+        .replace(/_/g, "")
+        .replace(/~~/g, "")
+        .replace(/`/g, "");
+}
+
+/**
  * Convert Telegram-style markdown in plain text to HTML for display.
  * Handles: **bold**, *italic*, __underline__, ~~strikethrough~~, `code`, [text](url)
  */
