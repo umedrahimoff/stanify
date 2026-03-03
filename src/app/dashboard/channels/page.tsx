@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users, X } from "lucide-react";
+import { Search, Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
 import { cn } from "@/lib/cn";
@@ -32,10 +32,6 @@ export default function ChannelsPage() {
     const [typeFilter, setTypeFilter] = useState<"all" | "channel" | "group">("all");
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
     const [page, setPage] = useState(1);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [bulkModalOpen, setBulkModalOpen] = useState(false);
-    const [bulkKeywords, setBulkKeywords] = useState("");
-    const [bulkAdding, setBulkAdding] = useState(false);
 
     const PAGE_SIZE = 20;
     const params = new URLSearchParams();
@@ -52,7 +48,6 @@ export default function ChannelsPage() {
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
 
     useEffect(() => setPage(1), [searchQuery, showOnlyActive, typeFilter]);
-    useEffect(() => setSelectedIds(new Set()), [searchQuery, showOnlyActive, typeFilter]);
     const { mutate: mutateStats } = useSWRConfig();
 
     const showToast = (msg: string, type: "success" | "error" | "warn" = "success") => {
@@ -105,42 +100,6 @@ export default function ChannelsPage() {
         } catch (error) {
             console.error("Failed to toggle channel status:", error);
             showToast("Failed to update status", "error");
-        }
-    };
-
-    const toggleSelect = (id: string) => {
-        setSelectedIds((s) => {
-            const n = new Set(s);
-            if (n.has(id)) n.delete(id);
-            else n.add(id);
-            return n;
-        });
-    };
-
-    const toggleSelectAll = () => {
-        if (selectedIds.size === channels.length) setSelectedIds(new Set());
-        else setSelectedIds(new Set(channels.map((c) => c.id)));
-    };
-
-    const handleBulkAddKeywords = async () => {
-        const texts = [...new Set(bulkKeywords.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))];
-        if (!texts.length || !selectedIds.size) return;
-        setBulkAdding(true);
-        try {
-            const res = await axios.post("/api/channels/bulk-keywords", {
-                channelIds: Array.from(selectedIds),
-                texts,
-            });
-            mutate();
-            mutateStats("/api/stats");
-            setBulkModalOpen(false);
-            setBulkKeywords("");
-            setSelectedIds(new Set());
-            showToast(`Added ${res.data.keywords} keyword(s) to ${res.data.channels} channel(s)`);
-        } catch (e: any) {
-            showToast(e.response?.data?.error || "Failed to add keywords", "error");
-        } finally {
-            setBulkAdding(false);
         }
     };
 
@@ -292,25 +251,6 @@ export default function ChannelsPage() {
                 <span className="text-[0.8rem] text-white/40">
                     {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}` : "0 channels"}
                 </span>
-                {selectedIds.size > 0 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span className="text-[0.8rem] text-white/60">{selectedIds.size} selected</span>
-                        <button
-                            onClick={() => setBulkModalOpen(true)}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 h-8 text-[0.8rem] rounded-lg bg-[#00A3FF]/20 border border-[#00A3FF]/40 text-[#00A3FF] cursor-pointer hover:bg-[#00A3FF]/30"
-                        >
-                            <Hash size={14} />
-                            Add keywords
-                        </button>
-                        <button
-                            onClick={() => setSelectedIds(new Set())}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 h-8 text-[0.8rem] rounded-lg bg-white/5 border border-white/10 text-white/60 cursor-pointer hover:bg-white/10"
-                        >
-                            <X size={14} />
-                            Clear
-                        </button>
-                    </div>
-                )}
             </div>
 
             <div className="card" style={{ padding: "0" }}>
@@ -321,14 +261,6 @@ export default function ChannelsPage() {
                         <table className="table-dashboard">
                             <thead>
                                 <tr>
-                                    <th style={{ width: "36px", paddingLeft: "0.75rem" }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={channels.length > 0 && selectedIds.size === channels.length}
-                                            onChange={toggleSelectAll}
-                                            style={{ cursor: "pointer" }}
-                                        />
-                                    </th>
                                     <th>Name</th>
                                     <th>Type</th>
                                     <th style={{ width: "1%", whiteSpace: "nowrap" }}>Kw</th>
@@ -341,7 +273,7 @@ export default function ChannelsPage() {
                             <tbody>
                                 {channels.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
+                                        <td colSpan={7} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
                                             No channels found matching the criteria.
                                         </td>
                                     </tr>
@@ -350,14 +282,6 @@ export default function ChannelsPage() {
                                         const isPending = c.telegramId?.startsWith("pending_");
                                         return (
                                             <tr key={c.id}>
-                                                <td style={{ paddingLeft: "0.75rem" }} onClick={(e) => e.stopPropagation()}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedIds.has(c.id)}
-                                                        onChange={() => toggleSelect(c.id)}
-                                                        style={{ cursor: "pointer" }}
-                                                    />
-                                                </td>
                                                 <td>
                                                     <Link
                                                         href={`/dashboard/channels/${c.id}`}
@@ -552,59 +476,6 @@ export default function ChannelsPage() {
                     >
                         →
                     </button>
-                </div>
-            )}
-
-            {bulkModalOpen && (
-                <div
-                    style={{
-                        position: "fixed",
-                        inset: 0,
-                        background: "rgba(0,0,0,0.6)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 9998,
-                    }}
-                    onClick={() => !bulkAdding && setBulkModalOpen(false)}
-                >
-                    <div
-                        className="card"
-                        style={{ padding: "1.25rem", minWidth: "360px", maxWidth: "90vw" }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-                            Add keywords to {selectedIds.size} channel(s)
-                        </h3>
-                        <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
-                            Enter keywords separated by commas. They will be added to all selected channels.
-                        </p>
-                        <input
-                            className="input-field"
-                            placeholder="keyword1, keyword2, keyword3..."
-                            value={bulkKeywords}
-                            onChange={(e) => setBulkKeywords(e.target.value)}
-                            style={{ marginBottom: "1rem", height: "36px", fontSize: "0.85rem" }}
-                        />
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-                            <button
-                                onClick={() => !bulkAdding && setBulkModalOpen(false)}
-                                className="input-field"
-                                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleBulkAddKeywords}
-                                disabled={bulkAdding || !bulkKeywords.trim()}
-                                className="btn-primary"
-                                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
-                            >
-                                {bulkAdding ? <Loader2 size={16} className="animate-spin" /> : <Hash size={16} />}
-                                {bulkAdding ? "Adding…" : "Add"}
-                            </button>
-                        </div>
-                    </div>
                 </div>
             )}
         </div>
