@@ -13,6 +13,8 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    LineChart,
+    Line,
 } from "recharts";
 
 type Period = "all" | "7d" | "30d" | "6m" | "1y";
@@ -25,6 +27,10 @@ interface Stats {
     systemHealth: string;
     recentAlerts: any[];
     alertsByWeek: { week: string; count: number }[];
+    alertsByChannel: { name: string; count: number }[];
+    alertsByKeyword: { keyword: string; count: number }[];
+    alertsByDay: { day: string; count: number }[];
+    lastScan: { date: string; count: number } | null;
 }
 
 function DashboardSkeleton() {
@@ -148,33 +154,75 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-                    <BarChart3 size={18} color="#00A3FF" />
-                    <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Posts per week</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div className="card" style={{ padding: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                        <BarChart3 size={18} color="#00A3FF" />
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Posts per week</h2>
+                    </div>
+                    <div style={{ width: "100%", height: 220 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.alertsByWeek ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <XAxis dataKey="week" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+                                <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                                <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }} formatter={(v: number | undefined) => [v ?? 0, "Posts"]} />
+                                <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
-                <div style={{ width: "100%", height: 220 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.alertsByWeek ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                            <XAxis
-                                dataKey="week"
-                                tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                            />
-                            <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
-                            <Tooltip
-                                contentStyle={{
-                                    background: "#1a1a2e",
-                                    border: "1px solid rgba(255,255,255,0.1)",
-                                    borderRadius: "12px",
-                                }}
-                                labelStyle={{ color: "rgba(255,255,255,0.6)" }}
-                                formatter={(value) => [value ?? 0, "Posts"]}
-                                labelFormatter={(label) => label}
-                            />
-                            <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                <div className="card" style={{ padding: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                        <Activity size={18} color="#00FF75" />
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Alerts per day (14d)</h2>
+                    </div>
+                    <div style={{ width: "100%", height: 220 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={stats.alertsByDay ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+                                <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                                <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
+                                <Line type="monotone" dataKey="count" stroke="#00FF75" strokeWidth={2} dot={{ fill: "#00FF75", r: 3 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+                <div className="card" style={{ padding: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                        <Radio size={18} color="#BF5AF2" />
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Top channels</h2>
+                    </div>
+                    <div style={{ width: "100%", height: 220 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.alertsByChannel ?? []} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                                <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                                <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} width={100} />
+                                <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
+                                <Bar dataKey="count" fill="#BF5AF2" radius={[0, 4, 4, 0]} maxBarSize={20} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                <div className="card" style={{ padding: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+                        <Hash size={18} color="#FF9F0A" />
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Top keywords</h2>
+                    </div>
+                    <div style={{ width: "100%", height: 220 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.alertsByKeyword ?? []} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                                <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                                <YAxis type="category" dataKey="keyword" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} width={100} />
+                                <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
+                                <Bar dataKey="count" fill="#FF9F0A" radius={[0, 4, 4, 0]} maxBarSize={20} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
             </div>
 
@@ -237,15 +285,19 @@ export default function Dashboard() {
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00FF75', marginTop: '6px' }}></div>
                             <div>
-                                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Telegram Node</div>
-                                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Status: Active, Data Center: DC2</div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Database</div>
+                                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Connected</div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00FF75', marginTop: '6px' }}></div>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: stats.lastScan ? '#00FF75' : 'rgba(255,255,255,0.2)', marginTop: '6px' }}></div>
                             <div>
-                                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Database Stream</div>
-                                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>Status: Operational, Last Sync: 1m ago</div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Worker</div>
+                                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+                                    {stats.lastScan
+                                        ? `Last scan: ${formatDate(stats.lastScan.date)} (${stats.lastScan.count.toLocaleString()} posts)`
+                                        : "No scan data yet"}
+                                </div>
                             </div>
                         </div>
                     </div>

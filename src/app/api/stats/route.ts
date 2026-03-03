@@ -76,6 +76,49 @@ export async function GET(req: Request) {
             where: { isActive: true },
         });
 
+        const alertsWithMeta = await prisma.alert.findMany({
+            where: dateFilter ? { createdAt: dateFilter } : undefined,
+            select: { channelName: true, matchedWord: true, createdAt: true },
+        });
+
+        const byChannel: Record<string, number> = {};
+        const byKeyword: Record<string, number> = {};
+        const byDay: Record<string, number> = {};
+        for (const a of alertsWithMeta) {
+            byChannel[a.channelName] = (byChannel[a.channelName] || 0) + 1;
+            byKeyword[a.matchedWord] = (byKeyword[a.matchedWord] || 0) + 1;
+            const day = a.createdAt.toISOString().slice(0, 10);
+            byDay[day] = (byDay[day] || 0) + 1;
+        }
+
+        const alertsByChannel = Object.entries(byChannel)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([name, count]) => ({ name, count }));
+
+        const alertsByKeyword = Object.entries(byKeyword)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([keyword, count]) => ({ keyword, count }));
+
+        const alertsByDay: { day: string; count: number }[] = [];
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            d.setUTCHours(0, 0, 0, 0);
+            const key = d.toISOString().slice(0, 10);
+            const [y, m, day] = key.split("-").map(Number);
+            alertsByDay.push({
+                day: `${day.toString().padStart(2, "0")}.${m.toString().padStart(2, "0")}`,
+                count: byDay[key] || 0,
+            });
+        }
+
+        const lastScan = await prisma.dailyScanStats.findFirst({
+            orderBy: { date: "desc" },
+            select: { date: true, count: true },
+        });
+
         const stats = {
             totalAlerts: dateFilter
                 ? await prisma.alert.count({ where: { createdAt: dateFilter } })
@@ -90,6 +133,10 @@ export async function GET(req: Request) {
                 take: 5,
             }),
             alertsByWeek,
+            alertsByChannel,
+            alertsByKeyword,
+            alertsByDay,
+            lastScan: lastScan ? { date: lastScan.date.toISOString(), count: lastScan.count } : null,
         };
         return NextResponse.json(stats);
     } catch (error) {
