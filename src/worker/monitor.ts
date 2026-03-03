@@ -100,12 +100,17 @@ async function startMonitoring() {
     await tg.setupListener(getKeywordsForMessage, async (msg, keyword) => {
         const peer = msg.peerId || {};
         let channelName = peer.username || "Private/Group";
+        let linkUsername: string | null = peer.username || null;
         let channelIdForLink: string | null = null;
 
         if (!peer.username && peer.channelId) {
             const entity = await tg.getEntityByPeer(msg.peerId);
-            if (entity && (entity as any).username) channelName = (entity as any).username;
-            else if (entity && (entity as any).title) channelName = (entity as any).title;
+            if (entity && (entity as any).username) {
+                channelName = (entity as any).username;
+                linkUsername = (entity as any).username;
+            } else if (entity && (entity as any).title) {
+                channelName = (entity as any).title;
+            }
             channelIdForLink = peer.channelId.toString().replace(/^-100/, "");
         }
 
@@ -113,8 +118,8 @@ async function startMonitoring() {
 
         let postLink = "";
         const messageId = msg.id;
-        if (peer.username) {
-            postLink = `https://t.me/${peer.username}/${messageId}`;
+        if (linkUsername) {
+            postLink = `https://t.me/${linkUsername}/${messageId}`;
         } else if (channelIdForLink) {
             postLink = `https://t.me/c/${channelIdForLink}/${messageId}`;
         }
@@ -133,6 +138,12 @@ async function startMonitoring() {
         if (!channel) {
             console.log(`⏭️ Skipping match from unsubscribed/paused channel: ${channelName}`);
             return;
+        }
+
+        if (!postLink && channel.username) {
+            postLink = `https://t.me/${channel.username}/${messageId}`;
+        } else if (postLink.startsWith("https://t.me/c/") && channel.username) {
+            postLink = `https://t.me/${channel.username}/${messageId}`;
         }
 
         // Save Alert to DB (linked to channel when found)
