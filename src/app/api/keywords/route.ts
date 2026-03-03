@@ -5,12 +5,18 @@ function parseTexts(input: string): string[] {
     return [...new Set(input.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))];
 }
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const { searchParams } = new URL(req.url);
+        const pageParam = searchParams.get("page");
+        const pageSizeParam = searchParams.get("pageSize");
+        const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1;
+        const pageSize = pageSizeParam ? Math.min(100, Math.max(1, parseInt(pageSizeParam, 10))) : 20;
+
         const rows = await prisma.channelKeyword.findMany({
             where: { isActive: true },
             include: { channel: { select: { id: true, name: true, username: true } } },
-            orderBy: [{ text: "asc" }, { channel: { name: "asc" } }],
+            orderBy: { createdAt: "desc" },
         });
 
         const byText: Record<string, { text: string; items: typeof rows }> = {};
@@ -19,17 +25,27 @@ export async function GET() {
             byText[r.text].items.push(r);
         }
 
-        const keywords = Object.values(byText).map((g) => ({
-            text: g.text,
-            channels: g.items.map((i) => ({
-                id: i.channel.id,
-                name: i.channel.name,
-                username: i.channel.username,
-            })),
-            ids: g.items.map((i) => i.id),
-        }));
+        const allKeywords = Object.values(byText).map((g) => {
+            const maxCreated = g.items.reduce((max, i) => (i.createdAt > max ? i.createdAt : max), g.items[0].createdAt);
+            return {
+                text: g.text,
+                channels: g.items.map((i) => ({
+                    id: i.channel.id,
+                    name: i.channel.name,
+                    username: i.channel.username,
+                })),
+                ids: g.items.map((i) => i.id),
+                createdAt: maxCreated,
+            };
+        });
 
-        return NextResponse.json({ keywords });
+        allKeywords.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
+
+        const total = allKeywords.length;
+        const start = (page - 1) * pageSize;
+        const keywords = allKeywords.slice(start, start + pageSize);
+
+        return NextResponse.json({ keywords, total, page, pageSize });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch keywords" }, { status: 500 });
     }

@@ -28,8 +28,12 @@ export default function KeywordsPage() {
     const [editKw, setEditKw] = useState<KeywordGroup | null>(null);
     const [editChannelIds, setEditChannelIds] = useState<Set<string>>(new Set());
     const [saving, setSaving] = useState(false);
+    const [page, setPage] = useState(1);
     const inputRef = useRef<HTMLInputElement>(null);
     const pickerRef = useRef<HTMLDivElement>(null);
+
+    const PAGE_SIZE = 20;
+    const keywordsKey = `/api/keywords?page=${page}&pageSize=${PAGE_SIZE}`;
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -41,11 +45,13 @@ export default function KeywordsPage() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [showChannelPicker]);
 
-    const { data, isLoading, mutate } = useSWR<{ keywords: KeywordGroup[] }>("/api/keywords", fetcher);
+    const { data, isLoading, mutate } = useSWR<{ keywords: KeywordGroup[]; total: number; page: number; pageSize: number }>(keywordsKey, fetcher);
     const { data: channels = [] } = useSWR<Channel[]>("/api/channels", fetcher);
     const { mutate: mutateStats } = useSWRConfig();
 
     const keywords = data?.keywords ?? [];
+    const total = data?.total ?? 0;
+    const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
     const activeChannels = channels.filter((c) => c.id);
 
     const showToast = (msg: string, type: "success" | "error" = "success") => {
@@ -127,6 +133,7 @@ export default function KeywordsPage() {
                 channelIds: Array.from(selectedChannelIds),
             })
             .then((res) => {
+                setPage(1);
                 mutate();
                 mutateStats("/api/stats");
                 setKeywordInput("");
@@ -304,6 +311,12 @@ export default function KeywordsPage() {
                 </div>
             </div>
 
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <span className="text-[0.8rem] text-white/40">
+                    {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total}` : "0 keywords"}
+                </span>
+            </div>
+
             <div className="card" style={{ padding: "0" }}>
                 {isLoading ? (
                     <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
@@ -404,6 +417,66 @@ export default function KeywordsPage() {
                     </div>
                 )}
             </div>
+
+            {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", marginTop: "1rem" }}>
+                    <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page <= 1}
+                        style={{
+                            padding: "0.35rem 0.6rem",
+                            fontSize: "0.8rem",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "6px",
+                            color: page <= 1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+                            cursor: page <= 1 ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        ←
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let p: number;
+                        if (totalPages <= 5) p = i + 1;
+                        else if (page <= 3) p = i + 1;
+                        else if (page >= totalPages - 2) p = totalPages - 4 + i;
+                        else p = page - 2 + i;
+                        return (
+                            <button
+                                key={p}
+                                onClick={() => setPage(p)}
+                                style={{
+                                    padding: "0.35rem 0.6rem",
+                                    fontSize: "0.8rem",
+                                    minWidth: "32px",
+                                    background: page === p ? "rgba(0,163,255,0.2)" : "rgba(255,255,255,0.05)",
+                                    border: `1px solid ${page === p ? "rgba(0,163,255,0.4)" : "rgba(255,255,255,0.1)"}`,
+                                    borderRadius: "6px",
+                                    color: page === p ? "#00A3FF" : "rgba(255,255,255,0.7)",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                {p}
+                            </button>
+                        );
+                    })}
+                    <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages}
+                        style={{
+                            padding: "0.35rem 0.6rem",
+                            fontSize: "0.8rem",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "6px",
+                            color: page >= totalPages ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+                            cursor: page >= totalPages ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        →
+                    </button>
+                </div>
+            )}
 
             {editKw && (
                 <div
