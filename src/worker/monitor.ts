@@ -95,7 +95,7 @@ async function startMonitoring() {
         }).catch((e) => console.warn("Failed to record scan:", e.message));
     };
 
-    // 4. Setup Listener (explicit chats for reliable channel updates)
+    // 4. Setup Listener
     await tg.setupListener(getKeywordsForMessage, async (msg, keyword) => {
         const peer = msg.peerId || {};
         let channelName = peer.username || "Private/Group";
@@ -165,6 +165,8 @@ async function startMonitoring() {
         }
         console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
     }, recordScan, chatIdsForListener.length > 0 ? chatIdsForListener : undefined);
+
+    tg.startReconnectInterval?.();
 
     console.log("🟢 Listener active. Waiting for messages...");
 }

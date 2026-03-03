@@ -35,6 +35,18 @@ export class TelegramManager {
         return this.client;
     }
 
+    startReconnectInterval(intervalMs = 60 * 1000) {
+        if (!this.client) return;
+        const sender = (this.client as any)._sender;
+        if (!sender?.reconnect) return;
+        setInterval(() => {
+            try {
+                sender.reconnect();
+                console.log("🔄 Reconnect tick");
+            } catch (_) {}
+        }, intervalMs);
+    }
+
     public async setupListener(
         getKeywordsForMessage: (msg: any) => string[],
         onMatch: (msg: any, keyword: string) => void,
