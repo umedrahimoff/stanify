@@ -93,18 +93,25 @@ export function Sidebar() {
 
             <button
                 onClick={handleLogout}
-                className="btn-secondary"
+                className="card"
                 style={{
                     marginTop: 'auto',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1rem',
-                    padding: '0.75rem 1rem',
+                    padding: '0.6rem 0.85rem',
                     width: '100%',
-                    justifyContent: 'flex-start'
+                    justifyContent: 'flex-start',
+                    background: 'transparent',
+                    border: '1px solid transparent',
+                    color: 'rgba(255,255,255,0.6)',
+                    fontSize: '0.85rem',
+                    fontWeight: 400,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
                 }}
             >
-                <LogOut size={20} />
+                <LogOut size={18} />
                 Log Out
             </button>
         </aside>
