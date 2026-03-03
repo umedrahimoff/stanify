@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Hash, Plus, Loader2, Trash2, Radio, AlertCircle } from "lucide-react";
+import { Hash, Plus, Loader2, Trash2, Radio, AlertCircle, Pencil } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
@@ -25,6 +25,9 @@ export default function KeywordsPage() {
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
     const [showChannelPicker, setShowChannelPicker] = useState(false);
+    const [editKw, setEditKw] = useState<KeywordGroup | null>(null);
+    const [editChannelIds, setEditChannelIds] = useState<Set<string>>(new Set());
+    const [saving, setSaving] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +60,61 @@ export default function KeywordsPage() {
             else n.add(id);
             return n;
         });
+    };
+
+    const openEdit = (kw: KeywordGroup) => {
+        setEditKw(kw);
+        setEditChannelIds(new Set(kw.channels.map((ch) => ch.id)));
+    };
+
+    const toggleEditChannel = (id: string) => {
+        setEditChannelIds((s) => {
+            const n = new Set(s);
+            if (n.has(id)) n.delete(id);
+            else n.add(id);
+            return n;
+        });
+    };
+
+    const saveEdit = async () => {
+        if (!editKw) return;
+        if (editChannelIds.size === 0) {
+            if (!confirm("Remove this keyword from all channels?")) return;
+            try {
+                await axios.delete("/api/keywords", { data: { ids: editKw.ids } });
+                mutate();
+                mutateStats("/api/stats");
+                setEditKw(null);
+                showToast("Removed");
+            } catch {
+                showToast("Failed to remove", "error");
+            }
+            return;
+        }
+        setSaving(true);
+        try {
+            const currentIds = new Set(editKw.channels.map((ch) => ch.id));
+            const toRemove = editKw.channels.filter((ch) => !editChannelIds.has(ch.id));
+            const toAdd = Array.from(editChannelIds).filter((id) => !currentIds.has(id));
+            const idsToDelete = toRemove.map((ch) => editKw.ids[editKw.channels.findIndex((c) => c.id === ch.id)]);
+            if (idsToDelete.length) {
+                await axios.delete("/api/keywords", { data: { ids: idsToDelete } });
+            }
+            if (toAdd.length) {
+                await axios.post("/api/keywords", {
+                    texts: [editKw.text],
+                    channelIds: toAdd,
+                });
+            }
+            mutate();
+            mutateStats("/api/stats");
+            setEditKw(null);
+            showToast("Updated");
+        } catch {
+            showToast("Failed to update", "error");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const parseAndAdd = () => {
@@ -262,7 +320,7 @@ export default function KeywordsPage() {
                                 <tr>
                                     <th>Keyword</th>
                                     <th>Channels</th>
-                                    <th style={{ width: "80px" }}></th>
+                                    <th style={{ width: "100px" }}></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -304,22 +362,40 @@ export default function KeywordsPage() {
                                             </div>
                                         </td>
                                         <td>
-                                            <button
-                                                onClick={() => deleteKeyword(kw.ids)}
-                                                title="Remove from all channels"
-                                                style={{
-                                                    background: "none",
-                                                    border: "none",
-                                                    color: "rgba(255,69,69,0.6)",
-                                                    cursor: "pointer",
-                                                    padding: "0.35rem",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                }}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                            <div style={{ display: "flex", gap: "0.25rem", alignItems: "center", justifyContent: "flex-end" }}>
+                                                <button
+                                                    onClick={() => openEdit(kw)}
+                                                    title="Edit channels"
+                                                    style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "rgba(255,255,255,0.5)",
+                                                        cursor: "pointer",
+                                                        padding: "0.35rem",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    <Pencil size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteKeyword(kw.ids)}
+                                                    title="Remove from all channels"
+                                                    style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "rgba(255,69,69,0.6)",
+                                                        cursor: "pointer",
+                                                        padding: "0.35rem",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -328,6 +404,96 @@ export default function KeywordsPage() {
                     </div>
                 )}
             </div>
+
+            {editKw && (
+                <div
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        background: "rgba(0,0,0,0.6)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 9998,
+                    }}
+                    onClick={() => !saving && setEditKw(null)}
+                >
+                    <div
+                        className="card"
+                        style={{ padding: "1.25rem", minWidth: "360px", maxWidth: "90vw" }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+                            Edit keyword: <span style={{ color: "#00A3FF" }}>{editKw.text}</span>
+                        </h3>
+                        <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
+                            Add or remove channels for this keyword.
+                        </p>
+                        <div style={{ marginBottom: "1rem" }}>
+                            <label className="text-[0.75rem] text-white/40" style={{ display: "block", marginBottom: "0.35rem" }}>
+                                Channels ({editChannelIds.size} selected)
+                            </label>
+                            <div
+                                style={{
+                                    marginTop: "0.5rem",
+                                    maxHeight: "200px",
+                                    overflowY: "auto",
+                                    background: "rgba(255,255,255,0.03)",
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                    borderRadius: "8px",
+                                    padding: "0.5rem",
+                                }}
+                            >
+                                {activeChannels.map((c) => (
+                                    <label
+                                        key={c.id}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.5rem",
+                                            padding: "0.4rem 0.5rem",
+                                            cursor: "pointer",
+                                            fontSize: "0.85rem",
+                                            borderRadius: "6px",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = "transparent";
+                                        }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={editChannelIds.has(c.id)}
+                                            onChange={() => toggleEditChannel(c.id)}
+                                        />
+                                        {c.name || c.username || c.id}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                            <button
+                                onClick={() => !saving && setEditKw(null)}
+                                className="input-field"
+                                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)" }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveEdit}
+                                disabled={saving}
+                                className="btn-primary"
+                                style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+                            >
+                                {saving ? <Loader2 size={16} className="animate-spin" /> : null}
+                                {saving ? "Saving…" : "Save"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
