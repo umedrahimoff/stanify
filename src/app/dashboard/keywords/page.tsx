@@ -438,9 +438,25 @@ export default function KeywordsPage() {
                             Add or remove channels for this keyword.
                         </p>
                         <div style={{ marginBottom: "1rem" }}>
-                            <label className="text-[0.75rem] text-white/40" style={{ display: "block", marginBottom: "0.35rem" }}>
-                                Channels ({editChannelIds.size} selected)
-                            </label>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.35rem" }}>
+                                <label className="text-[0.75rem] text-white/40">
+                                    Channels ({editChannelIds.size} selected)
+                                </label>
+                                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={editChannelIds.size === activeChannels.length && activeChannels.length > 0}
+                                        onChange={() => {
+                                            if (editChannelIds.size === activeChannels.length) {
+                                                setEditChannelIds(new Set());
+                                            } else {
+                                                setEditChannelIds(new Set(activeChannels.map((c) => c.id)));
+                                            }
+                                        }}
+                                    />
+                                    Select all
+                                </label>
+                            </div>
                             <div
                                 style={{
                                     marginTop: "0.5rem",
