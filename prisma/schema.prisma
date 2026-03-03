@@ -49,11 +49,20 @@ model Session {
   updatedAt    DateTime @updatedAt
 }
 
-model VerificationCode {
+model AppUser {
   id        String   @id @default(cuid())
-  code      String
-  expiresAt DateTime
+  username  String   @unique
+  role      String   @default("moderator") // "admin" | "moderator"
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model VerificationCode {
+  id           String   @id @default(cuid())
+  code         String
+  targetUserId String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
 }
 
 model AppSetting {

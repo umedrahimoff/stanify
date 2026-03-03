@@ -2,10 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Radio, Hash, Bell, Archive, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Radio, Hash, Bell, Archive, Settings, Users, LogOut } from "lucide-react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 export function Sidebar() {
     const router = useRouter();
+    const pathname = usePathname();
+    const { data: me } = useSWR<{ role: string }>("/api/auth/me", fetcher);
 
     const handleLogout = async () => {
         try {
@@ -15,16 +19,22 @@ export function Sidebar() {
             router.push("/login");
         }
     };
-    const pathname = usePathname();
 
-    const links = [
+    const baseLinks = [
         { name: "Overview", icon: <LayoutDashboard size={18} />, href: "/dashboard" },
         { name: "Channels", icon: <Radio size={18} />, href: "/dashboard/channels" },
         { name: "Keywords", icon: <Hash size={18} />, href: "/dashboard/keywords" },
         { name: "Alerts", icon: <Bell size={18} />, href: "/dashboard/alerts" },
         { name: "Archive", icon: <Archive size={18} />, href: "/dashboard/archive" },
-        { name: "Settings", icon: <Settings size={18} />, href: "/dashboard/settings" },
     ];
+    const adminLinks =
+        me?.role === "admin"
+            ? [
+                  { name: "Users", icon: <Users size={18} />, href: "/dashboard/users" },
+                  { name: "Settings", icon: <Settings size={18} />, href: "/dashboard/settings" },
+              ]
+            : [];
+    const links = [...baseLinks, ...adminLinks];
 
     return (
         <aside className="glass" style={{
@@ -67,10 +77,10 @@ export function Sidebar() {
                             gap: '1rem',
                             padding: '0.6rem 0.85rem',
                             textDecoration: 'none',
-                            color: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href))) ? 'white' : 'rgba(255,255,255,0.6)',
-                            background: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.08)' : 'transparent',
-                            borderColor: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.15)' : 'transparent',
-                            fontWeight: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href))) ? 600 : 400,
+                            color: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href)) || (link.href === "/dashboard/users" && pathname.startsWith(link.href)) || (link.href === "/dashboard/settings" && pathname.startsWith(link.href))) ? 'white' : 'rgba(255,255,255,0.6)',
+                            background: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href)) || (link.href === "/dashboard/users" && pathname.startsWith(link.href)) || (link.href === "/dashboard/settings" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            borderColor: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href)) || (link.href === "/dashboard/users" && pathname.startsWith(link.href)) || (link.href === "/dashboard/settings" && pathname.startsWith(link.href))) ? 'rgba(255,255,255,0.15)' : 'transparent',
+                            fontWeight: (pathname === link.href || (link.href === "/dashboard/archive" && pathname.startsWith(link.href)) || (link.href === "/dashboard/channels" && pathname.startsWith(link.href)) || (link.href === "/dashboard/keywords" && pathname.startsWith(link.href)) || (link.href === "/dashboard/users" && pathname.startsWith(link.href)) || (link.href === "/dashboard/settings" && pathname.startsWith(link.href))) ? 600 : 400,
                             fontSize: '0.85rem',
                             transition: 'all 0.2s'
                         }}

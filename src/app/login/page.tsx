@@ -6,17 +6,23 @@ import { Lock, Loader2, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
     const [step, setStep] = useState(1);
+    const [username, setUsername] = useState("");
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [codeSentTo, setCodeSentTo] = useState("");
 
     const requestLogin = async () => {
+        const u = username.trim().replace(/^@/, "").toLowerCase();
+        if (!u) {
+            setError("Enter your username");
+            return;
+        }
         setLoading(true);
         setError("");
         try {
-            const res = await axios.post("/api/auth/request");
-            setCodeSentTo(res.data?.message?.replace("Code sent to ", "") || "@umedrahimoff");
+            const res = await axios.post("/api/auth/request", { username: u });
+            setCodeSentTo(res.data?.message?.replace("Code sent to ", "") || `@${u}`);
             setStep(2);
         } catch (err: any) {
             setError(err.response?.data?.error || "Failed to send code");
@@ -44,7 +50,7 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
         try {
-            await axios.post("/api/auth/request");
+            await axios.post("/api/auth/request", { username: username.trim().replace(/^@/, "").toLowerCase() });
             setCode("");
         } catch (err: any) {
             setError(err.response?.data?.error || "Failed to send code");
@@ -81,12 +87,12 @@ export default function LoginPage() {
                 </div>
 
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem' }}>
-                    {step === 1 ? "Admin Access" : "Enter Code"}
+                    {step === 1 ? "Sign In" : "Enter Code"}
                 </h1>
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.95rem', marginBottom: '2rem' }}>
                     {step === 1
-                        ? "Accessing the Stanify command center requires authorization."
-                        : `A 6-digit verification code was sent to ${codeSentTo || "@umedrahimoff"}.`}
+                        ? "Enter your Telegram username. A one-time code will be sent to you."
+                        : `A 6-digit code was sent to ${codeSentTo}.`}
                 </p>
 
                 {error && (
@@ -104,14 +110,25 @@ export default function LoginPage() {
                 )}
 
                 {step === 1 ? (
-                    <button
-                        className="btn-primary"
-                        onClick={requestLogin}
-                        style={{ width: '100%', height: '52px', fontSize: '1rem' }}
-                        disabled={loading}
-                    >
-                        {loading ? <Loader2 className="animate-spin" size={20} /> : "Request Login Code"}
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <input
+                            className="input-field"
+                            type="text"
+                            placeholder="@username"
+                            style={{ height: '52px', fontSize: '1rem', textAlign: 'center' }}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && requestLogin()}
+                        />
+                        <button
+                            className="btn-primary"
+                            onClick={requestLogin}
+                            style={{ width: '100%', height: '52px', fontSize: '1rem' }}
+                            disabled={loading}
+                        >
+                            {loading ? <Loader2 className="animate-spin" size={20} /> : "Send Code"}
+                        </button>
+                    </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <input

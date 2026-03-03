@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Key, Phone, ShieldCheck, Mail, Save, Fingerprint, Activity } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
 
 export default function SettingsPage() {
+    const router = useRouter();
     const [phone, setPhone] = useState("");
     const [code, setCode] = useState("");
     const [apiId, setApiId] = useState("");
@@ -18,7 +20,15 @@ export default function SettingsPage() {
     const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
     const isTelegramAccountLocked = true;
-    const { data: settings, mutate } = useSWR<{ notificationRecipients: string[] }>("/api/settings", fetcher);
+    const { data: me } = useSWR<{ role: string }>("/api/auth/me", fetcher);
+    const { data: settings, mutate } = useSWR<{ notificationRecipients: string[] }>(
+        me?.role === "admin" ? "/api/settings" : null,
+        fetcher
+    );
+
+    useEffect(() => {
+        if (me && me.role !== "admin") router.replace("/dashboard");
+    }, [me, router]);
 
     useEffect(() => {
         if (settings?.notificationRecipients?.length) setRecipients(settings.notificationRecipients);
@@ -32,6 +42,9 @@ export default function SettingsPage() {
     const parseAndAdd = (s: string) => {
         s.split(",").forEach((x) => addRecipient(x));
     };
+
+    if (!me) return <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>;
+    if (me.role !== "admin") return <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Redirecting...</div>;
 
     return (
         <div className="animate-fade">
