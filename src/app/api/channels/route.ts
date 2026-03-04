@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
@@ -10,6 +11,8 @@ const apiHash = process.env.TELEGRAM_API_HASH || "";
 // With page/pageSize: returns { items, total, page, pageSize }
 // Without: returns full array (for dropdowns)
 export async function GET(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { searchParams } = new URL(req.url);
         const pageParam = searchParams.get("page");
@@ -94,6 +97,8 @@ export async function GET(req: Request) {
 
 // POST: Add new channel OR Toggle status of existing
 export async function POST(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const body = await req.json();
         console.log("POST Body:", body);
@@ -234,6 +239,8 @@ export async function POST(req: Request) {
 
 // DELETE: Remove channel from monitoring list and leave it in Telegram
 export async function DELETE(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { id } = await req.json();
         if (!id) return NextResponse.json({ error: "ID is required" }, { status: 400 });

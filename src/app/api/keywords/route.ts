@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 function parseTexts(input: string): string[] {
     return [...new Set(input.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))];
 }
 
 export async function GET(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { searchParams } = new URL(req.url);
         const pageParam = searchParams.get("page");
@@ -52,6 +55,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const body = await req.json();
         const channelIds: string[] = Array.isArray(body.channelIds) ? body.channelIds : body.channelId ? [body.channelId] : [];
@@ -91,6 +96,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const body = await req.json();
         const ids: string[] = Array.isArray(body.ids) ? body.ids : body.id ? [body.id] : [];

@@ -28,60 +28,74 @@ async function startMonitoring() {
     await tg.initialize(session.sessionStr);
     console.log("✅ Telegram Client Connected");
 
-    // 3. Load Channels with their Keywords
-    const channels = await prisma.channel.findMany({
-        where: { isActive: true },
-        include: { keywords: { where: { isActive: true } } },
-    });
+    // 3. Mutable state for channels/keywords (reloadable without restart)
+    const state = {
+        channelMapByUsername: new Map<string, { id: string; keywords: string[] }>(),
+        channelMapByTelegramId: new Map<string, { id: string; keywords: string[] }>(),
+        channelIdOnlyByUsername: new Map<string, string>(),
+        channelIdOnlyByTelegramId: new Map<string, string>(),
+        channelIdsSaveAllPosts: new Set<string>(),
+        globalKeywordsList: [] as { id: string; text: string; recipients: string[] }[],
+    };
 
-    const globalKeywords = await prisma.globalKeyword.findMany({
-        where: { isActive: true },
-        include: { recipients: { select: { username: true } } },
-    });
-    const globalKeywordsList = globalKeywords
-        .filter((gk) => gk.recipients.length > 0)
-        .map((gk) => ({ id: gk.id, text: gk.text.toLowerCase(), recipients: gk.recipients.map((r) => r.username) }));
+    async function loadChannelsState() {
+        const channels = await prisma.channel.findMany({
+            where: { isActive: true },
+            include: { keywords: { where: { isActive: true } } },
+        });
+        const globalKeywords = await prisma.globalKeyword.findMany({
+            where: { isActive: true },
+            include: { recipients: { select: { username: true } } },
+        });
+        state.globalKeywordsList = globalKeywords
+            .filter((gk) => gk.recipients.length > 0)
+            .map((gk) => ({ id: gk.id, text: gk.text.toLowerCase(), recipients: gk.recipients.map((r) => r.username) }));
 
-    const channelMapByUsername = new Map<string, { id: string; keywords: string[] }>();
-    const channelMapByTelegramId = new Map<string, { id: string; keywords: string[] }>();
-    const channelIdOnlyByUsername = new Map<string, string>();
-    const channelIdOnlyByTelegramId = new Map<string, string>();
-    const channelIdsSaveAllPosts = new Set<string>(channels.filter((c: { saveAllPosts?: boolean }) => c.saveAllPosts).map((c) => c.id));
-    for (const ch of channels) {
-        const kw = ch.keywords.map((k: { text: string }) => k.text);
-        if (ch.username) {
-            channelMapByUsername.set(ch.username.toLowerCase(), { id: ch.id, keywords: kw });
-            channelIdOnlyByUsername.set(ch.username.toLowerCase(), ch.id);
+        state.channelMapByUsername.clear();
+        state.channelMapByTelegramId.clear();
+        state.channelIdOnlyByUsername.clear();
+        state.channelIdOnlyByTelegramId.clear();
+        state.channelIdsSaveAllPosts = new Set(channels.filter((c: { saveAllPosts?: boolean }) => c.saveAllPosts).map((c) => c.id));
+
+        for (const ch of channels) {
+            const kw = ch.keywords.map((k: { text: string }) => k.text);
+            if (ch.username) {
+                state.channelMapByUsername.set(ch.username.toLowerCase(), { id: ch.id, keywords: kw });
+                state.channelIdOnlyByUsername.set(ch.username.toLowerCase(), ch.id);
+            }
+            state.channelMapByTelegramId.set(ch.telegramId, { id: ch.id, keywords: kw });
+            state.channelIdOnlyByTelegramId.set(ch.telegramId, ch.id);
+            const rawId = ch.telegramId.replace(/^-100/, "");
+            if (rawId !== ch.telegramId) {
+                state.channelMapByTelegramId.set(rawId, { id: ch.id, keywords: kw });
+                state.channelIdOnlyByTelegramId.set(rawId, ch.id);
+            }
+            state.channelMapByTelegramId.set("-100" + rawId, { id: ch.id, keywords: kw });
+            state.channelIdOnlyByTelegramId.set("-100" + rawId, ch.id);
         }
-        channelMapByTelegramId.set(ch.telegramId, { id: ch.id, keywords: kw });
-        channelIdOnlyByTelegramId.set(ch.telegramId, ch.id);
-        const rawId = ch.telegramId.replace(/^-100/, "");
-        if (rawId !== ch.telegramId) {
-            channelMapByTelegramId.set(rawId, { id: ch.id, keywords: kw });
-            channelIdOnlyByTelegramId.set(rawId, ch.id);
-        }
-        channelMapByTelegramId.set("-100" + rawId, { id: ch.id, keywords: kw });
-        channelIdOnlyByTelegramId.set("-100" + rawId, ch.id);
+        return channels;
     }
+
+    const channels = await loadChannelsState();
 
     const getChannelIdForMessage = (msg: any): string | null => {
         const peer = msg.peerId || {};
         const username = (peer.username || "").toLowerCase();
-        if (username) return channelIdOnlyByUsername.get(username) ?? null;
+        if (username) return state.channelIdOnlyByUsername.get(username) ?? null;
         try {
             const fullId = utils.getPeerId(peer);
             const raw = String(fullId).replace(/^-100/, "");
-            return channelIdOnlyByTelegramId.get(String(fullId))
-                || channelIdOnlyByTelegramId.get(raw)
-                || channelIdOnlyByTelegramId.get("-100" + raw)
+            return state.channelIdOnlyByTelegramId.get(String(fullId))
+                || state.channelIdOnlyByTelegramId.get(raw)
+                || state.channelIdOnlyByTelegramId.get("-100" + raw)
                 || null;
         } catch (_) {
             const chatId = msg.chatId?.toString?.() || peer.channelId?.toString?.() || peer.chatId?.toString?.();
             if (chatId) {
                 const raw = chatId.replace(/^-100/, "");
-                return channelIdOnlyByTelegramId.get(chatId)
-                    || channelIdOnlyByTelegramId.get(raw)
-                    || channelIdOnlyByTelegramId.get("-100" + raw)
+                return state.channelIdOnlyByTelegramId.get(chatId)
+                    || state.channelIdOnlyByTelegramId.get(raw)
+                    || state.channelIdOnlyByTelegramId.get("-100" + raw)
                     || null;
             }
         }
@@ -97,7 +111,7 @@ async function startMonitoring() {
             if (!isNaN(num)) chatIdsForListener.push(num);
         }
     }
-    console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} channel keywords, ${globalKeywordsList.length} global keywords.`);
+    console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} channel keywords, ${state.globalKeywordsList.length} global keywords.`);
     if (channelsWithKeywords.length === 0) {
         console.warn("⚠️ No channels have keywords! Add keywords to channels in the dashboard.");
     } else {
@@ -110,21 +124,21 @@ async function startMonitoring() {
     const getKeywordsForMessage = (msg: any): string[] => {
         const peer = msg.peerId || {};
         const username = (peer.username || "").toLowerCase();
-        let entry = username ? channelMapByUsername.get(username) : null;
+        let entry = username ? state.channelMapByUsername.get(username) : null;
         if (!entry && peer) {
             try {
                 const fullId = utils.getPeerId(peer);
                 const raw = String(fullId).replace(/^-100/, "");
-                entry = channelMapByTelegramId.get(String(fullId))
-                    || channelMapByTelegramId.get(raw)
-                    || channelMapByTelegramId.get("-100" + raw);
+                entry = state.channelMapByTelegramId.get(String(fullId))
+                    || state.channelMapByTelegramId.get(raw)
+                    || state.channelMapByTelegramId.get("-100" + raw);
             } catch (_) {
                 const chatId = msg.chatId?.toString?.() || peer.channelId?.toString?.() || peer.chatId?.toString?.();
                 if (chatId) {
                     const raw = chatId.replace(/^-100/, "");
-                    entry = channelMapByTelegramId.get(chatId)
-                        || channelMapByTelegramId.get(raw)
-                        || channelMapByTelegramId.get("-100" + raw);
+                    entry = state.channelMapByTelegramId.get(chatId)
+                        || state.channelMapByTelegramId.get(raw)
+                        || state.channelMapByTelegramId.get("-100" + raw);
                 }
             }
         }
@@ -143,7 +157,7 @@ async function startMonitoring() {
 
     const saveEveryPost = async (msg: any) => {
         const channelId = getChannelIdForMessage(msg);
-        if (!channelId || !channelIdsSaveAllPosts.has(channelId)) return;
+        if (!channelId || !state.channelIdsSaveAllPosts.has(channelId)) return;
         const content = msg.text ?? msg.message ?? "";
         if (!content.trim()) return;
 
@@ -272,7 +286,7 @@ async function startMonitoring() {
         // Global keywords: check every message
         const content = (msg.text ?? msg.message ?? "").toLowerCase();
         if (!content.trim()) return;
-        for (const gk of globalKeywordsList) {
+        for (const gk of state.globalKeywordsList) {
             if (content.includes(gk.text)) {
                 const peer = msg.peerId || {};
                 let channelName = peer.username || "Private/Group";
@@ -346,6 +360,16 @@ async function startMonitoring() {
 
     tg.startReconnectInterval?.();
 
+    // Reload channels/keywords every 5 min (picks up new keywords, saveAllPosts changes)
+    setInterval(async () => {
+        try {
+            await loadChannelsState();
+            console.log("🔄 Channels/keywords reloaded");
+        } catch (e) {
+            console.warn("Failed to reload channels:", (e as Error).message);
+        }
+    }, 5 * 60 * 1000);
+
     console.log("🟢 Listener active. Waiting for messages...");
 }
 
@@ -355,11 +379,12 @@ async function cleanupOldAlerts() {
     threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
 
     try {
-        const [deletedAlerts, deletedLogs] = await Promise.all([
+        const [deletedAlerts, deletedLogs, deletedPosts] = await Promise.all([
             prisma.alert.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
             prisma.notificationLog.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
+            prisma.channelPost.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
         ]);
-        console.log(`✅ Cleanup finished: Deleted ${deletedAlerts.count} old alerts, ${deletedLogs.count} old logs.`);
+        console.log(`✅ Cleanup finished: Deleted ${deletedAlerts.count} old alerts, ${deletedLogs.count} old logs, ${deletedPosts.count} old posts.`);
     } catch (error) {
         console.error("❌ Cleanup failed:", error);
     }

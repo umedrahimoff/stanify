@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 function parseTags(input: string): string[] {
     return [...new Set(input.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))];
@@ -9,6 +10,8 @@ export async function GET(
     _req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { id } = await params;
         const keywords = await prisma.channelKeyword.findMany({
@@ -25,6 +28,8 @@ export async function POST(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { id } = await params;
         const body = await req.json();
@@ -57,6 +62,8 @@ export async function DELETE(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { id } = await params;
         const body = await req.json();

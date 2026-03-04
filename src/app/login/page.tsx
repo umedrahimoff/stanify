@@ -22,7 +22,7 @@ export default function LoginPage() {
         setError("");
         try {
             const res = await axios.post("/api/auth/request", { username: u });
-            setCodeSentTo(res.data?.message?.replace("Code sent to ", "") || `@${u}`);
+            setCodeSentTo(`@${u}`);
             setStep(2);
         } catch (err: any) {
             setError(err.response?.data?.error || "Failed to send code");

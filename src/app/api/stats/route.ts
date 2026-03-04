@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 type Period = "all" | "24h" | "3d" | "7d" | "30d";
 
@@ -15,6 +16,8 @@ function getPeriodStart(period: Period): Date | null {
 }
 
 export async function GET(req: Request) {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { searchParams } = new URL(req.url);
         const period = (searchParams.get("period") || "all") as Period;

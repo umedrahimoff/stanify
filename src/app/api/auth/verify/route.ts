@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
+    const limit = checkRateLimit(req, "auth:verify", 10, 5 * 60 * 1000);
+    if (!limit.ok) {
+        return NextResponse.json(
+            { error: "Too many attempts. Try again later." },
+            { status: 429, headers: limit.retryAfter ? { "Retry-After": String(limit.retryAfter) } : undefined }
+        );
+    }
     try {
         const { code } = await req.json();
         const codeStr = typeof code === "string" ? code.trim() : String(code || "").trim();
