@@ -248,17 +248,17 @@ export default function SettingsPage() {
                     <div className="card" style={{ padding: '1rem', marginTop: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                             <Database size={18} color="#BF5AF2" />
-                            <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Хранилище постов</h2>
+                            <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Post Storage</h2>
                         </div>
                         {dataStats && (
                             <>
                                 <div style={{ fontSize: '0.9rem', marginBottom: '0.75rem' }}>
-                                    <span style={{ fontWeight: 600 }}>{dataStats.count.toLocaleString()}</span> постов · <span style={{ fontWeight: 600 }}>{dataStats.mb.toFixed(2)} MB</span> / {dataStats.limitMb} MB
+                                    <span style={{ fontWeight: 600 }}>{dataStats.count.toLocaleString()}</span> posts · <span style={{ fontWeight: 600 }}>{dataStats.mb.toFixed(2)} MB</span> / {dataStats.limitMb} MB
                                 </div>
                                 {dataStats.limitReached && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', background: 'rgba(255,159,10,0.15)', borderRadius: '10px', marginBottom: '1rem', color: '#FF9F0A', fontSize: '0.85rem' }}>
                                         <AlertTriangle size={18} />
-                                        Лимит достигнут. Выгрузите данные в CSV и очистите хранилище.
+                                        Limit reached. Export data to CSV and clear storage.
                                     </div>
                                 )}
                                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -268,17 +268,17 @@ export default function SettingsPage() {
                                         style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', fontSize: '0.85rem', background: 'rgba(0,163,255,0.15)', border: '1px solid rgba(0,163,255,0.3)', borderRadius: '8px', color: '#00A3FF', textDecoration: 'none', cursor: 'pointer' }}
                                     >
                                         <Download size={14} />
-                                        Выгрузить CSV
+                                        Export CSV
                                     </a>
                                     <button
                                         onClick={async () => {
-                                            if (!confirm('Удалить все сохранённые посты? Это освободит место. Алерты не затронуты.')) return;
+                                            if (!confirm('Delete all saved posts? This will free up space. Alerts will not be affected.')) return;
                                             setClearing(true);
                                             try {
                                                 await axios.post('/api/data/clear');
                                                 mutateData();
                                             } catch (e) {
-                                                alert('Ошибка');
+                                                alert('Error');
                                             } finally {
                                                 setClearing(false);
                                             }
@@ -287,7 +287,7 @@ export default function SettingsPage() {
                                         style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', fontSize: '0.85rem', background: 'rgba(255,69,69,0.15)', border: '1px solid rgba(255,69,69,0.3)', borderRadius: '8px', color: '#FF4545', cursor: clearing ? 'not-allowed' : 'pointer' }}
                                     >
                                         <Trash2 size={14} />
-                                        {clearing ? '…' : 'Очистить'}
+                                        {clearing ? '…' : 'Clear'}
                                     </button>
                                 </div>
                             </>

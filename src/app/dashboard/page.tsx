@@ -93,11 +93,11 @@ function DashboardSkeleton() {
 }
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-    { value: "24h", label: "24 часа" },
-    { value: "3d", label: "3 дня" },
-    { value: "7d", label: "7 дней" },
-    { value: "30d", label: "Месяц" },
-    { value: "all", label: "Всё время" },
+    { value: "24h", label: "24 hours" },
+    { value: "3d", label: "3 days" },
+    { value: "7d", label: "7 days" },
+    { value: "30d", label: "Month" },
+    { value: "all", label: "All time" },
 ];
 
 export default function Dashboard() {
@@ -173,7 +173,7 @@ export default function Dashboard() {
                 <div className="card" style={{ padding: "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
                         <Activity size={18} color="#00FF75" />
-                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>{period === "24h" ? "Alerts по часам" : "Alerts по дням"}</h2>
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>{period === "24h" ? "Alerts by hour" : "Alerts by day"}</h2>
                     </div>
                     <div style={{ width: "100%", height: 220 }}>
                         <ResponsiveContainer width="100%" height="100%">

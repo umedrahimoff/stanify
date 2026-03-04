@@ -85,7 +85,7 @@ export default function ChannelDetailPage() {
             const { data } = await axios.post<{ keywords: string[] }>(`/api/channels/${id}/suggest-keywords`);
             setSuggestedKeywords(data.keywords ?? []);
         } catch (e: any) {
-            alert(e.response?.data?.error || "Ошибка");
+            alert(e.response?.data?.error || "Error");
         } finally {
             setSuggesting(false);
         }
@@ -97,7 +97,7 @@ export default function ChannelDetailPage() {
             await axios.post(`/api/channels/${id}/detect-language`);
             mutateStats("/api/channels");
         } catch (e: any) {
-            alert(e.response?.data?.error || "Ошибка");
+            alert(e.response?.data?.error || "Error");
         } finally {
             setDetectingLang(false);
         }
@@ -212,7 +212,7 @@ export default function ChannelDetailPage() {
                                     style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.35rem 0.75rem", fontSize: "0.8rem", background: "rgba(191,90,242,0.15)", border: "1px solid rgba(191,90,242,0.3)", borderRadius: "8px", color: "#BF5AF2", cursor: suggesting ? "not-allowed" : "pointer" }}
                                 >
                                     {suggesting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                                    Подсказать
+                                    Suggest
                                 </button>
                                 <button
                                     onClick={detectLanguage}
@@ -220,7 +220,7 @@ export default function ChannelDetailPage() {
                                     style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.35rem 0.75rem", fontSize: "0.8rem", background: "rgba(191,90,242,0.15)", border: "1px solid rgba(191,90,242,0.3)", borderRadius: "8px", color: "#BF5AF2", cursor: detectingLang ? "not-allowed" : "pointer" }}
                                 >
                                     {detectingLang ? <Loader2 size={14} className="animate-spin" /> : <Languages size={14} />}
-                                    Язык
+                                    Language
                                 </button>
                                 <Link
                                     href="/dashboard/keywords"
@@ -232,7 +232,7 @@ export default function ChannelDetailPage() {
                         </div>
                         {suggestedKeywords.length > 0 && (
                             <div style={{ marginBottom: "0.75rem", padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                                <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem" }}>Подсказки:</div>
+                                <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem" }}>Suggestions:</div>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                                     {suggestedKeywords.map((kw) => (
                                         <button

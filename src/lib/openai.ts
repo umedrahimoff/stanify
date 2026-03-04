@@ -34,17 +34,17 @@ export async function suggestKeywords(content: string, existingKeywords: string[
 
 export async function detectLanguage(content: string): Promise<string> {
     const text = content.slice(0, 3000);
-    if (!text.trim()) return "Неизвестно";
+    if (!text.trim()) return "Unknown";
     const res = await getClient().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
             {
                 role: "system",
-                content: "Определи язык текста. Ответь одним словом: русский, английский, узбекский, казахский и т.д. Если смешанный — укажи основной.",
+                content: "Detect the language of the text. Reply with one word in English: Russian, English, Uzbek, Kazakh, etc. If mixed, state the main one.",
             },
             { role: "user", content: text },
         ],
         max_tokens: 20,
     });
-    return res.choices[0]?.message?.content?.trim() || "Неизвестно";
+    return res.choices[0]?.message?.content?.trim() || "Unknown";
 }

@@ -58,14 +58,14 @@ export default function UsersPage() {
     };
 
     const suspendUser = async (id: string, u: AppUser) => {
-        if (!confirm(`Приостановить @${u.username}? Он не сможет войти, но будет получать оповещения.`)) return;
+        if (!confirm(`Suspend @${u.username}? They won't be able to log in but will still receive notifications.`)) return;
         try {
             await axios.delete("/api/users", { data: { id } });
             mutate();
             mutateMe("/api/auth/me");
-            showToast("Пользователь приостановлен");
+            showToast("User suspended");
         } catch (e: any) {
-            showToast(e.response?.data?.error || "Ошибка", "error");
+            showToast(e.response?.data?.error || "Error", "error");
         }
     };
 
@@ -74,9 +74,9 @@ export default function UsersPage() {
             await axios.patch("/api/users", { id, isActive: true });
             mutate();
             mutateMe("/api/auth/me");
-            showToast(`@${u.username} восстановлен`);
+            showToast(`@${u.username} restored`);
         } catch (e: any) {
-            showToast(e.response?.data?.error || "Ошибка", "error");
+            showToast(e.response?.data?.error || "Error", "error");
         }
     };
     const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
@@ -112,7 +112,7 @@ export default function UsersPage() {
             <div style={{ marginBottom: "1.5rem" }}>
                 <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Users</h1>
                 <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
-                    Добавляйте модераторов. Приостановленные не могут войти, но получают оповещения.
+                    Add moderators. Suspended users cannot log in but still receive notifications.
                 </p>
             </div>
 
@@ -217,7 +217,7 @@ export default function UsersPage() {
                                                 </span>
                                             ) : (
                                                 <span style={{ fontSize: "0.75rem", color: "rgba(255,159,10,0.9)", fontWeight: 600 }}>
-                                                    Приостановлен
+                                                    Suspended
                                                 </span>
                                             )}
                                         </td>
@@ -226,7 +226,7 @@ export default function UsersPage() {
                                                 u.isActive ? (
                                                     <button
                                                         onClick={() => suspendUser(u.id, u)}
-                                                        title="Приостановить"
+                                                        title="Suspend"
                                                         style={{
                                                             background: "none",
                                                             border: "none",
@@ -243,7 +243,7 @@ export default function UsersPage() {
                                                 ) : (
                                                     <button
                                                         onClick={() => restoreUser(u.id, u)}
-                                                        title="Восстановить"
+                                                        title="Restore"
                                                         style={{
                                                             background: "none",
                                                             border: "none",

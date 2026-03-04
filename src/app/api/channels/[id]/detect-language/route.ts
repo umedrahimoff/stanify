@@ -21,7 +21,7 @@ export async function POST(
         ]);
         const content = [...alerts.map((a) => a.content), ...posts.map((p) => p.content)].filter(Boolean).slice(0, 40).join("\n\n");
         if (!content.trim()) {
-            return NextResponse.json({ error: "Нет контента. Добавьте ключевые слова и дождитесь постов." }, { status: 400 });
+            return NextResponse.json({ error: "No content. Add keywords and wait for posts." }, { status: 400 });
         }
 
         const language = await detectLanguage(content);
@@ -33,9 +33,9 @@ export async function POST(
         return NextResponse.json({ language });
     } catch (e: any) {
         if (e.message?.includes("OPENAI_API_KEY")) {
-            return NextResponse.json({ error: "OpenAI не настроен. Добавьте OPENAI_API_KEY в Vercel → Settings → Environment Variables и сделайте Redeploy." }, { status: 500 });
+            return NextResponse.json({ error: "OpenAI not configured. Add OPENAI_API_KEY in Vercel → Settings → Environment Variables and Redeploy." }, { status: 500 });
         }
         console.error("Detect language error:", e);
-        return NextResponse.json({ error: e.message || "Ошибка" }, { status: 500 });
+        return NextResponse.json({ error: e.message || "Error" }, { status: 500 });
     }
 }
