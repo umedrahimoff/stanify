@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Calendar, Radio, Hash, Trash2 } from "lucide-react";
+import { ExternalLink, Calendar, Radio, Trash2 } from "lucide-react";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
 import { ChannelFilterSelect } from "@/components/ChannelFilterSelect";
@@ -111,16 +111,13 @@ export default function ArchivePage() {
                     </div>
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Keyword</label>
-                        <div className="relative">
-                            <Hash size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
-                            <input
-                                type="text"
-                                className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[140px]")}
-                                placeholder="Filter by keyword..."
-                                value={keywordFilter}
-                                onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
-                            />
-                        </div>
+                        <input
+                            type="text"
+                            className={cn("input-field", filterClasses.input, "min-w-[140px]")}
+                            placeholder="Filter by keyword..."
+                            value={keywordFilter}
+                            onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
+                        />
                     </div>
                     {hasFilters && (
                         <button onClick={() => { setChannelFilter(""); setSourceFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Calendar, Hash, Radio, User, CheckCircle, XCircle, ExternalLink } from "lucide-react";
+import { FileText, Calendar, CheckCircle, XCircle, ExternalLink, User } from "lucide-react";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
 import { cn } from "@/lib/cn";
@@ -111,42 +111,33 @@ export default function LogsPage() {
                 </div>
                 <div className={filterClasses.field}>
                     <label className={filterClasses.label}>Recipient</label>
-                    <div className="relative">
-                        <User size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
-                        <input
-                            type="text"
-                            className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[120px]")}
-                            placeholder="@username"
-                            value={recipientFilter}
-                            onChange={(e) => { setRecipientFilter(e.target.value); resetPage(); }}
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        className={cn("input-field", filterClasses.input, "min-w-[120px]")}
+                        placeholder="@username"
+                        value={recipientFilter}
+                        onChange={(e) => { setRecipientFilter(e.target.value); resetPage(); }}
+                    />
                 </div>
                 <div className={filterClasses.field}>
                     <label className={filterClasses.label}>Keyword</label>
-                    <div className="relative">
-                        <Hash size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
-                        <input
-                            type="text"
-                            className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[100px]")}
-                            placeholder="Keyword..."
-                            value={keywordFilter}
-                            onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        className={cn("input-field", filterClasses.input, "min-w-[100px]")}
+                        placeholder="Keyword..."
+                        value={keywordFilter}
+                        onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
+                    />
                 </div>
                 <div className={filterClasses.field}>
                     <label className={filterClasses.label}>Source channel</label>
-                    <div className="relative">
-                        <Radio size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0" />
-                        <input
-                            type="text"
-                            className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[120px]")}
-                            placeholder="Channel name..."
-                            value={channelFilter}
-                            onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        className={cn("input-field", filterClasses.input, "min-w-[120px]")}
+                        placeholder="Channel name..."
+                        value={channelFilter}
+                        onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
+                    />
                 </div>
                 <div className={filterClasses.field}>
                     <label className={filterClasses.label}>Status</label>

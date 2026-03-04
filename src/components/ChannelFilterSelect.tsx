@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Radio } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { filterClasses } from "@/components/FilterCard";
@@ -105,11 +104,9 @@ export function ChannelFilterSelect({ value, onChange, placeholder = "Search cha
         <div className={filterClasses.field} ref={containerRef} style={{ minWidth: "160px" }}>
             <label className={filterClasses.label}>Channel</label>
             <div className="relative">
-                <div className="relative">
-                    <Radio size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none shrink-0 z-10" />
-                    <input
-                        type="text"
-                        className={cn("input-field", filterClasses.input, filterClasses.inputWithIcon, "min-w-[160px]")}
+                <input
+                    type="text"
+                    className={cn("input-field", filterClasses.input, "min-w-[160px]")}
                         placeholder={placeholder}
                         value={open ? query : (value ? displayValue : "")}
                         onChange={(e) => {
@@ -118,9 +115,9 @@ export function ChannelFilterSelect({ value, onChange, placeholder = "Search cha
                         }}
                         onFocus={() => setOpen(true)}
                         onKeyDown={handleKeyDown}
-                    />
-                    {value && (
-                        <button
+                />
+                {value && (
+                    <button
                             type="button"
                             onClick={handleClear}
                             title="Clear"
@@ -137,11 +134,10 @@ export function ChannelFilterSelect({ value, onChange, placeholder = "Search cha
                                 lineHeight: 1,
                                 padding: "0.2rem",
                             }}
-                        >
-                            ×
-                        </button>
-                    )}
-                </div>
+                    >
+                        ×
+                    </button>
+                )}
                 {open && (
                     <div
                         style={{
