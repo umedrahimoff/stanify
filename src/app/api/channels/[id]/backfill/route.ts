@@ -15,6 +15,9 @@ export async function POST(
     const admin = await requireAdmin();
     if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+    const parserRow = await prisma.appSetting.findUnique({ where: { key: "parser_enabled" } });
+    if (parserRow?.value === "false") return NextResponse.json({ error: "Parser is disabled in settings" }, { status: 403 });
+
     const { id } = await params;
     const channel = await prisma.channel.findUnique({
         where: { id },

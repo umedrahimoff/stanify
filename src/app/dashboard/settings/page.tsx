@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Key, Phone, ShieldCheck, Mail, Fingerprint, Activity, Database, Download, Trash2, AlertTriangle, Users } from "lucide-react";
+import { Key, Phone, ShieldCheck, Mail, Fingerprint, Activity, Database, Download, Trash2, AlertTriangle, Users, History } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
@@ -22,7 +22,12 @@ export default function SettingsPage() {
         fetcher,
         { refreshInterval: 30000 }
     );
+    const { data: settings, mutate: mutateSettings } = useSWR<{ parserEnabled?: boolean }>(
+        me?.role === "admin" ? "/api/settings" : null,
+        fetcher
+    );
     const [clearing, setClearing] = useState(false);
+    const [savingParser, setSavingParser] = useState(false);
 
     useEffect(() => {
         if (me && me.role !== "admin") router.replace("/dashboard");
@@ -144,6 +149,36 @@ export default function SettingsPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div className="card" style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                            <History size={18} color="#BF5AF2" />
+                            <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Parser</h2>
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1rem' }}>
+                            Parse old messages (backfill) — scan historical messages for channels. When disabled, the feature is hidden from the UI.
+                        </p>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
+                            <input
+                                type="checkbox"
+                                checked={settings?.parserEnabled !== false}
+                                disabled={savingParser}
+                                onChange={async (e) => {
+                                    setSavingParser(true);
+                                    try {
+                                        await axios.post('/api/settings', { parserEnabled: e.target.checked });
+                                        mutateSettings();
+                                    } catch {
+                                        alert('Error');
+                                    } finally {
+                                        setSavingParser(false);
+                                    }
+                                }}
+                                style={{ accentColor: '#BF5AF2' }}
+                            />
+                            Parser enabled
+                        </label>
+                    </div>
+
+                    <div className="card" style={{ padding: '1rem', marginTop: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                             <Activity size={18} color="#00FF94" />
                             <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>Notification Settings</h2>

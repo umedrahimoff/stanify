@@ -3,7 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 
 const NOTIFICATION_RECIPIENT_KEY = "notification_recipient";
+const PARSER_ENABLED_KEY = "parser_enabled";
 const DEFAULT_RECIPIENT = "umedrahimoff";
+
+async function getParserEnabled(): Promise<boolean> {
+    const row = await prisma.appSetting.findUnique({ where: { key: PARSER_ENABLED_KEY } });
+    return row?.value !== "false";
+}
 
 export async function GET() {
     try {
@@ -15,7 +21,8 @@ export async function GET() {
             .split(",")
             .map((s) => s.trim().replace(/^@/, ""))
             .filter(Boolean);
-        return NextResponse.json({ notificationRecipients: recipients });
+        const parserEnabled = await getParserEnabled();
+        return NextResponse.json({ notificationRecipients: recipients, parserEnabled });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
     }
@@ -39,7 +46,15 @@ export async function POST(req: Request) {
             create: { key: NOTIFICATION_RECIPIENT_KEY, value },
             update: { value },
         });
-        return NextResponse.json({ success: true, notificationRecipients: value.split(",") });
+        if (typeof body.parserEnabled === "boolean") {
+            await prisma.appSetting.upsert({
+                where: { key: PARSER_ENABLED_KEY },
+                create: { key: PARSER_ENABLED_KEY, value: body.parserEnabled ? "true" : "false" },
+                update: { value: body.parserEnabled ? "true" : "false" },
+            });
+        }
+        const parserEnabled = await getParserEnabled();
+        return NextResponse.json({ success: true, notificationRecipients: value.split(","), parserEnabled });
     } catch (error) {
         return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
     }

@@ -53,6 +53,7 @@ export default function ChannelDetailPage() {
         id ? `/api/channels/${id}/keywords` : null,
         fetcher
     );
+    const { data: parserSettings } = useSWR<{ parserEnabled: boolean }>("/api/settings/parser", fetcher);
     const { mutate: mutateStats } = useSWRConfig();
     const [keywordInput, setKeywordInput] = useState("");
     const [addingKw, setAddingKw] = useState(false);
@@ -369,76 +370,78 @@ export default function ChannelDetailPage() {
                         )}
                     </div>
 
-                    <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                            <History size={18} color="#BF5AF2" />
-                            <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Parse old messages</h2>
-                        </div>
-                        <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.75rem" }}>
-                            Scan historical messages for this channel. Matches saved to Archive.
-                        </p>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
-                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                                <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
-                                    <input type="radio" name="backfillMode" checked={backfillMode === "limit"} onChange={() => setBackfillMode("limit")} style={{ accentColor: "#BF5AF2" }} />
-                                    Last N messages
-                                </label>
-                                <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
-                                    <input type="radio" name="backfillMode" checked={backfillMode === "date"} onChange={() => setBackfillMode("date")} style={{ accentColor: "#BF5AF2" }} />
-                                    Date range
-                                </label>
+                    {parserSettings?.parserEnabled === true && (
+                        <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                                <History size={18} color="#BF5AF2" />
+                                <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Parse old messages</h2>
                             </div>
-                            {backfillMode === "limit" ? (
-                                <div>
-                                    <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>Messages</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={5000}
-                                        className="input-field"
-                                        value={backfillLimit}
-                                        onChange={(e) => setBackfillLimit(e.target.value)}
-                                        placeholder="100"
-                                        style={{ width: "100px", height: "36px", fontSize: "0.85rem" }}
-                                    />
+                            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.75rem" }}>
+                                Scan historical messages for this channel. Matches saved to Archive.
+                            </p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
+                                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                    <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
+                                        <input type="radio" name="backfillMode" checked={backfillMode === "limit"} onChange={() => setBackfillMode("limit")} style={{ accentColor: "#BF5AF2" }} />
+                                        Last N messages
+                                    </label>
+                                    <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
+                                        <input type="radio" name="backfillMode" checked={backfillMode === "date"} onChange={() => setBackfillMode("date")} style={{ accentColor: "#BF5AF2" }} />
+                                        Date range
+                                    </label>
                                 </div>
-                            ) : (
-                                <>
+                                {backfillMode === "limit" ? (
                                     <div>
-                                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>From</label>
-                                        <input type="date" className="input-field" value={backfillFrom} onChange={(e) => setBackfillFrom(e.target.value)} style={{ height: "36px", fontSize: "0.85rem" }} />
+                                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>Messages</label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={5000}
+                                            className="input-field"
+                                            value={backfillLimit}
+                                            onChange={(e) => setBackfillLimit(e.target.value)}
+                                            placeholder="100"
+                                            style={{ width: "100px", height: "36px", fontSize: "0.85rem" }}
+                                        />
                                     </div>
-                                    <div>
-                                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>To</label>
-                                        <input type="date" className="input-field" value={backfillTo} onChange={(e) => setBackfillTo(e.target.value)} style={{ height: "36px", fontSize: "0.85rem" }} />
-                                    </div>
-                                </>
-                            )}
-                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                                <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
-                                    <input type="radio" name="backfillSave" checked={backfillSaveAll} onChange={() => setBackfillSaveAll(true)} style={{ accentColor: "#BF5AF2" }} />
-                                    All posts
+                                ) : (
+                                    <>
+                                        <div>
+                                            <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>From</label>
+                                            <input type="date" className="input-field" value={backfillFrom} onChange={(e) => setBackfillFrom(e.target.value)} style={{ height: "36px", fontSize: "0.85rem" }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>To</label>
+                                            <input type="date" className="input-field" value={backfillTo} onChange={(e) => setBackfillTo(e.target.value)} style={{ height: "36px", fontSize: "0.85rem" }} />
+                                        </div>
+                                    </>
+                                )}
+                                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                    <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
+                                        <input type="radio" name="backfillSave" checked={backfillSaveAll} onChange={() => setBackfillSaveAll(true)} style={{ accentColor: "#BF5AF2" }} />
+                                        All posts
+                                    </label>
+                                    <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
+                                        <input type="radio" name="backfillSave" checked={!backfillSaveAll} onChange={() => setBackfillSaveAll(false)} style={{ accentColor: "#BF5AF2" }} />
+                                        Only keywords
+                                    </label>
+                                </div>
+                                <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                                    <input type="checkbox" checked={backfillNotify} onChange={(e) => setBackfillNotify(e.target.checked)} style={{ accentColor: "#BF5AF2" }} />
+                                    Send to Telegram
                                 </label>
-                                <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
-                                    <input type="radio" name="backfillSave" checked={!backfillSaveAll} onChange={() => setBackfillSaveAll(false)} style={{ accentColor: "#BF5AF2" }} />
-                                    Only keywords
-                                </label>
+                                <button
+                                    onClick={runBackfill}
+                                    disabled={backfilling || (backfillMode === "date" && (!backfillFrom || !backfillTo)) || (backfillMode === "limit" && (!backfillLimit.trim() || parseInt(backfillLimit, 10) < 1))}
+                                    className="btn-primary"
+                                    style={{ height: "36px", padding: "0 1rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+                                >
+                                    {backfilling ? <Loader2 size={16} className="animate-spin" /> : <History size={16} />}
+                                    {backfilling ? "Scanning…" : "Run"}
+                                </button>
                             </div>
-                            <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
-                                <input type="checkbox" checked={backfillNotify} onChange={(e) => setBackfillNotify(e.target.checked)} style={{ accentColor: "#BF5AF2" }} />
-                                Send to Telegram
-                            </label>
-                            <button
-                                onClick={runBackfill}
-                                disabled={backfilling || (backfillMode === "date" && (!backfillFrom || !backfillTo)) || (backfillMode === "limit" && (!backfillLimit.trim() || parseInt(backfillLimit, 10) < 1))}
-                                className="btn-primary"
-                                style={{ height: "36px", padding: "0 1rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
-                            >
-                                {backfilling ? <Loader2 size={16} className="animate-spin" /> : <History size={16} />}
-                                {backfilling ? "Scanning…" : "Run"}
-                            </button>
                         </div>
-                    </div>
+                    )}
 
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
                         <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>
