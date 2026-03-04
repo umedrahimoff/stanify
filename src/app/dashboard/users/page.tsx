@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, Shield, UserCog, AlertCircle, Pause, Play } from "lucide-react";
+import Link from "next/link";
+import { Plus, Loader2, Shield, UserCog, AlertCircle, Pause, Play, Settings } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
@@ -58,7 +59,7 @@ export default function UsersPage() {
     };
 
     const suspendUser = async (id: string, u: AppUser) => {
-        if (!confirm(`Suspend @${u.username}? They won't be able to log in but will still receive notifications.`)) return;
+        if (!confirm(`Suspend @${u.username}? They won't be able to log in or receive alerts.`)) return;
         try {
             await axios.delete("/api/users", { data: { id } });
             mutate();
@@ -112,7 +113,7 @@ export default function UsersPage() {
             <div style={{ marginBottom: "1.5rem" }}>
                 <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Users</h1>
                 <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
-                    Add moderators. Suspended users cannot log in but still receive notifications.
+                    Add moderators. Only users in this list receive alerts. Use the gear icon to set channels and keywords per user.
                 </p>
             </div>
 
@@ -162,7 +163,7 @@ export default function UsersPage() {
                                     <th>Role</th>
                                     <th>Last login</th>
                                     <th>Status</th>
-                                    <th style={{ width: "80px" }}></th>
+                                    <th style={{ width: "120px" }}></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -222,43 +223,61 @@ export default function UsersPage() {
                                             )}
                                         </td>
                                         <td>
-                                            {u.role !== "admin" && (
-                                                u.isActive ? (
-                                                    <button
-                                                        onClick={() => suspendUser(u.id, u)}
-                                                        title="Suspend"
-                                                        style={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            color: "rgba(255,159,10,0.8)",
-                                                            cursor: "pointer",
-                                                            padding: "0.35rem",
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                        }}
-                                                    >
-                                                        <Pause size={14} />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => restoreUser(u.id, u)}
-                                                        title="Restore"
-                                                        style={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            color: "rgba(0,255,117,0.8)",
-                                                            cursor: "pointer",
-                                                            padding: "0.35rem",
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                        }}
-                                                    >
-                                                        <Play size={14} />
-                                                    </button>
-                                                )
-                                            )}
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                                                <Link
+                                                    href={`/dashboard/users/${u.id}`}
+                                                    title="Preferences"
+                                                    style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: "rgba(0,163,255,0.8)",
+                                                        cursor: "pointer",
+                                                        padding: "0.35rem",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        textDecoration: "none",
+                                                    }}
+                                                >
+                                                    <Settings size={14} />
+                                                </Link>
+                                                {u.role !== "admin" &&
+                                                    (u.isActive ? (
+                                                        <button
+                                                            onClick={() => suspendUser(u.id, u)}
+                                                            title="Suspend"
+                                                            style={{
+                                                                background: "none",
+                                                                border: "none",
+                                                                color: "rgba(255,159,10,0.8)",
+                                                                cursor: "pointer",
+                                                                padding: "0.35rem",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                            }}
+                                                        >
+                                                            <Pause size={14} />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => restoreUser(u.id, u)}
+                                                            title="Restore"
+                                                            style={{
+                                                                background: "none",
+                                                                border: "none",
+                                                                color: "rgba(0,255,117,0.8)",
+                                                                cursor: "pointer",
+                                                                padding: "0.35rem",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                            }}
+                                                        >
+                                                            <Play size={14} />
+                                                        </button>
+                                                    ))}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

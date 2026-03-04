@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { TelegramManager } from "../lib/telegram";
-import { getNotificationRecipients } from "../lib/settings";
+import { getFilteredRecipients } from "../lib/userRecipients";
 import { stripMarkdown } from "../lib/telegramFormat";
 import { translateToRussian } from "../lib/deepl";
 import { logNotification } from "../lib/notificationLog";
@@ -35,7 +35,7 @@ async function startMonitoring() {
         channelIdOnlyByUsername: new Map<string, string>(),
         channelIdOnlyByTelegramId: new Map<string, string>(),
         channelIdsSaveAllPosts: new Set<string>(),
-        globalKeywordsList: [] as { id: string; text: string; recipients: string[] }[],
+        globalKeywordsList: [] as { id: string; text: string }[],
     };
 
     async function loadChannelsState() {
@@ -45,11 +45,8 @@ async function startMonitoring() {
         });
         const globalKeywords = await prisma.globalKeyword.findMany({
             where: { isActive: true },
-            include: { recipients: { select: { username: true } } },
         });
-        state.globalKeywordsList = globalKeywords
-            .filter((gk) => gk.recipients.length > 0)
-            .map((gk) => ({ id: gk.id, text: gk.text.toLowerCase(), recipients: gk.recipients.map((r) => r.username) }));
+        state.globalKeywordsList = globalKeywords.map((gk) => ({ id: gk.id, text: gk.text.toLowerCase() }));
 
         state.channelMapByUsername.clear();
         state.channelMapByTelegramId.clear();
@@ -256,7 +253,11 @@ async function startMonitoring() {
             prisma.channel.update({ where: { id: channel.id }, data: { lastActivityAt: new Date() } }).catch(() => {});
         }
 
-        const recipients = await getNotificationRecipients();
+        const recipients = await getFilteredRecipients({
+            channelId: channel?.id ?? null,
+            channelName,
+            matchedKeyword: keyword,
+        });
         const contentPlain = stripMarkdown(content);
         const contentPreview = contentPlain.length > 400 ? contentPlain.slice(0, 400) + "…" : contentPlain;
         const contentTranslated = await translateToRussian(contentPreview);
@@ -343,7 +344,12 @@ async function startMonitoring() {
                     "",
                     postLink ? `🔗 Open post: ${postLink}` : "🔗 Private",
                 ].join("\n");
-                for (const r of gk.recipients) {
+                const recipients = await getFilteredRecipients({
+                    channelId: channel?.id ?? null,
+                    channelName,
+                    matchedKeyword: gk.text,
+                });
+                for (const r of recipients) {
                     try {
                         await tg.sendMessage(r, notificationText);
                         await logNotification({ type: "global", keyword: gk.text, sourceChannel: channelName, recipient: r, success: true, alertId: alert.id, contentPreview: contentTranslated, postLink });
@@ -352,7 +358,7 @@ async function startMonitoring() {
                         await logNotification({ type: "global", keyword: gk.text, sourceChannel: channelName, recipient: r, success: false, errorMessage: e?.message ?? String(e), alertId: alert.id, contentPreview: contentTranslated, postLink });
                     }
                 }
-                console.log(`🚀 Global alert [${gk.text}] sent to ${gk.recipients.map((u) => "@" + u).join(", ")}`);
+                console.log(`🚀 Global alert [${gk.text}] sent to ${recipients.map((u) => "@" + u).join(", ")}`);
                 break;
             }
         }

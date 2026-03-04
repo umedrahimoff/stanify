@@ -21,6 +21,7 @@ model Channel {
   alerts      Alert[]
   keywords    ChannelKeyword[]
   channelPosts ChannelPost[]
+  userChannels UserChannel[]
 }
 
 model ChannelPost {
@@ -94,6 +95,29 @@ model AppUser {
   createdAt      DateTime  @default(now())
   lastLoginAt    DateTime?
   lastActivityAt DateTime?
+  userChannels   UserChannel[]
+  userKeywords   UserKeyword[]
+}
+
+model UserChannel {
+  id        String   @id @default(cuid())
+  userId    String
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, channelId])
+}
+
+model UserKeyword {
+  id        String   @id @default(cuid())
+  userId    String
+  user      AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyword   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, keyword])
 }
 
 model VerificationCode {

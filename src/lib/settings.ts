@@ -1,30 +1,15 @@
 import { prisma } from "./prisma";
 
-const NOTIFICATION_RECIPIENT_KEY = "notification_recipient";
-const DEFAULT_RECIPIENT = "umedrahimoff";
-
-function parseRecipients(value: string): string[] {
-    if (!value?.trim()) return [DEFAULT_RECIPIENT];
-    return value
-        .split(",")
-        .map((s) => s.trim().replace(/^@/, ""))
-        .filter(Boolean);
-}
-
+/** Returns usernames of active AppUsers — only users in the list can receive alerts */
 export async function getNotificationRecipients(): Promise<string[]> {
-    const row = await prisma.appSetting.findUnique({ where: { key: NOTIFICATION_RECIPIENT_KEY } });
-    return parseRecipients(row?.value ?? DEFAULT_RECIPIENT);
+    const users = await prisma.appUser.findMany({
+        where: { isActive: true },
+        select: { username: true },
+    });
+    return users.map((u) => u.username.toLowerCase());
 }
 
-export async function addNotificationRecipient(username: string): Promise<void> {
-    const u = String(username ?? "").trim().replace(/^@/, "").toLowerCase();
-    if (!u) return;
-    const current = await getNotificationRecipients();
-    if (current.includes(u)) return;
-    const value = [...current, u].join(",");
-    await prisma.appSetting.upsert({
-        where: { key: NOTIFICATION_RECIPIENT_KEY },
-        create: { key: NOTIFICATION_RECIPIENT_KEY, value },
-        update: { value },
-    });
+/** @deprecated Kept for backward compat when adding user. Recipients now come from AppUser only. */
+export async function addNotificationRecipient(_username: string): Promise<void> {
+    // No-op: recipients are managed via Users list only
 }
