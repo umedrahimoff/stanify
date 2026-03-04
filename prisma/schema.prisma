@@ -7,20 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model RecipientGroup {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  members   RecipientGroupMember[]
+  channels  Channel[]
+  globalKeywords GlobalKeyword[]
+}
+
+model RecipientGroupMember {
+  id        String        @id @default(cuid())
+  groupId   String
+  group     RecipientGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  username  String
+  createdAt DateTime      @default(now())
+
+  @@unique([groupId, username])
+}
+
 model Channel {
-  id              String    @id @default(cuid())
-  telegramId      String    @unique
-  username        String?   @unique
-  name            String?
-  type            String    @default("channel") // "channel" | "group"
-  isActive        Boolean   @default(false)
-  saveAllPosts    Boolean   @default(false) // if true, save all posts to ChannelPost; else only keyword matches
-  language        String?   // detected via OpenAI
-  lastActivityAt   DateTime? // max(Alert.createdAt) for sorting
-  createdAt       DateTime  @default(now())
-  alerts      Alert[]
-  keywords    ChannelKeyword[]
-  channelPosts ChannelPost[]
+  id                String         @id @default(cuid())
+  telegramId        String         @unique
+  username          String?        @unique
+  name              String?
+  type              String         @default("channel") // "channel" | "group"
+  isActive          Boolean        @default(false)
+  saveAllPosts      Boolean        @default(false)
+  recipientGroupId  String?
+  recipientGroup    RecipientGroup? @relation(fields: [recipientGroupId], references: [id], onDelete: SetNull)
+  language          String?
+  lastActivityAt    DateTime?
+  createdAt         DateTime       @default(now())
+  alerts            Alert[]
+  keywords          ChannelKeyword[]
+  channelPosts      ChannelPost[]
 }
 
 model ChannelPost {
@@ -47,11 +68,13 @@ model ChannelKeyword {
 }
 
 model GlobalKeyword {
-  id         String   @id @default(cuid())
-  text       String   @unique
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  recipients GlobalKeywordRecipient[]
+  id                String         @id @default(cuid())
+  text              String         @unique
+  isActive          Boolean        @default(true)
+  recipientGroupId  String?
+  recipientGroup    RecipientGroup? @relation(fields: [recipientGroupId], references: [id], onDelete: SetNull)
+  createdAt         DateTime       @default(now())
+  recipients        GlobalKeywordRecipient[]
 }
 
 model GlobalKeywordRecipient {

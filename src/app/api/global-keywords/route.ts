@@ -13,7 +13,10 @@ export async function GET() {
 
         const items = await prisma.globalKeyword.findMany({
             orderBy: { createdAt: "desc" },
-            include: { recipients: { select: { username: true } } },
+            include: {
+                recipients: { select: { username: true } },
+                recipientGroup: { include: { members: { select: { username: true } } } },
+            },
         });
 
         return NextResponse.json(
@@ -21,8 +24,11 @@ export async function GET() {
                 id: k.id,
                 text: k.text,
                 isActive: k.isActive,
-                createdAt: k.createdAt,
-                recipients: k.recipients.map((r) => r.username),
+                recipientGroupId: k.recipientGroupId,
+                recipientGroup: k.recipientGroup ? { id: k.recipientGroup.id, name: k.recipientGroup.name } : null,
+                recipients: k.recipientGroup?.members?.length
+                    ? k.recipientGroup.members.map((r) => r.username)
+                    : k.recipients.map((r) => r.username),
             }))
         );
     } catch (error) {
@@ -37,6 +43,7 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         const text = normalize(body.text ?? "");
+        const recipientGroupId = body.recipientGroupId || null;
         const usernames: string[] = Array.isArray(body.recipients)
             ? body.recipients.map((u: string) => String(u).trim().replace(/^@/, "").toLowerCase()).filter(Boolean)
             : body.recipient
@@ -44,7 +51,7 @@ export async function POST(req: Request) {
                 : [];
 
         if (!text) return NextResponse.json({ error: "text required" }, { status: 400 });
-        if (!usernames.length) return NextResponse.json({ error: "At least one recipient required" }, { status: 400 });
+        if (!recipientGroupId && !usernames.length) return NextResponse.json({ error: "recipientGroupId or recipients required" }, { status: 400 });
 
         const existing = await prisma.globalKeyword.findUnique({ where: { text } });
         if (existing) return NextResponse.json({ error: "Keyword already exists" }, { status: 409 });
@@ -53,19 +60,19 @@ export async function POST(req: Request) {
             data: {
                 text,
                 isActive: true,
-                recipients: {
-                    create: usernames.map((username) => ({ username })),
-                },
+                recipientGroupId: recipientGroupId || undefined,
+                recipients: !recipientGroupId && usernames.length ? { create: usernames.map((username) => ({ username })) } : undefined,
             },
-            include: { recipients: { select: { username: true } } },
+            include: {
+                recipients: { select: { username: true } },
+                recipientGroup: { include: { members: { select: { username: true } } } },
+            },
         });
 
-        return NextResponse.json({
-            id: created.id,
-            text: created.text,
-            isActive: created.isActive,
-            recipients: created.recipients.map((r) => r.username),
-        });
+        const recipients = created.recipientGroup?.members?.length
+            ? created.recipientGroup.members.map((r) => r.username)
+            : created.recipients.map((r) => r.username);
+        return NextResponse.json({ id: created.id, text: created.text, isActive: created.isActive, recipients });
     } catch (error) {
         return NextResponse.json({ error: "Failed to create global keyword" }, { status: 500 });
     }

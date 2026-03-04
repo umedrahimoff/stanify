@@ -45,7 +45,7 @@ export async function GET(req: Request) {
                 prisma.channel.findMany({
                     where: whereClause,
                     orderBy,
-                    include: { _count: { select: { keywords: true, channelPosts: true } } },
+                    include: { _count: { select: { keywords: true, channelPosts: true } }, recipientGroup: { select: { id: true, name: true } } },
                     skip: (Math.max(1, parseInt(pageParam, 10)) - 1) * Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10))),
                     take: Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10))),
                 }),
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
             : [await prisma.channel.findMany({
                 where: whereClause,
                 orderBy,
-                include: { _count: { select: { keywords: true, channelPosts: true } } },
+                include: { _count: { select: { keywords: true, channelPosts: true } }, recipientGroup: { select: { id: true, name: true } } },
             }), 0];
 
         const [byChannelId, byChannelName] = await Promise.all([
