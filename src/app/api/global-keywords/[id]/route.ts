@@ -1,0 +1,43 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+
+export async function PATCH(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { id } = await params;
+        const body = await req.json();
+
+        const data: { isActive?: boolean; recipients?: { deleteMany: object; create: { username: string }[] } } = {};
+        if (typeof body.isActive === "boolean") data.isActive = body.isActive;
+        if (Array.isArray(body.recipients)) {
+            const usernames = body.recipients
+                .map((u: string) => String(u).trim().replace(/^@/, "").toLowerCase())
+                .filter(Boolean);
+            data.recipients = {
+                deleteMany: {},
+                create: usernames.map((u: string) => ({ username: u })),
+            };
+        }
+
+        const updated = await prisma.globalKeyword.update({
+            where: { id },
+            data,
+            include: { recipients: { select: { username: true } } },
+        });
+
+        return NextResponse.json({
+            id: updated.id,
+            text: updated.text,
+            isActive: updated.isActive,
+            recipients: updated.recipients.map((r) => r.username),
+        });
+    } catch (error) {
+        return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+    }
+}

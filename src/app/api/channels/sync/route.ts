@@ -112,6 +112,25 @@ export async function POST() {
         }
 
         await client.disconnect();
+
+        // Backfill lastActivityAt from alerts + channelPosts for channels that have null
+        const [byChannelId, byChannelName, postsByChannel] = await Promise.all([
+            prisma.alert.groupBy({ by: ["channelId"], where: { channelId: { not: null } }, _max: { createdAt: true } }),
+            prisma.alert.groupBy({ by: ["channelName"], _max: { createdAt: true } }),
+            prisma.channelPost.groupBy({ by: ["channelId"], _max: { createdAt: true } }),
+        ]);
+        const activityById = Object.fromEntries(byChannelId.map((a) => [a.channelId!, a._max.createdAt]));
+        const activityByName = Object.fromEntries(byChannelName.map((a) => [a.channelName, a._max.createdAt]));
+        const postActivityById = Object.fromEntries(postsByChannel.map((p) => [p.channelId, p._max.createdAt]));
+        const toUpdate = await prisma.channel.findMany({ where: { lastActivityAt: null }, select: { id: true, username: true, name: true } });
+        for (const ch of toUpdate) {
+            const fromAlerts = activityById[ch.id] ?? (ch.username && activityByName[ch.username]) ?? (ch.name && activityByName[ch.name]);
+            const fromPosts = postActivityById[ch.id];
+            const dates = [fromAlerts, fromPosts].filter((d): d is Date => d instanceof Date);
+            const at = dates.length ? dates.sort((a, b) => b.getTime() - a.getTime())[0] : null;
+            if (at) await prisma.channel.update({ where: { id: ch.id }, data: { lastActivityAt: at } });
+        }
+
         console.log(`✅ Sync done. Updated: ${upsertCount}, Removed: ${removedCount}`);
 
         return NextResponse.json({

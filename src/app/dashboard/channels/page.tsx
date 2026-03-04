@@ -30,6 +30,7 @@ export default function ChannelsPage() {
     const [syncing, setSyncing] = useState(false);
     const [showOnlyActive, setShowOnlyActive] = useState(true);
     const [typeFilter, setTypeFilter] = useState<"all" | "channel" | "group">("all");
+    const [sortBy, setSortBy] = useState<string>("createdAt");
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
     const [page, setPage] = useState(1);
 
@@ -39,6 +40,7 @@ export default function ChannelsPage() {
     params.set("pageSize", String(PAGE_SIZE));
     params.set("showOnlyActive", String(showOnlyActive));
     params.set("typeFilter", typeFilter);
+    params.set("sortBy", sortBy);
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
 
     const channelsKey = `/api/channels?${params.toString()}`;
@@ -47,7 +49,7 @@ export default function ChannelsPage() {
     const total = data?.total ?? 0;
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
 
-    useEffect(() => setPage(1), [searchQuery, showOnlyActive, typeFilter]);
+    useEffect(() => setPage(1), [searchQuery, showOnlyActive, typeFilter, sortBy]);
     const { mutate: mutateStats } = useSWRConfig();
 
     const showToast = (msg: string, type: "success" | "error" | "warn" = "success") => {
@@ -211,6 +213,20 @@ export default function ChannelsPage() {
                         </select>
                     </div>
                     <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Sort by</label>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className={cn("input-field", filterClasses.input)}
+                        >
+                            <option value="createdAt">Newest first</option>
+                            <option value="added">Oldest first</option>
+                            <option value="posts">Posts count</option>
+                            <option value="keywords">Keywords count</option>
+                            <option value="activity">Last activity</option>
+                        </select>
+                    </div>
+                    <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Status</label>
                         <button
                             onClick={() => setShowOnlyActive(!showOnlyActive)}
@@ -236,9 +252,9 @@ export default function ChannelsPage() {
                             {syncing ? <Loader2 size={16} className="animate-spin" /> : <Radio size={16} />}
                             <span>{syncing ? "Syncing..." : "Sync"}</span>
                         </button>
-                        {(searchQuery.trim() || typeFilter !== "all" || !showOnlyActive) && (
+                        {(searchQuery.trim() || typeFilter !== "all" || !showOnlyActive || sortBy !== "createdAt") && (
                             <button
-                                onClick={() => { setSearchQuery(""); setTypeFilter("all"); setShowOnlyActive(true); setPage(1); }}
+                                onClick={() => { setSearchQuery(""); setTypeFilter("all"); setShowOnlyActive(true); setSortBy("createdAt"); setPage(1); }}
                                 className={filterClasses.clearBtn}
                             >
                                 Clear

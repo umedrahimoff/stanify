@@ -33,6 +33,14 @@ async function startMonitoring() {
         include: { keywords: { where: { isActive: true } } },
     });
 
+    const globalKeywords = await prisma.globalKeyword.findMany({
+        where: { isActive: true },
+        include: { recipients: { select: { username: true } } },
+    });
+    const globalKeywordsList = globalKeywords
+        .filter((gk) => gk.recipients.length > 0)
+        .map((gk) => ({ id: gk.id, text: gk.text.toLowerCase(), recipients: gk.recipients.map((r) => r.username) }));
+
     const channelMapByUsername = new Map<string, { id: string; keywords: string[] }>();
     const channelMapByTelegramId = new Map<string, { id: string; keywords: string[] }>();
     const channelIdOnlyByUsername = new Map<string, string>();
@@ -87,7 +95,7 @@ async function startMonitoring() {
             if (!isNaN(num)) chatIdsForListener.push(num);
         }
     }
-    console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} keywords total.`);
+    console.log(`📡 Monitoring ${channels.length} channels, ${totalKeywords} channel keywords, ${globalKeywordsList.length} global keywords.`);
     if (channelsWithKeywords.length === 0) {
         console.warn("⚠️ No channels have keywords! Add keywords to channels in the dashboard.");
     } else {
@@ -163,6 +171,7 @@ async function startMonitoring() {
         prisma.channelPost.create({
             data: { channelId, content, messageId, postLink },
         }).catch((e) => console.warn("Failed to save post:", e.message));
+        prisma.channel.update({ where: { id: channelId }, data: { lastActivityAt: new Date() } }).catch(() => {});
     };
 
     // 4. Setup Listener
@@ -223,9 +232,13 @@ async function startMonitoring() {
                 channelId: channel?.id ?? null,
                 content,
                 matchedWord: keyword,
-                postLink: postLink
+                postLink: postLink,
+                source: "channel",
             }
         });
+        if (channel?.id) {
+            prisma.channel.update({ where: { id: channel.id }, data: { lastActivityAt: new Date() } }).catch(() => {});
+        }
 
         const recipients = await getNotificationRecipients();
         const contentPlain = stripMarkdown(content);
@@ -250,7 +263,80 @@ async function startMonitoring() {
             }
         }
         console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
-    }, recordScan, chatIdsForListener.length > 0 ? chatIdsForListener : undefined, saveEveryPost);
+    }, recordScan, chatIdsForListener.length > 0 ? chatIdsForListener : undefined, async (msg) => {
+        await saveEveryPost(msg);
+        // Global keywords: check every message
+        const content = (msg.text ?? msg.message ?? "").toLowerCase();
+        if (!content.trim()) return;
+        for (const gk of globalKeywordsList) {
+            if (content.includes(gk.text)) {
+                const peer = msg.peerId || {};
+                let channelName = peer.username || "Private/Group";
+                let linkUsername: string | null = peer.username || null;
+                let channelIdForLink: string | null = null;
+                if (!peer.username && peer.channelId) {
+                    const entity = await tg.getEntityByPeer(msg.peerId);
+                    if (entity && (entity as any).username) {
+                        channelName = (entity as any).username;
+                        linkUsername = (entity as any).username;
+                    } else if (entity && (entity as any).title) channelName = (entity as any).title;
+                    channelIdForLink = peer.channelId.toString().replace(/^-100/, "");
+                }
+                let postLink = "";
+                const messageId = msg.id;
+                if (linkUsername) postLink = `https://t.me/${linkUsername}/${messageId}`;
+                else if (channelIdForLink) postLink = `https://t.me/c/${channelIdForLink}/${messageId}`;
+                const channel = await prisma.channel.findFirst({
+                    where: {
+                        isActive: true,
+                        OR: [
+                            { username: channelName },
+                            { telegramId: peer.channelId?.toString() },
+                            { telegramId: "-100" + (peer.channelId?.toString() || "").replace(/^-100/, "") },
+                        ],
+                    },
+                });
+                if (channel?.username && (!postLink || postLink.startsWith("https://t.me/c/"))) {
+                    postLink = `https://t.me/${channel.username}/${messageId}`;
+                }
+                const textContent = msg.text ?? msg.message ?? "";
+                await prisma.alert.create({
+                    data: {
+                        channelName,
+                        channelId: channel?.id ?? null,
+                        content: textContent,
+                        matchedWord: gk.text,
+                        postLink,
+                        source: "global",
+                        globalKeywordId: gk.id,
+                    },
+                });
+                const contentPlain = stripMarkdown(textContent);
+                const contentPreview = contentPlain.length > 400 ? contentPlain.slice(0, 400) + "…" : contentPlain;
+                const contentTranslated = await translateToRussian(contentPreview);
+                const notificationText = [
+                    "🔔 Stanify Global Alert",
+                    "",
+                    `📍 Source: ${channelName}`,
+                    `🔑 Keyword: ${gk.text}`,
+                    "",
+                    "📝 Content:",
+                    contentTranslated,
+                    "",
+                    postLink ? `🔗 Open post: ${postLink}` : "🔗 Private",
+                ].join("\n");
+                for (const r of gk.recipients) {
+                    try {
+                        await tg.sendMessage(r, notificationText);
+                    } catch (e) {
+                        console.warn(`Failed to send global alert to @${r}:`, e);
+                    }
+                }
+                console.log(`🚀 Global alert [${gk.text}] sent to ${gk.recipients.map((u) => "@" + u).join(", ")}`);
+                break;
+            }
+        }
+    });
 
     tg.startReconnectInterval?.();
 

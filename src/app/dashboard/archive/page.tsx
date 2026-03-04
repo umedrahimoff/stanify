@@ -19,6 +19,7 @@ interface Alert {
     content: string;
     matchedWord: string;
     postLink: string | null;
+    source?: string;
     createdAt: string;
 }
 
@@ -26,6 +27,7 @@ const PAGE_SIZE = 20;
 
 export default function ArchivePage() {
     const [channelFilter, setChannelFilter] = useState<string>("");
+    const [sourceFilter, setSourceFilter] = useState<string>("");
     const [dateFrom, setDateFrom] = useState<string>("");
     const [dateTo, setDateTo] = useState<string>("");
     const [keywordFilter, setKeywordFilter] = useState<string>("");
@@ -35,6 +37,7 @@ export default function ArchivePage() {
     params.set("page", String(page));
     params.set("pageSize", String(PAGE_SIZE));
     if (channelFilter) params.set("channelId", channelFilter);
+    if (sourceFilter) params.set("source", sourceFilter);
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
     if (keywordFilter.trim()) params.set("keyword", keywordFilter.trim());
@@ -44,7 +47,7 @@ export default function ArchivePage() {
     const alerts = data?.items ?? [];
     const total = data?.total ?? 0;
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
-    const hasFilters = channelFilter || dateFrom || dateTo || keywordFilter.trim();
+    const hasFilters = channelFilter || sourceFilter || dateFrom || dateTo || keywordFilter.trim();
     const { mutate: mutateStats } = useSWRConfig();
 
     const resetPage = () => setPage(1);
@@ -77,6 +80,18 @@ export default function ArchivePage() {
                         onChange={(id) => { setChannelFilter(id); resetPage(); }}
                     />
                     <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Source</label>
+                        <select
+                            className={cn("input-field", filterClasses.input)}
+                            value={sourceFilter}
+                            onChange={(e) => { setSourceFilter(e.target.value); resetPage(); }}
+                        >
+                            <option value="">All</option>
+                            <option value="channel">Channel</option>
+                            <option value="global">Global</option>
+                        </select>
+                    </div>
+                    <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Date from</label>
                         <input
                             type="date"
@@ -108,7 +123,7 @@ export default function ArchivePage() {
                         </div>
                     </div>
                     {hasFilters && (
-                        <button onClick={() => { setChannelFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>
+                        <button onClick={() => { setChannelFilter(""); setSourceFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>
                             Clear
                         </button>
                     )}
@@ -154,7 +169,14 @@ export default function ArchivePage() {
                                             </div>
                                         </td>
                                         <td>
-                                            <span className="keyword-badge">{alert.matchedWord}</span>
+                                            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
+                                                <span className="keyword-badge">{alert.matchedWord}</span>
+                                                {alert.source === "global" && (
+                                                    <span style={{ fontSize: "0.65rem", color: "#BF5AF2", background: "rgba(191,90,242,0.15)", padding: "0.1rem 0.4rem", borderRadius: "6px" }}>
+                                                        Global
+                                                    </span>
+                                                )}
+                                            </span>
                                         </td>
                                         <td className="td-right">
                                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "flex-end" }}>

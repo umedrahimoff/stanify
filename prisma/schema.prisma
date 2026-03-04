@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Channel {
-  id          String        @id @default(cuid())
-  telegramId  String        @unique
-  username    String?       @unique
-  name        String?
-  type        String        @default("channel") // "channel" | "group"
-  isActive    Boolean       @default(false)
-  language    String?       // detected via OpenAI
-  createdAt   DateTime      @default(now())
+  id              String    @id @default(cuid())
+  telegramId      String    @unique
+  username        String?   @unique
+  name            String?
+  type            String    @default("channel") // "channel" | "group"
+  isActive        Boolean   @default(false)
+  language        String?   // detected via OpenAI
+  lastActivityAt   DateTime? // max(Alert.createdAt) for sorting
+  createdAt       DateTime  @default(now())
   alerts      Alert[]
   keywords    ChannelKeyword[]
   channelPosts ChannelPost[]
@@ -44,6 +45,24 @@ model ChannelKeyword {
   @@unique([channelId, text])
 }
 
+model GlobalKeyword {
+  id         String   @id @default(cuid())
+  text       String   @unique
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  recipients GlobalKeywordRecipient[]
+}
+
+model GlobalKeywordRecipient {
+  id        String        @id @default(cuid())
+  keywordId String
+  keyword   GlobalKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  username  String
+  createdAt DateTime      @default(now())
+
+  @@unique([keywordId, username])
+}
+
 model Alert {
   id               String   @id @default(cuid())
   channelName      String
@@ -53,6 +72,8 @@ model Alert {
   translatedContent String?  // cached DeepL translation for admin panel
   matchedWord      String
   postLink         String?
+  source           String   @default("channel") // "channel" | "global"
+  globalKeywordId  String?
   createdAt        DateTime @default(now())
 }
 

@@ -18,6 +18,7 @@ export async function GET(req: Request) {
         if (search?.startsWith("@")) search = search.slice(1) || undefined;
         const showOnlyActive = searchParams.get("showOnlyActive") === "true";
         const typeFilter = searchParams.get("typeFilter") || "all";
+        const sortBy = searchParams.get("sortBy") || "createdAt";
 
         const where: { isActive?: boolean; type?: string; OR?: object[] } = {};
         if (showOnlyActive) where.isActive = true;
@@ -30,11 +31,20 @@ export async function GET(req: Request) {
         }
         const whereClause = Object.keys(where).length > 0 ? where : undefined;
 
+        const orderByMap: Record<string, object> = {
+            createdAt: { createdAt: "desc" },
+            added: { createdAt: "asc" },
+            posts: { channelPosts: { _count: "desc" } },
+            keywords: { keywords: { _count: "desc" } },
+            activity: { lastActivityAt: "desc" },
+        };
+        const orderBy = orderByMap[sortBy] || orderByMap.createdAt;
+
         const [channels, total] = pageParam
             ? await Promise.all([
                 prisma.channel.findMany({
                     where: whereClause,
-                    orderBy: { createdAt: "desc" },
+                    orderBy,
                     include: { _count: { select: { keywords: true, channelPosts: true } } },
                     skip: (Math.max(1, parseInt(pageParam, 10)) - 1) * Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10))),
                     take: Math.min(100, Math.max(1, parseInt(pageSizeParam || "20", 10))),
@@ -43,7 +53,7 @@ export async function GET(req: Request) {
             ])
             : [await prisma.channel.findMany({
                 where: whereClause,
-                orderBy: { createdAt: "desc" },
+                orderBy,
                 include: { _count: { select: { keywords: true, channelPosts: true } } },
             }), 0];
 
@@ -67,7 +77,7 @@ export async function GET(req: Request) {
 
         const channelsWithActivity = channels.map((c) => ({
             ...c,
-            lastActivityAt: activityById[c.id] ?? (c.username && activityByName[c.username]) ?? (c.name && activityByName[c.name]) ?? null,
+            lastActivityAt: c.lastActivityAt ?? activityById[c.id] ?? (c.username && activityByName[c.username]) ?? (c.name && activityByName[c.name]) ?? null,
         }));
 
         if (pageParam) {

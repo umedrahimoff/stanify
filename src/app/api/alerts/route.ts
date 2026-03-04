@@ -11,8 +11,12 @@ export async function GET(req: Request) {
         const dateFrom = searchParams.get("dateFrom") || undefined;
         const dateTo = searchParams.get("dateTo") || undefined;
         const keyword = searchParams.get("keyword")?.trim() || undefined;
+        const source = searchParams.get("source") || undefined; // "channel" | "global"
 
         const conditions: object[] = [];
+        if (source === "channel" || source === "global") {
+            conditions.push({ source });
+        }
 
         if (channelId) {
             const channel = await prisma.channel.findUnique({ where: { id: channelId } });
