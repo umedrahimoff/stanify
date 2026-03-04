@@ -151,22 +151,9 @@ export default function Dashboard() {
 
     return (
         <div className="animate-fade" style={{ width: "100%" }}>
-            <div style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
-                <div>
-                    <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Overview</h1>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>Performance overview of your Stanify monitoring network.</p>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                    <button onClick={() => mutate()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "0.4rem 0.6rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: "0.8rem" }} title="Refresh">
-                        <RefreshCw size={14} />
-                        Refresh
-                    </button>
-                    <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="input-field" style={{ padding: "0.4rem 0.75rem", fontSize: "0.85rem", height: "auto", minWidth: "140px" }}>
-                        {PERIOD_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                    </select>
-                </div>
+            <div style={{ marginBottom: "1.5rem" }}>
+                <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Overview</h1>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>Performance overview of your Stanify monitoring network.</p>
             </div>
 
             {stats.periodComparison && stats.periodComparison.previous > 0 && (
@@ -177,25 +164,36 @@ export default function Dashboard() {
                 </div>
             )}
 
-            <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <Filter size={14} color="rgba(255,255,255,0.4)" />
-                <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "inherit", minWidth: 120 }}>
-                    <option value="">All channels</option>
-                    {(stats.alertsByChannel ?? []).map((c) => (
-                        <option key={c.name} value={c.name}>{c.name}</option>
-                    ))}
-                </select>
-                <select value={keywordFilter} onChange={(e) => setKeywordFilter(e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "inherit", minWidth: 120 }}>
-                    <option value="">All keywords</option>
-                    {(stats.alertsByKeyword ?? []).map((k) => (
-                        <option key={k.keyword} value={k.keyword}>{k.keyword}</option>
-                    ))}
-                </select>
-                {(channelFilter || keywordFilter) && (
-                    <Link href={archiveHref} style={{ fontSize: "0.8rem", color: "#00A3FF" }}>
-                        View filtered →
-                    </Link>
-                )}
+            <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <Filter size={14} color="rgba(255,255,255,0.4)" />
+                    <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "inherit", minWidth: 120 }}>
+                        <option value="">All channels</option>
+                        {(stats.alertsByChannel ?? []).map((c) => (
+                            <option key={c.name} value={c.name}>{c.name}</option>
+                        ))}
+                    </select>
+                    <select value={keywordFilter} onChange={(e) => setKeywordFilter(e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "inherit", minWidth: 120 }}>
+                        <option value="">All keywords</option>
+                        {(stats.alertsByKeyword ?? []).map((k) => (
+                            <option key={k.keyword} value={k.keyword}>{k.keyword}</option>
+                        ))}
+                    </select>
+                    <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="input-field" style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", height: "auto", minWidth: "120px" }}>
+                        {PERIOD_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                    {(channelFilter || keywordFilter) && (
+                        <Link href={archiveHref} style={{ fontSize: "0.8rem", color: "#00A3FF" }}>
+                            View filtered →
+                        </Link>
+                    )}
+                </div>
+                <button onClick={() => mutate()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "0.35rem 0.6rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: "0.8rem" }} title="Refresh">
+                    <RefreshCw size={14} />
+                    Refresh
+                </button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
@@ -218,15 +216,15 @@ export default function Dashboard() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                             <BarChart3 size={18} color="#00A3FF" />
-                            <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Posts per week</h2>
+                            <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Posts per day</h2>
                         </div>
-                        <ChartExportButton chartId="chart-week" title="Posts per week" />
+                        <ChartExportButton chartId="chart-week" title="Posts per day" />
                     </div>
                     <div style={{ width: "100%", height: 220 }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.alertsByWeek ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <BarChart data={stats.alertsByDay ?? []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                                <XAxis dataKey="week" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
+                                <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
                                 <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
                                 <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Posts"]} labelFormatter={(l) => l} />
                                 <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
@@ -257,29 +255,32 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {(stats.alertsBySource?.length ?? 0) > 0 && (
-                <div id="chart-source" className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <PieChart size={18} color="#BF5AF2" />
-                            <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Alerts by source</h2>
+            <div style={{ display: "grid", gridTemplateColumns: (stats.alertsBySource?.length ?? 0) > 0 ? "1fr 1fr" : "1fr", gap: "1rem", marginBottom: "1rem" }}>
+                {(stats.alertsBySource?.length ?? 0) > 0 && (
+                    <div id="chart-source" className="card" style={{ padding: "1rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <PieChart size={18} color="#BF5AF2" />
+                                <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Alerts by source</h2>
+                            </div>
+                            <ChartExportButton chartId="chart-source" title="Alerts by source" />
                         </div>
-                        <ChartExportButton chartId="chart-source" title="Alerts by source" />
+                        <div style={{ width: "100%", height: 200 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RechartsPieChart>
+                                    <Pie data={stats.alertsBySource} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
+                                        {(stats.alertsBySource ?? []).map((entry, i) => (
+                                            <Cell key={i} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
+                                </RechartsPieChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
-                    <div style={{ width: "100%", height: 200 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RechartsPieChart>
-                                <Pie data={stats.alertsBySource} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
-                                    {(stats.alertsBySource ?? []).map((entry, i) => (
-                                        <Cell key={i} fill={entry.fill} />
-                                    ))}
-                                </Pie>
-                                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
-                            </RechartsPieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
+                )}
+                <SystemStatusCard />
+            </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
                 <div id="chart-channels" className="card" style={{ padding: "1rem" }}>
@@ -343,9 +344,8 @@ export default function Dashboard() {
                 </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.8fr) minmax(0, 1.2fr)", gap: "1rem" }}>
-                    <div className="card" style={{ padding: "1rem" }}>
+            <div style={{ marginBottom: "1rem" }}>
+                <div className="card" style={{ padding: "1rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", alignItems: "center" }}>
                             <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Real-time Feed</h2>
                             <Link href="/dashboard/archive" style={{ fontSize: "0.8rem", color: "#00A3FF", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.25rem", textDecoration: "none" }}>
@@ -393,9 +393,6 @@ export default function Dashboard() {
                                 ))}
                             </div>
                         )}
-                    </div>
-
-                    <SystemStatusCard />
                 </div>
             </div>
         </div>
