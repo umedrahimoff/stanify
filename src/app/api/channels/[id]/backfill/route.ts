@@ -25,7 +25,7 @@ export async function POST(
     const entity = channel.username ?? (channel.telegramId && !channel.telegramId.startsWith("pending_") ? parseInt(channel.telegramId, 10) : null);
     if (!entity) return NextResponse.json({ error: "Channel has no username or telegramId" }, { status: 400 });
 
-    let body: { dateFrom?: string; dateTo?: string; limit?: number; sendNotifications?: boolean };
+    let body: { dateFrom?: string; dateTo?: string; limit?: number; sendNotifications?: boolean; saveAll?: boolean };
     try {
         body = await req.json();
     } catch {
@@ -36,6 +36,7 @@ export async function POST(
     const dateFrom = body.dateFrom ? new Date(body.dateFrom) : null;
     const dateTo = body.dateTo ? new Date(body.dateTo) : null;
     const sendNotifications = !!body.sendNotifications;
+    const saveAll = body.saveAll !== false;
 
     const useDateRange = dateFrom && dateTo && !isNaN(dateFrom.getTime()) && !isNaN(dateTo.getTime()) && dateFrom < dateTo;
     const useLimit = limit !== null;
@@ -85,7 +86,30 @@ export async function POST(
                 totalScanned++;
                 if (useLimit && totalScanned > limit!) break;
 
+                const postLink = channel.username
+                    ? `https://t.me/${channel.username}/${m.id}`
+                    : `https://t.me/c/${channel.telegramId?.replace(/^-100/, "")}/${m.id}`;
+
                 const contentLower = content.toLowerCase();
+                const hasChannelMatch = channel.keywords.some((k) => contentLower.includes(k.text.toLowerCase()));
+                const hasGlobalMatch = globalKeywords.some((gk) => contentLower.includes(gk.text.toLowerCase()));
+                const hasMatch = hasChannelMatch || hasGlobalMatch;
+
+                if (saveAll || hasMatch) {
+                    const existing = m.id != null
+                        ? await prisma.channelPost.findFirst({ where: { channelId: channel.id, messageId: m.id } })
+                        : null;
+                    if (!existing) {
+                        await prisma.channelPost.create({
+                            data: {
+                                channelId: channel.id,
+                                content,
+                                messageId: m.id ?? undefined,
+                                postLink,
+                            },
+                        }).catch(() => {});
+                    }
+                }
 
                 for (const kw of channel.keywords.map((k) => k.text)) {
                     if (contentLower.includes(kw.toLowerCase())) {
@@ -249,5 +273,6 @@ export async function POST(
         totalMatches,
         channelId: channel.id,
         sendNotifications,
+        saveAll,
     });
 }

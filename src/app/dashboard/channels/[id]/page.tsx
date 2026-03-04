@@ -30,6 +30,13 @@ interface Alert {
     createdAt: string;
 }
 
+interface ChannelPost {
+    id: string;
+    content: string;
+    postLink: string | null;
+    createdAt: string;
+}
+
 interface ChannelKeyword {
     id: string;
     text: string;
@@ -129,7 +136,7 @@ export default function ChannelDetailPage() {
 
     const runBackfill = async () => {
         if (!id) return;
-        const body: Record<string, unknown> = { sendNotifications: backfillNotify };
+        const body: Record<string, unknown> = { sendNotifications: backfillNotify, saveAll: backfillSaveAll };
         if (backfillMode === "date") {
             if (!backfillFrom || !backfillTo) {
                 alert("Select date range");
@@ -150,6 +157,7 @@ export default function ChannelDetailPage() {
             const res = await axios.post(`/api/channels/${id}/backfill`, body);
             mutateStats("/api/stats");
             mutateStats(`/api/alerts?channelId=${id}`);
+            mutateStats(`/api/channels/${id}/posts`);
             alert(`Parsed ${res.data.totalScanned} messages, ${res.data.totalMatches} matches`);
         } catch (e: any) {
             alert(e.response?.data?.error || "Backfill failed");
@@ -166,16 +174,21 @@ export default function ChannelDetailPage() {
     const [backfillTo, setBackfillTo] = useState("");
     const [backfillLimit, setBackfillLimit] = useState("100");
     const [backfillNotify, setBackfillNotify] = useState(false);
+    const [backfillSaveAll, setBackfillSaveAll] = useState(true);
     const [backfilling, setBackfilling] = useState(false);
-    const [alertsPage, setAlertsPage] = useState(1);
-    const ALERTS_PAGE_SIZE = 15;
-    const { data: alertsData, isLoading: alertsLoading } = useSWR<{ items: Alert[]; total: number }>(
-        id ? `/api/alerts?page=${alertsPage}&pageSize=${ALERTS_PAGE_SIZE}&channelId=${id}` : null,
-        fetcher
-    );
+    const [postsMode, setPostsMode] = useState<"all" | "matched">("all");
+    const [postsPage, setPostsPage] = useState(1);
+    const POSTS_PAGE_SIZE = 15;
+    const alertsKey = id && postsMode === "matched" ? `/api/alerts?page=${postsPage}&pageSize=${POSTS_PAGE_SIZE}&channelId=${id}` : null;
+    const channelPostsKey = id && postsMode === "all" ? `/api/channels/${id}/posts?page=${postsPage}&pageSize=${POSTS_PAGE_SIZE}` : null;
+    const { data: alertsData, isLoading: alertsLoading } = useSWR<{ items: Alert[]; total: number }>(alertsKey, fetcher);
+    const { data: postsData, isLoading: postsLoading } = useSWR<{ items: ChannelPost[]; total: number }>(channelPostsKey, fetcher);
     const alerts = alertsData?.items ?? [];
+    const channelPosts = postsData?.items ?? [];
     const alertsTotal = alertsData?.total ?? 0;
-    const alertsTotalPages = Math.ceil(alertsTotal / ALERTS_PAGE_SIZE) || 1;
+    const postsTotal = postsData?.total ?? 0;
+    const total = postsMode === "all" ? postsTotal : alertsTotal;
+    const totalPages = Math.ceil(total / POSTS_PAGE_SIZE) || 1;
 
     if (!id) {
         return (
@@ -401,6 +414,16 @@ export default function ChannelDetailPage() {
                                     </div>
                                 </>
                             )}
+                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
+                                    <input type="radio" name="backfillSave" checked={backfillSaveAll} onChange={() => setBackfillSaveAll(true)} style={{ accentColor: "#BF5AF2" }} />
+                                    All posts
+                                </label>
+                                <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.85rem" }}>
+                                    <input type="radio" name="backfillSave" checked={!backfillSaveAll} onChange={() => setBackfillSaveAll(false)} style={{ accentColor: "#BF5AF2" }} />
+                                    Only keywords
+                                </label>
+                            </div>
                             <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
                                 <input type="checkbox" checked={backfillNotify} onChange={(e) => setBackfillNotify(e.target.checked)} style={{ accentColor: "#BF5AF2" }} />
                                 Send to Telegram
@@ -417,18 +440,91 @@ export default function ChannelDetailPage() {
                         </div>
                     </div>
 
-                    <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem" }}>
-                        Posts ({alertsTotal})
-                    </h2>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>
+                            Posts ({total})
+                        </h2>
+                        <div style={{ display: "flex", gap: "0.35rem" }}>
+                            <button
+                                onClick={() => { setPostsMode("all"); setPostsPage(1); }}
+                                style={{
+                                    padding: "0.35rem 0.75rem",
+                                    fontSize: "0.8rem",
+                                    borderRadius: "8px",
+                                    border: "1px solid",
+                                    background: postsMode === "all" ? "rgba(0,163,255,0.15)" : "transparent",
+                                    borderColor: postsMode === "all" ? "rgba(0,163,255,0.4)" : "rgba(255,255,255,0.1)",
+                                    color: postsMode === "all" ? "#00A3FF" : "rgba(255,255,255,0.5)",
+                                    cursor: "pointer",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                All
+                            </button>
+                            <button
+                                onClick={() => { setPostsMode("matched"); setPostsPage(1); }}
+                                style={{
+                                    padding: "0.35rem 0.75rem",
+                                    fontSize: "0.8rem",
+                                    borderRadius: "8px",
+                                    border: "1px solid",
+                                    background: postsMode === "matched" ? "rgba(0,163,255,0.15)" : "transparent",
+                                    borderColor: postsMode === "matched" ? "rgba(0,163,255,0.4)" : "rgba(255,255,255,0.1)",
+                                    color: postsMode === "matched" ? "#00A3FF" : "rgba(255,255,255,0.5)",
+                                    cursor: "pointer",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Matched
+                            </button>
+                        </div>
+                    </div>
 
                     <div className="card" style={{ padding: "0" }}>
-                        {alertsLoading ? (
+                        {(postsMode === "all" ? postsLoading : alertsLoading) ? (
                             <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
                                 <Loader2 className="animate-spin" size={28} color="#00A3FF" />
                             </div>
+                        ) : postsMode === "all" ? (
+                            channelPosts.length === 0 ? (
+                                <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>
+                                    No saved posts. Enable Full archive and run backfill to save all posts.
+                                </div>
+                            ) : (
+                                <div style={{ overflowX: "auto" }}>
+                                    <table className="table-dashboard">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Preview</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {channelPosts.map((post) => (
+                                                <tr key={post.id}>
+                                                    <td style={{ color: "rgba(255,255,255,0.7)" }}>{formatDate(post.createdAt)}</td>
+                                                    <td style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                        <span dangerouslySetInnerHTML={{ __html: markdownToHtml(post.content || "(no text)", { breakLines: false }) }} />
+                                                    </td>
+                                                    <td className="td-right">
+                                                        {post.postLink ? (
+                                                            <a href={post.postLink} target="_blank" rel="noopener noreferrer" className="btn-link" style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}>
+                                                                Open <ExternalLink size={12} />
+                                                            </a>
+                                                        ) : (
+                                                            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.8rem" }}>—</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )
                         ) : alerts.length === 0 ? (
                             <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>
-                                No posts yet.
+                                No keyword matches yet.
                             </div>
                         ) : (
                             <div style={{ overflowX: "auto" }}>
@@ -444,12 +540,8 @@ export default function ChannelDetailPage() {
                                     <tbody>
                                         {alerts.map((alert) => (
                                             <tr key={alert.id}>
-                                                <td style={{ color: "rgba(255,255,255,0.7)" }}>
-                                                    {formatDate(alert.createdAt)}
-                                                </td>
-                                                <td>
-                                                    <span className="keyword-badge">{alert.matchedWord}</span>
-                                                </td>
+                                                <td style={{ color: "rgba(255,255,255,0.7)" }}>{formatDate(alert.createdAt)}</td>
+                                                <td><span className="keyword-badge">{alert.matchedWord}</span></td>
                                                 <td style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                                     <span dangerouslySetInnerHTML={{ __html: markdownToHtml(alert.content || "(no text)", { breakLines: false }) }} />
                                                 </td>
@@ -466,22 +558,22 @@ export default function ChannelDetailPage() {
                         )}
                     </div>
 
-                    {alertsTotalPages > 1 && (
+                    {totalPages > 1 && (
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", marginTop: "1rem" }}>
                             <button
-                                onClick={() => setAlertsPage((p) => Math.max(1, p - 1))}
-                                disabled={alertsPage <= 1}
-                                style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: alertsPage <= 1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", cursor: alertsPage <= 1 ? "not-allowed" : "pointer" }}
+                                onClick={() => setPostsPage((p) => Math.max(1, p - 1))}
+                                disabled={postsPage <= 1}
+                                style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: postsPage <= 1 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", cursor: postsPage <= 1 ? "not-allowed" : "pointer" }}
                             >
                                 ←
                             </button>
                             <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", padding: "0 0.5rem" }}>
-                                {alertsPage} / {alertsTotalPages}
+                                {postsPage} / {totalPages}
                             </span>
                             <button
-                                onClick={() => setAlertsPage((p) => Math.min(alertsTotalPages, p + 1))}
-                                disabled={alertsPage >= alertsTotalPages}
-                                style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: alertsPage >= alertsTotalPages ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", cursor: alertsPage >= alertsTotalPages ? "not-allowed" : "pointer" }}
+                                onClick={() => setPostsPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={postsPage >= totalPages}
+                                style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: postsPage >= totalPages ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", cursor: postsPage >= totalPages ? "not-allowed" : "pointer" }}
                             >
                                 →
                             </button>
