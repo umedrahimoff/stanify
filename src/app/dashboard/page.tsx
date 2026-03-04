@@ -338,7 +338,7 @@ export default function Dashboard() {
                 {(stats.keywordsByChannel?.length ?? 0) > 0 ? (
                     <div className="card" style={{ padding: "1rem" }}>
                         <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Keywords by channel</h2>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "0.75rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                             {(stats.keywordsByChannel ?? []).map((ch) => (
                                 <div key={ch.channelName} style={{ padding: "0.75rem", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)" }}>
                                     <div style={{ fontWeight: 600, marginBottom: "0.5rem", fontSize: "0.9rem" }}>{ch.channelName}</div>
