@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Hash } from "lucide-react";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
+import { ChannelFilterSelect } from "@/components/ChannelFilterSelect";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { cn } from "@/lib/cn";
 import useSWR from "swr";
@@ -18,12 +19,6 @@ interface Alert {
     matchedWord: string;
     postLink: string | null;
     createdAt: string;
-}
-
-interface Channel {
-    id: string;
-    name: string | null;
-    username: string | null;
 }
 
 const PAGE_SIZE = 20;
@@ -50,8 +45,6 @@ export default function AlertsHistoryPage() {
     const alerts = data?.items ?? [];
     const total = data?.total ?? 0;
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
-    const { data: channels = [] } = useSWR<Channel[]>("/api/channels", fetcher);
-
     const hasFilters = channelFilter || dateFrom || dateTo || keywordFilter.trim();
     const resetPage = () => setPage(1);
 
@@ -65,21 +58,10 @@ export default function AlertsHistoryPage() {
             </div>
 
             <FilterCard>
-                    <div className={filterClasses.field}>
-                        <label className={filterClasses.label}>Channel</label>
-                        <select
-                            className={cn("input-field", filterClasses.input, "min-w-[130px]")}
-                            value={channelFilter}
-                            onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
-                        >
-                            <option value="">All channels</option>
-                            {channels.map((ch) => (
-                                <option key={ch.id} value={ch.id}>
-                                    {ch.name || ch.username || ch.id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <ChannelFilterSelect
+                        value={channelFilter}
+                        onChange={(id) => { setChannelFilter(id); resetPage(); }}
+                    />
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Date from</label>
                         <input

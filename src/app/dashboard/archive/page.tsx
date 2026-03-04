@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Calendar, Radio, Hash } from "lucide-react";
+import { ExternalLink, Calendar, Radio, Hash, Trash2 } from "lucide-react";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
+import { ChannelFilterSelect } from "@/components/ChannelFilterSelect";
 import { cn } from "@/lib/cn";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { formatDate } from "@/lib/date";
 import Link from "next/link";
+import axios from "axios";
 
 interface Alert {
     id: string;
@@ -18,12 +20,6 @@ interface Alert {
     matchedWord: string;
     postLink: string | null;
     createdAt: string;
-}
-
-interface Channel {
-    id: string;
-    name: string | null;
-    username: string | null;
 }
 
 const PAGE_SIZE = 20;
@@ -44,15 +40,25 @@ export default function ArchivePage() {
     if (keywordFilter.trim()) params.set("keyword", keywordFilter.trim());
 
     const alertsKey = `/api/alerts?${params.toString()}`;
-    const { data, isLoading } = useSWR<{ items: Alert[]; total: number; page: number; pageSize: number }>(alertsKey, fetcher);
+    const { data, isLoading, mutate } = useSWR<{ items: Alert[]; total: number; page: number; pageSize: number }>(alertsKey, fetcher);
     const alerts = data?.items ?? [];
     const total = data?.total ?? 0;
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
-    const { data: channels = [] } = useSWR<Channel[]>("/api/channels", fetcher);
-
     const hasFilters = channelFilter || dateFrom || dateTo || keywordFilter.trim();
+    const { mutate: mutateStats } = useSWRConfig();
 
     const resetPage = () => setPage(1);
+
+    const deleteAlert = async (alertId: string) => {
+        if (!confirm("Delete this post from archive?")) return;
+        try {
+            await axios.delete(`/api/alerts/${alertId}`);
+            mutate();
+            mutateStats("/api/stats");
+        } catch (e) {
+            console.error("Delete failed:", e);
+        }
+    };
 
     return (
         <div className="animate-fade">
@@ -66,21 +72,10 @@ export default function ArchivePage() {
             </div>
 
             <FilterCard>
-                    <div className={filterClasses.field}>
-                        <label className={filterClasses.label}>Channel</label>
-                        <select
-                            className={cn("input-field", filterClasses.input, "min-w-[130px]")}
-                            value={channelFilter}
-                            onChange={(e) => { setChannelFilter(e.target.value); resetPage(); }}
-                        >
-                            <option value="">All channels</option>
-                            {channels.map((ch) => (
-                                <option key={ch.id} value={ch.id}>
-                                    {ch.name || ch.username || ch.id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <ChannelFilterSelect
+                        value={channelFilter}
+                        onChange={(id) => { setChannelFilter(id); resetPage(); }}
+                    />
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Date from</label>
                         <input
@@ -162,9 +157,18 @@ export default function ArchivePage() {
                                             <span className="keyword-badge">{alert.matchedWord}</span>
                                         </td>
                                         <td className="td-right">
-                                            <Link href={`/dashboard/archive/${alert.id}`} className="btn-link">
-                                                View <ExternalLink size={14} />
-                                            </Link>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", justifyContent: "flex-end" }}>
+                                                <Link href={`/dashboard/archive/${alert.id}`} className="btn-link">
+                                                    View <ExternalLink size={14} />
+                                                </Link>
+                                                <button
+                                                    onClick={() => deleteAlert(alert.id)}
+                                                    title="Delete"
+                                                    style={{ background: "none", border: "none", color: "rgba(255,69,69,0.6)", cursor: "pointer", padding: "0.35rem", display: "flex" }}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

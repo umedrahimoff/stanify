@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import { Loader2, ArrowLeft, Radio, Hash, Calendar, ExternalLink, Languages } from "lucide-react";
-import useSWR from "swr";
+import { useParams, useRouter } from "next/navigation";
+import { Loader2, ArrowLeft, Radio, Hash, Calendar, ExternalLink, Languages, Trash2 } from "lucide-react";
+import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
 import axios from "axios";
@@ -22,6 +22,7 @@ interface Alert {
 
 export default function ArchiveDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const id = params.id as string;
 
     const { data: alert, error, isLoading, mutate } = useSWR<Alert>(
@@ -30,6 +31,18 @@ export default function ArchiveDetailPage() {
     );
     const [showTranslation, setShowTranslation] = useState(false);
     const [translating, setTranslating] = useState(false);
+    const { mutate: mutateStats } = useSWRConfig();
+
+    const deleteAlert = async () => {
+        if (!confirm("Delete this post from archive?")) return;
+        try {
+            await axios.delete(`/api/alerts/${id}`);
+            mutateStats("/api/stats");
+            router.push("/dashboard/archive");
+        } catch (e) {
+            console.error("Delete failed:", e);
+        }
+    };
 
     if (isLoading || error) {
         return (
@@ -140,6 +153,24 @@ export default function ArchiveDetailPage() {
                             Open in Telegram <ExternalLink size={12} />
                         </a>
                     )}
+                    <button
+                        onClick={deleteAlert}
+                        title="Delete from archive"
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.35rem",
+                            color: "rgba(255,69,69,0.8)",
+                            fontSize: "0.85rem",
+                            background: "rgba(255,69,69,0.1)",
+                            border: "1px solid rgba(255,69,69,0.3)",
+                            padding: "0.3rem 0.6rem",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                        }}
+                    >
+                        <Trash2 size={14} /> Delete
+                    </button>
                 </div>
 
                 <div>
