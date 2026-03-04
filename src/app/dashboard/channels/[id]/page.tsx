@@ -16,6 +16,7 @@ interface Channel {
     username: string | null;
     telegramId: string;
     isActive: boolean;
+    saveAllPosts?: boolean;
     language: string | null;
     createdAt: string;
 }
@@ -38,7 +39,7 @@ export default function ChannelDetailPage() {
     const params = useParams();
     const id = params.id as string;
 
-    const { data: channels = [] } = useSWR<Channel[]>(id ? "/api/channels" : null, fetcher);
+    const { data: channels = [], mutate: mutateChannels } = useSWR<Channel[]>(id ? "/api/channels" : null, fetcher);
     const currentChannel = channels.find((c) => c.id === id);
 
     const { data: keywords = [], isLoading: keywordsLoading, mutate: mutateKeywords } = useSWR<ChannelKeyword[]>(
@@ -100,6 +101,18 @@ export default function ChannelDetailPage() {
             alert(e.response?.data?.error || "Error");
         } finally {
             setDetectingLang(false);
+        }
+    };
+
+    const toggleSaveAllPosts = async () => {
+        if (!id) return;
+        try {
+            await axios.patch(`/api/channels/${id}`, { saveAllPosts: !currentChannel?.saveAllPosts });
+            mutateChannels();
+            mutateStats("/api/channels");
+            mutateStats("/api/data");
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Failed to update");
         }
     };
 
@@ -191,6 +204,25 @@ export default function ChannelDetailPage() {
                                         <Calendar size={14} />
                                         Added {formatDate(currentChannel.createdAt)}
                                     </span>
+                                    <button
+                                        onClick={toggleSaveAllPosts}
+                                        title={currentChannel.saveAllPosts ? "Saving all posts to archive. Click to save only keyword matches." : "Saving only keyword matches. Click to save all posts."}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "0.35rem",
+                                            padding: "0.2rem 0.5rem",
+                                            borderRadius: "6px",
+                                            background: currentChannel.saveAllPosts ? "rgba(0,255,117,0.15)" : "rgba(255,255,255,0.05)",
+                                            border: `1px solid ${currentChannel.saveAllPosts ? "rgba(0,255,117,0.3)" : "rgba(255,255,255,0.1)"}`,
+                                            color: currentChannel.saveAllPosts ? "#00FF75" : "rgba(255,255,255,0.5)",
+                                            fontSize: "0.75rem",
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        {currentChannel.saveAllPosts ? "Full archive" : "Keywords only"}
+                                    </button>
                                     {currentChannel.language && (
                                         <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(191,90,242,0.15)", color: "#BF5AF2", padding: "0.15rem 0.5rem", borderRadius: "100px", fontWeight: 600 }}>
                                             <Languages size={12} />

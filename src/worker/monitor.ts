@@ -46,6 +46,7 @@ async function startMonitoring() {
     const channelMapByTelegramId = new Map<string, { id: string; keywords: string[] }>();
     const channelIdOnlyByUsername = new Map<string, string>();
     const channelIdOnlyByTelegramId = new Map<string, string>();
+    const channelIdsSaveAllPosts = new Set<string>(channels.filter((c: { saveAllPosts?: boolean }) => c.saveAllPosts).map((c) => c.id));
     for (const ch of channels) {
         const kw = ch.keywords.map((k: { text: string }) => k.text);
         if (ch.username) {
@@ -142,7 +143,7 @@ async function startMonitoring() {
 
     const saveEveryPost = async (msg: any) => {
         const channelId = getChannelIdForMessage(msg);
-        if (!channelId) return;
+        if (!channelId || !channelIdsSaveAllPosts.has(channelId)) return;
         const content = msg.text ?? msg.message ?? "";
         if (!content.trim()) return;
 
