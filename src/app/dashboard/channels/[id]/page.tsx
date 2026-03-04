@@ -17,16 +17,8 @@ interface Channel {
     telegramId: string;
     isActive: boolean;
     saveAllPosts?: boolean;
-    recipientGroupId?: string | null;
-    recipientGroup?: { id: string; name: string } | null;
     language: string | null;
     createdAt: string;
-}
-
-interface RecipientGroup {
-    id: string;
-    name: string;
-    members: string[];
 }
 
 interface Alert {
@@ -48,7 +40,6 @@ export default function ChannelDetailPage() {
     const id = params.id as string;
 
     const { data: channels = [], mutate: mutateChannels } = useSWR<Channel[]>(id ? "/api/channels" : null, fetcher);
-    const { data: groups = [] } = useSWR<RecipientGroup[]>("/api/recipient-groups", fetcher);
     const currentChannel = channels.find((c) => c.id === id);
 
     const { data: keywords = [], isLoading: keywordsLoading, mutate: mutateKeywords } = useSWR<ChannelKeyword[]>(
@@ -120,17 +111,6 @@ export default function ChannelDetailPage() {
             mutateChannels();
             mutateStats("/api/channels");
             mutateStats("/api/data");
-        } catch (e: any) {
-            alert(e.response?.data?.error || "Failed to update");
-        }
-    };
-
-    const setChannelGroup = async (groupId: string | null) => {
-        if (!id) return;
-        try {
-            await axios.patch(`/api/channels/${id}`, { recipientGroupId: groupId });
-            mutateChannels();
-            mutateStats("/api/channels");
         } catch (e: any) {
             alert(e.response?.data?.error || "Failed to update");
         }
@@ -243,25 +223,6 @@ export default function ChannelDetailPage() {
                                     >
                                         {currentChannel.saveAllPosts ? "Full archive" : "Keywords only"}
                                     </button>
-                                    <select
-                                        value={currentChannel.recipientGroupId || ""}
-                                        onChange={(e) => setChannelGroup(e.target.value || null)}
-                                        style={{
-                                            padding: "0.2rem 0.5rem",
-                                            borderRadius: "6px",
-                                            background: "rgba(255,255,255,0.05)",
-                                            border: "1px solid rgba(255,255,255,0.1)",
-                                            color: "rgba(255,255,255,0.8)",
-                                            fontSize: "0.75rem",
-                                            cursor: "pointer",
-                                        }}
-                                        title="Who receives alerts from this channel"
-                                    >
-                                        <option value="">Default recipients</option>
-                                        {groups.map((g) => (
-                                            <option key={g.id} value={g.id}>{g.name}</option>
-                                        ))}
-                                    </select>
                                     {currentChannel.language && (
                                         <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(191,90,242,0.15)", color: "#BF5AF2", padding: "0.15rem 0.5rem", borderRadius: "100px", fontWeight: 600 }}>
                                             <Languages size={12} />

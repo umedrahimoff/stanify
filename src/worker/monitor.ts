@@ -28,39 +28,19 @@ async function startMonitoring() {
     await tg.initialize(session.sessionStr);
     console.log("✅ Telegram Client Connected");
 
-    // 3. Load Channels with their Keywords and RecipientGroups
+    // 3. Load Channels with their Keywords
     const channels = await prisma.channel.findMany({
         where: { isActive: true },
-        include: {
-            keywords: { where: { isActive: true } },
-            recipientGroup: { include: { members: { select: { username: true } } } },
-        },
+        include: { keywords: { where: { isActive: true } } },
     });
-
-    const defaultRecipients = await getNotificationRecipients();
-    const channelRecipientsMap = new Map<string, string[]>();
-    for (const ch of channels) {
-        const recipients = ch.recipientGroup?.members?.length
-            ? ch.recipientGroup.members.map((m) => m.username)
-            : defaultRecipients;
-        channelRecipientsMap.set(ch.id, recipients);
-    }
 
     const globalKeywords = await prisma.globalKeyword.findMany({
         where: { isActive: true },
-        include: {
-            recipients: { select: { username: true } },
-            recipientGroup: { include: { members: { select: { username: true } } } },
-        },
+        include: { recipients: { select: { username: true } } },
     });
     const globalKeywordsList = globalKeywords
-        .map((gk) => {
-            const recipients = gk.recipientGroup?.members?.length
-                ? gk.recipientGroup.members.map((r) => r.username)
-                : gk.recipients.map((r) => r.username);
-            return { id: gk.id, text: gk.text.toLowerCase(), recipients };
-        })
-        .filter((gk) => gk.recipients.length > 0);
+        .filter((gk) => gk.recipients.length > 0)
+        .map((gk) => ({ id: gk.id, text: gk.text.toLowerCase(), recipients: gk.recipients.map((r) => r.username) }));
 
     const channelMapByUsername = new Map<string, { id: string; keywords: string[] }>();
     const channelMapByTelegramId = new Map<string, { id: string; keywords: string[] }>();
@@ -262,7 +242,7 @@ async function startMonitoring() {
             prisma.channel.update({ where: { id: channel.id }, data: { lastActivityAt: new Date() } }).catch(() => {});
         }
 
-        const recipients = channelRecipientsMap.get(channel.id) ?? defaultRecipients;
+        const recipients = await getNotificationRecipients();
         const contentPlain = stripMarkdown(content);
         const contentPreview = contentPlain.length > 400 ? contentPlain.slice(0, 400) + "…" : contentPlain;
         const contentTranslated = await translateToRussian(contentPreview);

@@ -13,17 +13,13 @@ export async function PATCH(
         const { id } = await params;
         const body = await req.json();
 
-        const data: { saveAllPosts?: boolean; recipientGroupId?: string | null } = {};
-        if (typeof body.saveAllPosts === "boolean") data.saveAllPosts = body.saveAllPosts;
-        if (body.recipientGroupId !== undefined) data.recipientGroupId = body.recipientGroupId || null;
-
-        if (Object.keys(data).length === 0) {
-            return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+        if (typeof body.saveAllPosts !== "boolean") {
+            return NextResponse.json({ error: "saveAllPosts (boolean) required" }, { status: 400 });
         }
 
         const channel = await prisma.channel.update({
             where: { id },
-            data,
+            data: { saveAllPosts: body.saveAllPosts },
         });
         return NextResponse.json(channel);
     } catch (error) {
