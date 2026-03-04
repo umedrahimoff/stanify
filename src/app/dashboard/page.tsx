@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Activity, Bell, Radio, Hash, ArrowUpRight, BarChart3, Eye, Calendar, PieChart, Download, RefreshCw, Filter } from "lucide-react";
+import { Activity, Bell, Radio, Hash, ArrowUpRight, BarChart3, Eye, PieChart, Download, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { FilterCard, filterClasses } from "@/components/FilterCard";
+import { cn } from "@/lib/cn";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { formatDate } from "@/lib/date";
@@ -164,37 +166,45 @@ export default function Dashboard() {
                 </div>
             )}
 
-            <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <Filter size={14} color="rgba(255,255,255,0.4)" />
-                    <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "inherit", minWidth: 120 }}>
+            <FilterCard>
+                <div className={filterClasses.field}>
+                    <label className={filterClasses.label}>Channel</label>
+                    <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)} className={cn("input-field", filterClasses.input)}>
                         <option value="">All channels</option>
                         {(stats.alertsByChannel ?? []).map((c) => (
                             <option key={c.name} value={c.name}>{c.name}</option>
                         ))}
                     </select>
-                    <select value={keywordFilter} onChange={(e) => setKeywordFilter(e.target.value)} style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "inherit", minWidth: 120 }}>
+                </div>
+                <div className={filterClasses.field}>
+                    <label className={filterClasses.label}>Keyword</label>
+                    <select value={keywordFilter} onChange={(e) => setKeywordFilter(e.target.value)} className={cn("input-field", filterClasses.input)}>
                         <option value="">All keywords</option>
                         {(stats.alertsByKeyword ?? []).map((k) => (
                             <option key={k.keyword} value={k.keyword}>{k.keyword}</option>
                         ))}
                     </select>
-                    <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="input-field" style={{ padding: "0.35rem 0.6rem", fontSize: "0.8rem", height: "auto", minWidth: "120px" }}>
+                </div>
+                <div className={filterClasses.field}>
+                    <label className={filterClasses.label}>Period</label>
+                    <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className={cn("input-field", filterClasses.input)}>
                         {PERIOD_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                     </select>
-                    {(channelFilter || keywordFilter) && (
-                        <Link href={archiveHref} style={{ fontSize: "0.8rem", color: "#00A3FF" }}>
-                            View filtered →
-                        </Link>
-                    )}
                 </div>
-                <button onClick={() => mutate()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "0.35rem 0.6rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: "0.8rem" }} title="Refresh">
-                    <RefreshCw size={14} />
-                    Refresh
-                </button>
-            </div>
+                {(channelFilter || keywordFilter) && (
+                    <Link href={archiveHref} style={{ fontSize: "0.8rem", color: "#00A3FF", fontWeight: 600, display: "flex", alignItems: "center", alignSelf: "flex-end" }}>
+                        View filtered →
+                    </Link>
+                )}
+                <div className={filterClasses.actions} style={{ marginLeft: "auto" }}>
+                    <button onClick={() => mutate()} className={filterClasses.clearBtn} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <RefreshCw size={14} />
+                        Refresh
+                    </button>
+                </div>
+            </FilterCard>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
                 {cards.map((card) => (
@@ -324,27 +334,30 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {(stats.keywordsByChannel?.length ?? 0) > 0 && (
-                <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
-                    <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Keywords by channel</h2>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-                        {(stats.keywordsByChannel ?? []).map((ch) => (
-                            <div key={ch.channelName} style={{ padding: "0.75rem", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)" }}>
-                                <div style={{ fontWeight: 600, marginBottom: "0.5rem", fontSize: "0.9rem" }}>{ch.channelName}</div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                                    {ch.keywords.map((kw) => (
-                                        <div key={kw.keyword} style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
-                                            <span style={{ color: "#00A3FF" }}>{kw.keyword}</span> — {kw.count}
-                                        </div>
-                                    ))}
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.2fr)", gap: "1rem", marginBottom: "1rem" }}>
+                {(stats.keywordsByChannel?.length ?? 0) > 0 ? (
+                    <div className="card" style={{ padding: "1rem" }}>
+                        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Keywords by channel</h2>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "0.75rem" }}>
+                            {(stats.keywordsByChannel ?? []).map((ch) => (
+                                <div key={ch.channelName} style={{ padding: "0.75rem", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)" }}>
+                                    <div style={{ fontWeight: 600, marginBottom: "0.5rem", fontSize: "0.9rem" }}>{ch.channelName}</div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                        {ch.keywords.map((kw) => (
+                                            <div key={kw.keyword} style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+                                                <span style={{ color: "#00A3FF" }}>{kw.keyword}</span> — {kw.count}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-
-            <div style={{ marginBottom: "1rem" }}>
+                ) : (
+                    <div className="card" style={{ padding: "1rem", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 120 }}>
+                        <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>Keywords by channel will appear when you have alerts.</span>
+                    </div>
+                )}
                 <div className="card" style={{ padding: "1rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", alignItems: "center" }}>
                             <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Real-time Feed</h2>
