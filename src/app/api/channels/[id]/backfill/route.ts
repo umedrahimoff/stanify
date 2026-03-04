@@ -71,24 +71,29 @@ export async function POST(
             if (!messages || messages.length === 0) break;
 
             for (const msg of messages) {
-                const m = msg as { date?: Date | number; message?: string; text?: string; id?: number };
-                const msgDate = m.date instanceof Date ? m.date : new Date((m.date ?? 0) * 1000);
+                const m = msg as unknown as Record<string, unknown>;
+                if (m.className === "MessageEmpty" || m.className === "MessageService") continue;
 
+                const msgDate = m.date instanceof Date ? m.date : new Date(Number(m.date ?? 0) * 1000);
                 if (useDateRange && msgDate < dateFrom!) {
                     done = true;
                     break;
                 }
                 if (useDateRange && msgDate > dateTo!) continue;
 
-                const content = m.message ?? m.text ?? "";
-                if (!content || typeof content !== "string") continue;
+                let content = "";
+                if (typeof m.message === "string") content = m.message;
+                else if (typeof (m as { text?: string }).text === "string") content = (m as { text: string }).text;
+                else if (m.media && typeof (m.media as { message?: string }).message === "string") content = (m.media as { message: string }).message;
+                if (!content.trim()) continue;
 
                 totalScanned++;
                 if (useLimit && totalScanned > limit!) break;
 
+                const msgId = typeof m.id === "number" ? m.id : null;
                 const postLink = channel.username
-                    ? `https://t.me/${channel.username}/${m.id}`
-                    : `https://t.me/c/${channel.telegramId?.replace(/^-100/, "")}/${m.id}`;
+                    ? `https://t.me/${channel.username}/${msgId ?? ""}`
+                    : `https://t.me/c/${channel.telegramId?.replace(/^-100/, "")}/${msgId ?? ""}`;
 
                 const contentLower = content.toLowerCase();
                 const hasChannelMatch = channel.keywords.some((k) => contentLower.includes(k.text.toLowerCase()));
@@ -96,15 +101,15 @@ export async function POST(
                 const hasMatch = hasChannelMatch || hasGlobalMatch;
 
                 if (saveAll || hasMatch) {
-                    const existing = m.id != null
-                        ? await prisma.channelPost.findFirst({ where: { channelId: channel.id, messageId: m.id } })
+                    const existing = msgId != null
+                        ? await prisma.channelPost.findFirst({ where: { channelId: channel.id, messageId: msgId } })
                         : null;
                     if (!existing) {
                         await prisma.channelPost.create({
                             data: {
                                 channelId: channel.id,
                                 content,
-                                messageId: m.id ?? undefined,
+                                messageId: msgId ?? undefined,
                                 postLink,
                             },
                         }).catch(() => {});
@@ -114,9 +119,6 @@ export async function POST(
                 for (const kw of channel.keywords.map((k) => k.text)) {
                     if (contentLower.includes(kw.toLowerCase())) {
                         totalMatches++;
-                        const postLink = channel.username
-                            ? `https://t.me/${channel.username}/${m.id}`
-                            : `https://t.me/c/${channel.telegramId?.replace(/^-100/, "")}/${m.id}`;
 
                         const alert = await prisma.alert.create({
                             data: {
@@ -184,9 +186,9 @@ export async function POST(
                 for (const gk of globalKeywords) {
                     if (contentLower.includes(gk.text.toLowerCase())) {
                         totalMatches++;
-                        const postLink = channel.username
-                            ? `https://t.me/${channel.username}/${m.id}`
-                            : `https://t.me/c/${channel.telegramId?.replace(/^-100/, "")}/${m.id}`;
+                        const globalPostLink = channel.username
+                            ? `https://t.me/${channel.username}/${msgId ?? ""}`
+                            : `https://t.me/c/${channel.telegramId?.replace(/^-100/, "")}/${msgId ?? ""}`;
 
                         const globalAlert = await prisma.alert.create({
                             data: {
@@ -194,7 +196,7 @@ export async function POST(
                                 channelId: channel.id,
                                 content,
                                 matchedWord: gk.text,
-                                postLink,
+                                postLink: globalPostLink,
                                 source: "global",
                                 globalKeywordId: gk.id,
                             },
@@ -218,7 +220,7 @@ export async function POST(
                                 "📝 Content:",
                                 contentTranslated,
                                 "",
-                                postLink ? `🔗 Open post: ${postLink}` : "🔗 Private",
+                                globalPostLink ? `🔗 Open post: ${globalPostLink}` : "🔗 Private",
                             ].join("\n");
                             for (const r of recipients) {
                                 try {
@@ -231,7 +233,7 @@ export async function POST(
                                         success: true,
                                         alertId: globalAlert.id,
                                         contentPreview: contentTranslated,
-                                        postLink,
+                                        postLink: globalPostLink,
                                     });
                                 } catch (e: any) {
                                     await logNotification({
@@ -243,7 +245,7 @@ export async function POST(
                                         errorMessage: e?.message ?? String(e),
                                         alertId: globalAlert.id,
                                         contentPreview: contentTranslated,
-                                        postLink,
+                                        postLink: globalPostLink,
                                     });
                                 }
                             }
@@ -252,6 +254,8 @@ export async function POST(
                     }
                 }
             }
+
+            await new Promise((r) => setTimeout(r, 500));
 
             if (done) break;
             if (useLimit && totalScanned >= limit!) break;

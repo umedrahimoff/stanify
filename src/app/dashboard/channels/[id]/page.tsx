@@ -444,9 +444,10 @@ export default function ChannelDetailPage() {
                         <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>
                             Posts ({total})
                         </h2>
-                        <div style={{ display: "flex", gap: "0.35rem" }}>
+                        <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
                             <button
                                 onClick={() => { setPostsMode("all"); setPostsPage(1); }}
+                                title="All posts, with or without keywords"
                                 style={{
                                     padding: "0.35rem 0.75rem",
                                     fontSize: "0.8rem",
@@ -463,6 +464,7 @@ export default function ChannelDetailPage() {
                             </button>
                             <button
                                 onClick={() => { setPostsMode("matched"); setPostsPage(1); }}
+                                title="Only posts that matched keywords"
                                 style={{
                                     padding: "0.35rem 0.75rem",
                                     fontSize: "0.8rem",
