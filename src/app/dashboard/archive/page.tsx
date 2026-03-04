@@ -53,8 +53,8 @@ function ArchiveContent() {
     if (dateTo) params.set("dateTo", dateTo);
     if (keywordFilter.trim()) params.set("keyword", keywordFilter.trim());
 
-    const alertsKey = `/api/alerts?${params.toString()}`;
-    const { data, isLoading, mutate } = useSWR<{ items: Alert[]; total: number; page: number; pageSize: number }>(alertsKey, fetcher);
+    const archiveKey = `/api/archive?${params.toString()}`;
+    const { data, isLoading, mutate } = useSWR<{ items: Alert[]; total: number; page: number; pageSize: number }>(archiveKey, fetcher);
     const alerts = data?.items ?? [];
     const total = data?.total ?? 0;
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
@@ -63,10 +63,10 @@ function ArchiveContent() {
 
     const resetPage = () => setPage(1);
 
-    const deleteAlert = async (alertId: string) => {
+    const deleteAlert = async (itemId: string) => {
         if (!confirm("Delete this post from archive?")) return;
         try {
-            await axios.delete(`/api/alerts/${alertId}`);
+            await axios.delete(`/api/archive/${itemId}`);
             mutate();
             mutateStats("/api/stats");
         } catch (e) {
@@ -81,7 +81,7 @@ function ArchiveContent() {
                     Archive
                 </h1>
                 <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
-                    Historical posts matched by keywords. Filter by date, channel, or keyword.
+                    All saved posts (with and without keyword matches). Filter by date, channel, or keyword.
                 </p>
             </div>
 
@@ -126,13 +126,24 @@ function ArchiveContent() {
                     </div>
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Keyword</label>
-                        <input
-                            type="text"
-                            className={cn("input-field", filterClasses.input, "min-w-[140px]")}
-                            placeholder="Filter by keyword..."
-                            value={keywordFilter}
-                            onChange={(e) => { setKeywordFilter(e.target.value); resetPage(); }}
-                        />
+                        <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                            <input
+                                type="text"
+                                className={cn("input-field", filterClasses.input, "min-w-[140px]")}
+                                placeholder="Filter by keyword..."
+                                value={keywordFilter === "__none__" ? "" : keywordFilter}
+                                onChange={(e) => { setKeywordFilter(e.target.value || ""); resetPage(); }}
+                            />
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.35rem", cursor: "pointer", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={keywordFilter === "__none__"}
+                                    onChange={(e) => { setKeywordFilter(e.target.checked ? "__none__" : ""); resetPage(); }}
+                                    style={{ accentColor: "#BF5AF2" }}
+                                />
+                                No keyword
+                            </label>
+                        </div>
                     </div>
                     {hasFilters && (
                         <button onClick={() => { setChannelFilter(""); setChannelNameFilter(""); setSourceFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>
@@ -152,7 +163,7 @@ function ArchiveContent() {
                     <TableSkeleton columns={4} rows={15} />
                 ) : alerts.length === 0 ? (
                     <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
-                        {hasFilters ? "No posts match the filters." : "No posts in archive yet. Matches will appear here."}
+                        {hasFilters ? "No posts match the filters." : "No posts in archive yet. Enable Full archive and run backfill to save posts."}
                     </div>
                 ) : (
                     <div style={{ overflowX: "auto" }}>

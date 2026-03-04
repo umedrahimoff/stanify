@@ -26,7 +26,7 @@ export default function ArchiveDetailPage() {
     const id = params.id as string;
 
     const { data: alert, error, isLoading, mutate } = useSWR<Alert>(
-        id ? `/api/alerts/${id}` : null,
+        id ? `/api/archive/${id}` : null,
         fetcher
     );
     const [showTranslation, setShowTranslation] = useState(false);
@@ -36,7 +36,7 @@ export default function ArchiveDetailPage() {
     const deleteAlert = async () => {
         if (!confirm("Delete this post from archive?")) return;
         try {
-            await axios.delete(`/api/alerts/${id}`);
+            await axios.delete(`/api/archive/${id}`);
             mutateStats("/api/stats");
             router.push("/dashboard/archive");
         } catch (e) {
@@ -210,7 +210,7 @@ export default function ArchiveDetailPage() {
                                 onClick={async () => {
                                     setTranslating(true);
                                     try {
-                                        const { data } = await axios.post<{ translated: string }>(`/api/alerts/${id}/translate`);
+                                        const { data } = await axios.post<{ translated: string }>(`/api/archive/${id}/translate`);
                                         mutate({ ...alert, translatedContent: data.translated }, false);
                                         setShowTranslation(true);
                                     } catch (e) {
