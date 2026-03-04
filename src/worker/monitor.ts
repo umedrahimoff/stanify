@@ -13,6 +13,7 @@ const tg = TelegramManager.getInstance();
 
 async function startMonitoring() {
     console.log("🚀 Starting Stanify Monitor...");
+    console.log(process.env.DEEPL_API_KEY ? "✅ DeepL translation enabled" : "⚠️ DEEPL_API_KEY not set — alerts will be sent without translation");
 
     // 1. Get Session from DB
     const session = await prisma.session.findFirst({

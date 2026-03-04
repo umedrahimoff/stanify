@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users } from "lucide-react";
+import { Radio, Loader2, Link as LinkIcon, Plus, ListFilter, Trash2, AlertCircle, Calendar, Activity, ChevronRight, Hash, Users, History } from "lucide-react";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
 import { cn } from "@/lib/cn";
@@ -33,6 +33,10 @@ export default function ChannelsPage() {
     const [sortBy, setSortBy] = useState<string>("createdAt");
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "warn" } | null>(null);
     const [page, setPage] = useState(1);
+    const [backfillFrom, setBackfillFrom] = useState("");
+    const [backfillTo, setBackfillTo] = useState("");
+    const [backfillNotify, setBackfillNotify] = useState(false);
+    const [backfilling, setBackfilling] = useState(false);
 
     const PAGE_SIZE = 20;
     const params = new URLSearchParams();
@@ -115,6 +119,27 @@ export default function ChannelsPage() {
         } catch (error) {
             console.error("Failed to delete channel:", error);
             showToast("Failed to remove channel", "error");
+        }
+    };
+
+    const runBackfill = async () => {
+        if (!backfillFrom || !backfillTo) {
+            showToast("Select date range", "error");
+            return;
+        }
+        setBackfilling(true);
+        try {
+            const res = await axios.post("/api/channels/backfill", {
+                dateFrom: backfillFrom,
+                dateTo: backfillTo,
+                sendNotifications: backfillNotify,
+            });
+            mutateStats("/api/stats");
+            showToast(`Backfill: ${res.data.totalMatches} matches from ${res.data.totalScanned} messages`);
+        } catch (e: any) {
+            showToast(e.response?.data?.error || "Backfill failed", "error");
+        } finally {
+            setBackfilling(false);
         }
     };
 
@@ -259,6 +284,51 @@ export default function ChannelsPage() {
                         )}
                     </div>
                 </FilterCard>
+
+            <div className="card" style={{ padding: "1rem", marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    <History size={18} color="#BF5AF2" />
+                    <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Parse old messages</h2>
+                </div>
+                <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.75rem" }}>
+                    Scan historical messages for the selected period. Matches are saved to Archive. Optionally send notifications.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
+                    <div>
+                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>From</label>
+                        <input
+                            type="date"
+                            className="input-field"
+                            value={backfillFrom}
+                            onChange={(e) => setBackfillFrom(e.target.value)}
+                            style={{ height: "36px", fontSize: "0.85rem" }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "0.25rem" }}>To</label>
+                        <input
+                            type="date"
+                            className="input-field"
+                            value={backfillTo}
+                            onChange={(e) => setBackfillTo(e.target.value)}
+                            style={{ height: "36px", fontSize: "0.85rem" }}
+                        />
+                    </div>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                        <input type="checkbox" checked={backfillNotify} onChange={(e) => setBackfillNotify(e.target.checked)} style={{ accentColor: "#BF5AF2" }} />
+                        Send to Telegram
+                    </label>
+                    <button
+                        onClick={runBackfill}
+                        disabled={backfilling || !backfillFrom || !backfillTo}
+                        className="btn-primary"
+                        style={{ height: "36px", padding: "0 1rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
+                    >
+                        {backfilling ? <Loader2 size={16} className="animate-spin" /> : <History size={16} />}
+                        {backfilling ? "Scanning…" : "Run"}
+                    </button>
+                </div>
+            </div>
 
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <span className="text-[0.8rem] text-white/40">

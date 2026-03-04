@@ -124,4 +124,16 @@ export class TelegramManager {
     public getSession(): string {
         return (this.client?.session as StringSession).save() || "";
     }
+
+    /** Fetch message history from entity. entity: username or peer. params: offsetDate (Date or unix ts), limit, reverse, etc. */
+    public async getMessages(
+        entity: string | number,
+        params?: { offsetDate?: Date | number; limit?: number; offsetId?: number; reverse?: boolean }
+    ) {
+        if (!this.client) throw new Error("Client not initialized");
+        const p = params ?? {};
+        const out: Record<string, unknown> = { ...p };
+        if (p.offsetDate instanceof Date) out.offsetDate = Math.floor(p.offsetDate.getTime() / 1000);
+        return this.client.getMessages(entity, out as Parameters<typeof this.client.getMessages>[1]);
+    }
 }
