@@ -4,6 +4,7 @@ import { TelegramManager } from "../lib/telegram";
 import { getNotificationRecipients } from "../lib/settings";
 import { stripMarkdown } from "../lib/telegramFormat";
 import { translateToRussian } from "../lib/deepl";
+import { logNotification } from "../lib/notificationLog";
 import { PrismaClient } from "@prisma/client";
 import { utils } from "telegram";
 
@@ -226,7 +227,7 @@ async function startMonitoring() {
 
         // Save Alert to DB (linked to channel when found)
         const content = msg.text ?? msg.message ?? "";
-        await prisma.alert.create({
+        const alert = await prisma.alert.create({
             data: {
                 channelName: channelName,
                 channelId: channel?.id ?? null,
@@ -258,8 +259,10 @@ async function startMonitoring() {
         for (const r of recipients) {
             try {
                 await tg.sendMessage(r, notificationText);
-            } catch (e) {
+                await logNotification({ type: "channel", keyword, sourceChannel: channelName, recipient: r, success: true, alertId: alert.id, contentPreview: contentTranslated, postLink });
+            } catch (e: any) {
                 console.warn(`Failed to send to @${r}:`, e);
+                await logNotification({ type: "channel", keyword, sourceChannel: channelName, recipient: r, success: false, errorMessage: e?.message ?? String(e), alertId: alert.id, contentPreview: contentTranslated, postLink });
             }
         }
         console.log(`🚀 Alert sent to ${recipients.map((r) => "@" + r).join(", ")}`);
@@ -300,7 +303,7 @@ async function startMonitoring() {
                     postLink = `https://t.me/${channel.username}/${messageId}`;
                 }
                 const textContent = msg.text ?? msg.message ?? "";
-                await prisma.alert.create({
+                const alert = await prisma.alert.create({
                     data: {
                         channelName,
                         channelId: channel?.id ?? null,
@@ -328,8 +331,10 @@ async function startMonitoring() {
                 for (const r of gk.recipients) {
                     try {
                         await tg.sendMessage(r, notificationText);
-                    } catch (e) {
+                        await logNotification({ type: "global", keyword: gk.text, sourceChannel: channelName, recipient: r, success: true, alertId: alert.id, contentPreview: contentTranslated, postLink });
+                    } catch (e: any) {
                         console.warn(`Failed to send global alert to @${r}:`, e);
+                        await logNotification({ type: "global", keyword: gk.text, sourceChannel: channelName, recipient: r, success: false, errorMessage: e?.message ?? String(e), alertId: alert.id, contentPreview: contentTranslated, postLink });
                     }
                 }
                 console.log(`🚀 Global alert [${gk.text}] sent to ${gk.recipients.map((u) => "@" + u).join(", ")}`);
@@ -349,14 +354,11 @@ async function cleanupOldAlerts() {
     threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
 
     try {
-        const deleted = await prisma.alert.deleteMany({
-            where: {
-                createdAt: {
-                    lt: threeMonthsAgo
-                }
-            }
-        });
-        console.log(`✅ Cleanup finished: Deleted ${deleted.count} old alerts.`);
+        const [deletedAlerts, deletedLogs] = await Promise.all([
+            prisma.alert.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
+            prisma.notificationLog.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
+        ]);
+        console.log(`✅ Cleanup finished: Deleted ${deletedAlerts.count} old alerts, ${deletedLogs.count} old logs.`);
     } catch (error) {
         console.error("❌ Cleanup failed:", error);
     }

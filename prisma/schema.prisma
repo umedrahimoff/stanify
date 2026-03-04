@@ -114,3 +114,23 @@ model DailyScanStats {
   date  DateTime @unique
   count Int      @default(0)
 }
+
+model NotificationLog {
+  id             String   @id @default(cuid())
+  type           String   // "channel" | "global"
+  keyword        String
+  sourceChannel  String
+  recipient      String
+  success        Boolean
+  errorMessage   String?
+  alertId        String?
+  contentPreview String?
+  postLink       String?
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([recipient])
+  @@index([type])
+  @@index([keyword])
+  @@index([sourceChannel])
+}
