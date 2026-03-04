@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { ExternalLink, Calendar, Radio, Trash2 } from "lucide-react";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { FilterCard, filterClasses } from "@/components/FilterCard";
@@ -25,18 +26,28 @@ interface Alert {
 
 const PAGE_SIZE = 20;
 
-export default function ArchivePage() {
+function ArchiveContent() {
+    const searchParams = useSearchParams();
     const [channelFilter, setChannelFilter] = useState<string>("");
+    const [channelNameFilter, setChannelNameFilter] = useState<string>("");
     const [sourceFilter, setSourceFilter] = useState<string>("");
     const [dateFrom, setDateFrom] = useState<string>("");
     const [dateTo, setDateTo] = useState<string>("");
     const [keywordFilter, setKeywordFilter] = useState<string>("");
     const [page, setPage] = useState(1);
 
+    useEffect(() => {
+        const ch = searchParams.get("channel");
+        const kw = searchParams.get("keyword");
+        if (ch) setChannelNameFilter(ch);
+        if (kw) setKeywordFilter(kw);
+    }, [searchParams]);
+
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("pageSize", String(PAGE_SIZE));
-    if (channelFilter) params.set("channelId", channelFilter);
+    if (channelNameFilter) params.set("channel", channelNameFilter);
+    else if (channelFilter) params.set("channelId", channelFilter);
     if (sourceFilter) params.set("source", sourceFilter);
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
@@ -47,7 +58,7 @@ export default function ArchivePage() {
     const alerts = data?.items ?? [];
     const total = data?.total ?? 0;
     const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
-    const hasFilters = channelFilter || sourceFilter || dateFrom || dateTo || keywordFilter.trim();
+    const hasFilters = channelFilter || channelNameFilter || sourceFilter || dateFrom || dateTo || keywordFilter.trim();
     const { mutate: mutateStats } = useSWRConfig();
 
     const resetPage = () => setPage(1);
@@ -75,9 +86,13 @@ export default function ArchivePage() {
             </div>
 
             <FilterCard>
+                    <div className={filterClasses.field}>
+                        <label className={filterClasses.label}>Channel name</label>
+                        <input type="text" className={cn("input-field", filterClasses.input)} value={channelNameFilter} onChange={(e) => { setChannelNameFilter(e.target.value); setChannelFilter(""); resetPage(); }} placeholder="Filter by channel name..." />
+                    </div>
                     <ChannelFilterSelect
                         value={channelFilter}
-                        onChange={(id) => { setChannelFilter(id); resetPage(); }}
+                        onChange={(id) => { setChannelFilter(id); setChannelNameFilter(""); resetPage(); }}
                     />
                     <div className={filterClasses.field}>
                         <label className={filterClasses.label}>Source</label>
@@ -120,7 +135,7 @@ export default function ArchivePage() {
                         />
                     </div>
                     {hasFilters && (
-                        <button onClick={() => { setChannelFilter(""); setSourceFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>
+                        <button onClick={() => { setChannelFilter(""); setChannelNameFilter(""); setSourceFilter(""); setDateFrom(""); setDateTo(""); setKeywordFilter(""); setPage(1); }} className={filterClasses.clearBtn}>
                             Clear
                         </button>
                     )}
@@ -257,5 +272,13 @@ export default function ArchivePage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function ArchivePage() {
+    return (
+        <Suspense fallback={<div className="animate-fade"><TableSkeleton columns={4} rows={15} /></div>}>
+            <ArchiveContent />
+        </Suspense>
     );
 }

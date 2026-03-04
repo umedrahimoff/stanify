@@ -74,18 +74,43 @@ export async function GET(req: Request) {
 
         const alertsWithMeta = await prisma.alert.findMany({
             where: dateFilter ? { createdAt: dateFilter } : undefined,
-            select: { channelName: true, matchedWord: true, createdAt: true },
+            select: { channelName: true, matchedWord: true, createdAt: true, source: true },
         });
 
         const byChannel: Record<string, number> = {};
         const byKeyword: Record<string, number> = {};
         const byDay: Record<string, number> = {};
+        const bySource: Record<string, number> = {};
+        const byChannelKeyword: Record<string, Record<string, number>> = {};
         for (const a of alertsWithMeta) {
             byChannel[a.channelName] = (byChannel[a.channelName] || 0) + 1;
             byKeyword[a.matchedWord] = (byKeyword[a.matchedWord] || 0) + 1;
+            bySource[a.source || "channel"] = (bySource[a.source || "channel"] || 0) + 1;
             const day = a.createdAt.toISOString().slice(0, 10);
             byDay[day] = (byDay[day] || 0) + 1;
+            if (!byChannelKeyword[a.channelName]) byChannelKeyword[a.channelName] = {};
+            byChannelKeyword[a.channelName][a.matchedWord] = (byChannelKeyword[a.channelName][a.matchedWord] || 0) + 1;
         }
+
+        const alertsBySource = [
+            { name: "Channel", value: bySource.channel || 0, fill: "#00A3FF" },
+            { name: "Global", value: bySource.global || 0, fill: "#BF5AF2" },
+        ].filter((s) => s.value > 0);
+
+        const keywordsByChannel = Object.entries(byChannelKeyword)
+            .map(([channelName, kwCounts]) => ({
+                channelName,
+                keywords: Object.entries(kwCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([keyword, count]) => ({ keyword, count })),
+            }))
+            .sort((a, b) => {
+                const sumA = a.keywords.reduce((s, k) => s + k.count, 0);
+                const sumB = b.keywords.reduce((s, k) => s + k.count, 0);
+                return sumB - sumA;
+            })
+            .slice(0, 5);
 
         const alertsByChannel = Object.entries(byChannel)
             .sort((a, b) => b[1] - a[1])
@@ -135,14 +160,51 @@ export async function GET(req: Request) {
             select: { date: true, count: true },
         });
 
+        const totalAlertsCount = dateFilter
+            ? await prisma.alert.count({ where: { createdAt: dateFilter } })
+            : await prisma.alert.count();
+
+        const matchRate = totalPostsScanned > 0 ? (totalAlertsCount / totalPostsScanned) * 100 : 0;
+
+        const [notificationStats, totalPostsSaved, channelsAddedCount] = await Promise.all([
+            prisma.notificationLog.groupBy({
+                by: ["success"],
+                where: dateFilter ? { createdAt: dateFilter } : undefined,
+                _count: true,
+            }),
+            dateFilter ? prisma.channelPost.count({ where: { createdAt: dateFilter } }) : prisma.channelPost.count(),
+            dateFilter ? prisma.channel.count({ where: { createdAt: dateFilter } }) : Promise.resolve(0),
+        ]);
+        const totalNotif = notificationStats.reduce((s, x) => s + x._count, 0);
+        const successNotif = notificationStats.find((x) => x.success)?._count ?? 0;
+        const deliveryRate = totalNotif > 0 ? (successNotif / totalNotif) * 100 : 100;
+
+        let periodComparison: { current: number; previous: number; changePercent: number } | null = null;
+        if (periodStart) {
+            const prevStart = new Date(periodStart.getTime());
+            const periodMs = Date.now() - periodStart.getTime();
+            prevStart.setTime(prevStart.getTime() - periodMs);
+            const [currentCount, previousCount] = await Promise.all([
+                prisma.alert.count({ where: { createdAt: { gte: periodStart } } }),
+                prisma.alert.count({ where: { createdAt: { gte: prevStart, lt: periodStart } } }),
+            ]);
+            const changePercent = previousCount > 0 ? ((currentCount - previousCount) / previousCount) * 100 : (currentCount > 0 ? 100 : 0);
+            periodComparison = { current: currentCount, previous: previousCount, changePercent };
+        }
+
         const stats = {
-            totalAlerts: dateFilter
-                ? await prisma.alert.count({ where: { createdAt: dateFilter } })
-                : await prisma.alert.count(),
+            totalAlerts: totalAlertsCount,
             activeChannels: await prisma.channel.count({ where: { isActive: true } }),
             activeKeywords: uniqueKeywords.length,
             systemHealth: "Optimal",
             totalPostsScanned,
+            totalPostsSaved,
+            matchRate: Math.round(matchRate * 10) / 10,
+            deliveryRate: Math.round(deliveryRate * 10) / 10,
+            channelsAdded: channelsAddedCount,
+            periodComparison,
+            alertsBySource,
+            keywordsByChannel,
             recentAlerts: await prisma.alert.findMany({
                 where: dateFilter ? { createdAt: dateFilter } : undefined,
                 orderBy: { createdAt: "desc" },
