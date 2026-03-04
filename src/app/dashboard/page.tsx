@@ -334,7 +334,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.2fr)", gap: "1rem", marginBottom: "1rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
                 {(stats.keywordsByChannel?.length ?? 0) > 0 ? (
                     <div className="card" style={{ padding: "1rem" }}>
                         <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Keywords by channel</h2>
