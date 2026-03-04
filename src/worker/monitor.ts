@@ -3,6 +3,7 @@ dotenv.config();
 import { TelegramManager } from "../lib/telegram";
 import { getNotificationRecipients } from "../lib/settings";
 import { stripMarkdown } from "../lib/telegramFormat";
+import { translateToRussian } from "../lib/deepl";
 import { PrismaClient } from "@prisma/client";
 import { utils } from "telegram";
 
@@ -229,6 +230,7 @@ async function startMonitoring() {
         const recipients = await getNotificationRecipients();
         const contentPlain = stripMarkdown(content);
         const contentPreview = contentPlain.length > 400 ? contentPlain.slice(0, 400) + "…" : contentPlain;
+        const contentTranslated = await translateToRussian(contentPreview);
         const notificationText = [
             "🔔 Stanify Alert",
             "",
@@ -236,7 +238,7 @@ async function startMonitoring() {
             `🔑 Keyword: ${keyword}`,
             "",
             "📝 Content:",
-            contentPreview,
+            contentTranslated,
             "",
             postLink ? `🔗 Open post: ${postLink}` : "🔗 Private",
         ].join("\n");
