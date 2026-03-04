@@ -11,10 +11,19 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
+    Tooltip,
     ResponsiveContainer,
     LineChart,
     Line,
 } from "recharts";
+
+const chartTooltipStyle = {
+    background: "#1a1a2e",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: "10px",
+    padding: "0.5rem 0.75rem",
+    fontSize: "0.85rem",
+};
 
 type Period = "all" | "24h" | "3d" | "7d" | "30d";
 
@@ -165,6 +174,7 @@ export default function Dashboard() {
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                 <XAxis dataKey="week" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
                                 <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Posts"]} labelFormatter={(l) => l} />
                                 <Bar dataKey="count" fill="#00A3FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -181,6 +191,7 @@ export default function Dashboard() {
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                 <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} />
                                 <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
+                                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} labelFormatter={(l) => l} />
                                 <Line type="monotone" dataKey="count" stroke="#00FF75" strokeWidth={2} dot={{ fill: "#00FF75", r: 3 }} />
                             </LineChart>
                         </ResponsiveContainer>
@@ -199,6 +210,7 @@ export default function Dashboard() {
                             <BarChart data={stats.alertsByChannel ?? []} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                                 <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
                                 <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} width={100} />
+                                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
                                 <Bar dataKey="count" fill="#BF5AF2" radius={[0, 4, 4, 0]} maxBarSize={20} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -214,6 +226,7 @@ export default function Dashboard() {
                             <BarChart data={stats.alertsByKeyword ?? []} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                                 <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} allowDecimals={false} />
                                 <YAxis type="category" dataKey="keyword" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} width={100} />
+                                <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number | undefined) => [v ?? 0, "Alerts"]} />
                                 <Bar dataKey="count" fill="#FF9F0A" radius={[0, 4, 4, 0]} maxBarSize={20} />
                             </BarChart>
                         </ResponsiveContainer>

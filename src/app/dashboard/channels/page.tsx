@@ -20,7 +20,7 @@ interface Channel {
     createdAt: string;
     lastActivityAt: string | null;
     _pending?: boolean;
-    _count?: { keywords: number };
+    _count?: { keywords: number; channelPosts: number };
 }
 
 export default function ChannelsPage() {
@@ -264,6 +264,7 @@ export default function ChannelsPage() {
                                     <th>Name</th>
                                     <th>Type</th>
                                     <th style={{ width: "1%", whiteSpace: "nowrap" }}>Kw</th>
+                                    <th style={{ width: "1%", whiteSpace: "nowrap" }}>Posts</th>
                                     <th>Added</th>
                                     <th>Last Activity</th>
                                     <th>Status</th>
@@ -273,7 +274,7 @@ export default function ChannelsPage() {
                             <tbody>
                                 {channels.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
+                                        <td colSpan={8} style={{ textAlign: "center", padding: "4rem", color: "rgba(255,255,255,0.2)" }}>
                                             No channels found matching the criteria.
                                         </td>
                                     </tr>
@@ -336,6 +337,9 @@ export default function ChannelsPage() {
                                                 </td>
                                                 <td style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>
                                                     {c._count?.keywords ?? 0}
+                                                </td>
+                                                <td style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>
+                                                    {c._count?.channelPosts ?? 0}
                                                 </td>
                                                 <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

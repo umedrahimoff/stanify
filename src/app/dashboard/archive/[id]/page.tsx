@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, ArrowLeft, Radio, Hash, Calendar, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, Radio, Hash, Calendar, ExternalLink, Languages } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import Link from "next/link";
+import axios from "axios";
 import { formatDate } from "@/lib/date";
 import { markdownToHtml } from "@/lib/telegramFormat";
 
@@ -12,6 +14,7 @@ interface Alert {
     id: string;
     channelName: string;
     content: string;
+    translatedContent: string | null;
     matchedWord: string;
     postLink: string | null;
     createdAt: string;
@@ -21,10 +24,12 @@ export default function ArchiveDetailPage() {
     const params = useParams();
     const id = params.id as string;
 
-    const { data: alert, error, isLoading } = useSWR<Alert>(
+    const { data: alert, error, isLoading, mutate } = useSWR<Alert>(
         id ? `/api/alerts/${id}` : null,
         fetcher
     );
+    const [showTranslation, setShowTranslation] = useState(false);
+    const [translating, setTranslating] = useState(false);
 
     if (isLoading || error) {
         return (
@@ -138,18 +143,70 @@ export default function ArchiveDetailPage() {
                 </div>
 
                 <div>
-                    <h3
-                        style={{
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            color: "rgba(255,255,255,0.5)",
-                            marginBottom: "0.5rem",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                        }}
-                    >
-                        Full Post Text
-                    </h3>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <h3
+                            style={{
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                color: "rgba(255,255,255,0.5)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                            }}
+                        >
+                            Full Post Text
+                        </h3>
+                        {(alert.translatedContent || showTranslation) ? (
+                            <button
+                                onClick={() => setShowTranslation((v) => !v)}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.35rem",
+                                    padding: "0.3rem 0.6rem",
+                                    fontSize: "0.8rem",
+                                    background: showTranslation ? "rgba(0,163,255,0.2)" : "rgba(255,255,255,0.06)",
+                                    border: "1px solid rgba(0,163,255,0.3)",
+                                    borderRadius: "8px",
+                                    color: "#00A3FF",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <Languages size={14} />
+                                {showTranslation ? "Original" : "Russian"}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={async () => {
+                                    setTranslating(true);
+                                    try {
+                                        const { data } = await axios.post<{ translated: string }>(`/api/alerts/${id}/translate`);
+                                        mutate({ ...alert, translatedContent: data.translated }, false);
+                                        setShowTranslation(true);
+                                    } catch (e) {
+                                        console.error(e);
+                                    } finally {
+                                        setTranslating(false);
+                                    }
+                                }}
+                                disabled={translating}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.35rem",
+                                    padding: "0.3rem 0.6rem",
+                                    fontSize: "0.8rem",
+                                    background: "rgba(191,90,242,0.15)",
+                                    border: "1px solid rgba(191,90,242,0.3)",
+                                    borderRadius: "8px",
+                                    color: "#BF5AF2",
+                                    cursor: translating ? "not-allowed" : "pointer",
+                                }}
+                            >
+                                {translating ? <Loader2 size={14} className="animate-spin" /> : <Languages size={14} />}
+                                Translate to Russian
+                            </button>
+                        )}
+                    </div>
                     <div
                         style={{
                             fontSize: "0.85rem",
@@ -159,7 +216,11 @@ export default function ArchiveDetailPage() {
                             wordBreak: "break-word",
                         }}
                         dangerouslySetInnerHTML={{
-                            __html: markdownToHtml(alert.content || "(No text)"),
+                            __html: markdownToHtml(
+                                showTranslation && alert.translatedContent
+                                    ? alert.translatedContent
+                                    : alert.content || "(No text)"
+                            ),
                         }}
                     />
                 </div>

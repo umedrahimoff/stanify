@@ -45,14 +45,15 @@ model ChannelKeyword {
 }
 
 model Alert {
-  id          String   @id @default(cuid())
-  channelName String
-  channelId   String?
-  channel     Channel? @relation(fields: [channelId], references: [id])
-  content     String
-  matchedWord String
-  postLink    String?
-  createdAt   DateTime @default(now())
+  id               String   @id @default(cuid())
+  channelName      String
+  channelId        String?
+  channel          Channel? @relation(fields: [channelId], references: [id])
+  content          String
+  translatedContent String?  // cached DeepL translation for admin panel
+  matchedWord      String
+  postLink         String?
+  createdAt        DateTime @default(now())
 }
 
 model Session {
