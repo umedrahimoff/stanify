@@ -416,12 +416,13 @@ async function cleanupOldAlerts() {
     threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
 
     try {
-        const [deletedAlerts, deletedLogs, deletedPosts] = await Promise.all([
+        const [deletedAlerts, deletedLogs, deletedPosts, deletedActions] = await Promise.all([
             prisma.alert.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
             prisma.notificationLog.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
             prisma.channelPost.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
+            prisma.actionLog.deleteMany({ where: { createdAt: { lt: threeMonthsAgo } } }),
         ]);
-        console.log(`✅ Cleanup finished: Deleted ${deletedAlerts.count} old alerts, ${deletedLogs.count} old logs, ${deletedPosts.count} old posts.`);
+        console.log(`✅ Cleanup finished: Deleted ${deletedAlerts.count} old alerts, ${deletedLogs.count} old logs, ${deletedPosts.count} old posts, ${deletedActions.count} old actions.`);
     } catch (error) {
         console.error("❌ Cleanup failed:", error);
     }

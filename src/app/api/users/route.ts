@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 export async function GET() {
     const admin = await requireAdmin();
     if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
     const user = await prisma.appUser.create({
         data: { username, role: "moderator" },
     });
+    await logAction({ action: "user_add", actorId: admin.id, actorUsername: admin.username, targetType: "user", targetId: user.id, details: `@${username}` });
     return NextResponse.json(user);
 }
 
@@ -44,6 +46,7 @@ export async function DELETE(req: Request) {
         where: { id },
         data: { canAccessAdmin: false },
     });
+    await logAction({ action: "user_suspend", actorId: admin.id, actorUsername: admin.username, targetType: "user", targetId: id, details: `@${user.username}` });
     return NextResponse.json({ success: true });
 }
 
@@ -67,5 +70,6 @@ export async function PATCH(req: Request) {
         where: { id },
         data: updates,
     });
+    await logAction({ action: "user_restore", actorId: admin.id, actorUsername: admin.username, targetType: "user", targetId: id, details: `@${user.username}` });
     return NextResponse.json({ success: true, ...updates });
 }

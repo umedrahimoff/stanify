@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 function parseTags(input: string): string[] {
     return [...new Set(input.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))];
@@ -52,6 +53,8 @@ export async function POST(
                 })
             )
         );
+        const ch = await prisma.channel.findUnique({ where: { id }, select: { name: true, username: true } });
+        await logAction({ action: "keyword_add", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: id, details: `${ch?.name || ch?.username || id}: ${unique.join(", ")}` });
         return NextResponse.json(created.length === 1 ? created[0] : created);
     } catch (error) {
         return NextResponse.json({ error: "Failed to add keywords" }, { status: 500 });
@@ -73,6 +76,8 @@ export async function DELETE(
         await prisma.channelKeyword.deleteMany({
             where: { id: { in: ids }, channelId: id },
         });
+        const ch = await prisma.channel.findUnique({ where: { id }, select: { name: true, username: true } });
+        await logAction({ action: "keyword_remove", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: id, details: `${ch?.name || ch?.username || id} ids=${ids.length}` });
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: "Failed to delete keywords" }, { status: 500 });

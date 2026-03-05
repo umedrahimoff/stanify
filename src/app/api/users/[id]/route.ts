@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 export async function GET(
     _req: Request,
@@ -45,8 +46,10 @@ export async function PATCH(
     if (typeof body?.canAccessAdmin === "boolean") updates.canAccessAdmin = body.canAccessAdmin;
     if (Object.keys(updates).length > 0) {
         await prisma.appUser.update({ where: { id }, data: updates });
+        await logAction({ action: "user_edit", actorId: admin.id, actorUsername: admin.username, targetType: "user", targetId: id, details: `@${user.username} ${JSON.stringify(updates)}` });
     }
 
+    let edited = false;
     if (Array.isArray(body?.channelIds)) {
         await prisma.userChannel.deleteMany({ where: { userId: id } });
         const validIds = body.channelIds.filter((c: unknown) => typeof c === "string");
@@ -56,6 +59,7 @@ export async function PATCH(
                 skipDuplicates: true,
             });
         }
+        edited = true;
     }
 
     if (Array.isArray(body?.keywords)) {
@@ -70,6 +74,10 @@ export async function PATCH(
                 skipDuplicates: true,
             });
         }
+        edited = true;
+    }
+    if (edited) {
+        await logAction({ action: "user_edit", actorId: admin.id, actorUsername: admin.username, targetType: "user", targetId: id, details: `@${user.username} channels/keywords` });
     }
 
     const updated = await prisma.appUser.findUnique({
@@ -101,5 +109,6 @@ export async function DELETE(
     if (user.role === "admin") return NextResponse.json({ error: "Cannot delete admin" }, { status: 400 });
 
     await prisma.appUser.delete({ where: { id } });
+    await logAction({ action: "user_delete", actorId: admin.id, actorUsername: admin.username, targetType: "user", targetId: id, details: `@${user.username}` });
     return NextResponse.json({ success: true });
 }

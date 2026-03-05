@@ -3,6 +3,7 @@ import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
@@ -109,6 +110,7 @@ export async function POST(req: Request) {
                 where: { id: body.id },
                 data: { isActive: !!body.isActive },
             });
+            await logAction({ action: "channel_toggle", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: body.id, details: `${channel.name || channel.username} → ${body.isActive ? "active" : "inactive"}` });
             return NextResponse.json(channel);
         }
 
@@ -177,6 +179,7 @@ export async function POST(req: Request) {
                         where: { id: existing.id },
                         data: { isActive: true, name, username: finalUsername, telegramId, type: channelType },
                     });
+                    await logAction({ action: "channel_add", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: existing.id, details: `${name} (@${finalUsername})` });
                     await client.disconnect();
                     return NextResponse.json(updated);
                 }
@@ -207,7 +210,7 @@ export async function POST(req: Request) {
                             isActive: true,
                         },
                     });
-
+                    await logAction({ action: "channel_add", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: channel.id, details: `${name} (@${finalUsername})` });
                     await client.disconnect();
                     return NextResponse.json({
                         ...channel,
@@ -273,6 +276,7 @@ export async function DELETE(req: Request) {
         }
 
         await prisma.channel.delete({ where: { id } });
+        await logAction({ action: "channel_remove", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: id, details: `${channel.name || channel.username} (@${channel.username || ""})` });
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("DELETE error:", error);

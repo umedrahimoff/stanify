@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 const NOTIFICATION_RECIPIENT_KEY = "notification_recipient";
 const PARSER_ENABLED_KEY = "parser_enabled";
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
             });
         }
         const parserEnabled = await getParserEnabled();
+        await logAction({ action: "settings_change", actorId: admin.id, actorUsername: admin.username, targetType: "settings", details: `parser=${parserEnabled} recipients=${value.split(",").length}` });
         return NextResponse.json({ success: true, notificationRecipients: value.split(","), parserEnabled });
     } catch (error) {
         return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });

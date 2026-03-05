@@ -160,3 +160,18 @@ model NotificationLog {
   @@index([keyword])
   @@index([sourceChannel])
 }
+
+model ActionLog {
+  id             String   @id @default(cuid())
+  action         String   // user_add, user_suspend, user_restore, user_delete, user_edit, channel_add, channel_remove, keyword_add, keyword_edit, keyword_remove, settings_change, etc.
+  actorId        String
+  actorUsername  String
+  targetType     String?   // user, channel, keyword, global_keyword, settings
+  targetId       String?
+  details        String?  // JSON or human-readable summary
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([actorId])
+}

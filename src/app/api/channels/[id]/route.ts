@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 export async function PATCH(
     req: Request,
@@ -21,6 +22,7 @@ export async function PATCH(
             where: { id },
             data: { saveAllPosts: body.saveAllPosts },
         });
+        await logAction({ action: "channel_edit", actorId: user.id, actorUsername: user.username, targetType: "channel", targetId: id, details: `saveAllPosts=${body.saveAllPosts}` });
         return NextResponse.json(channel);
     } catch (error) {
         return NextResponse.json({ error: "Failed to update channel" }, { status: 500 });

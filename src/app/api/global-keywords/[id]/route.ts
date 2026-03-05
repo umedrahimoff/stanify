@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 export async function PATCH(
     req: Request,
@@ -30,7 +31,7 @@ export async function PATCH(
             data,
             include: { recipients: { select: { username: true } } },
         });
-
+        await logAction({ action: "global_keyword_edit", actorId: user.id, actorUsername: user.username, targetType: "global_keyword", targetId: id, details: `"${updated.text}"` });
         return NextResponse.json({
             id: updated.id,
             text: updated.text,

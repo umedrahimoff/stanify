@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logAction } from "@/lib/actionLog";
 
 function normalize(text: string): string {
     return text.trim().toLowerCase();
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
             },
             include: { recipients: { select: { username: true } } },
         });
-
+        await logAction({ action: "global_keyword_add", actorId: user.id, actorUsername: user.username, targetType: "global_keyword", targetId: created.id, details: `"${text}" → @${usernames.join(", @")}` });
         return NextResponse.json({
             id: created.id,
             text: created.text,
@@ -81,6 +82,7 @@ export async function DELETE(req: Request) {
         if (!ids.length) return NextResponse.json({ error: "id or ids required" }, { status: 400 });
 
         await prisma.globalKeyword.deleteMany({ where: { id: { in: ids } } });
+        await logAction({ action: "global_keyword_remove", actorId: user.id, actorUsername: user.username, targetType: "global_keyword", details: `ids=${ids.length}` });
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
