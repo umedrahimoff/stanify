@@ -40,11 +40,11 @@ export async function PATCH(
 
     const body = await req.json();
 
-    if (typeof body?.isActive === "boolean") {
-        await prisma.appUser.update({
-            where: { id },
-            data: { isActive: body.isActive },
-        });
+    const updates: { isActive?: boolean; canAccessAdmin?: boolean } = {};
+    if (typeof body?.isActive === "boolean") updates.isActive = body.isActive;
+    if (typeof body?.canAccessAdmin === "boolean") updates.canAccessAdmin = body.canAccessAdmin;
+    if (Object.keys(updates).length > 0) {
+        await prisma.appUser.update({ where: { id }, data: updates });
     }
 
     if (Array.isArray(body?.channelIds)) {
@@ -84,4 +84,22 @@ export async function PATCH(
         channels: updated?.userChannels.map((uc) => ({ id: uc.channel.id, username: uc.channel.username, name: uc.channel.name })) ?? [],
         keywords: updated?.userKeywords.map((uk) => ({ id: uk.id, keyword: uk.keyword })) ?? [],
     });
+}
+
+export async function DELETE(
+    _req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const admin = await requireAdmin();
+    if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const { id } = await params;
+    if (id === admin.id) return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
+
+    const user = await prisma.appUser.findUnique({ where: { id } });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (user.role === "admin") return NextResponse.json({ error: "Cannot delete admin" }, { status: 400 });
+
+    await prisma.appUser.delete({ where: { id } });
+    return NextResponse.json({ success: true });
 }

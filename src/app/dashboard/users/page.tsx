@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Loader2, Shield, UserCog, AlertCircle, Pause, Play, Settings } from "lucide-react";
+import { Plus, Loader2, Shield, UserCog, AlertCircle, Pause, Play, Settings, Trash2 } from "lucide-react";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
@@ -26,7 +26,7 @@ export default function UsersPage() {
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
-    const { data: me } = useSWR<{ role: string }>("/api/auth/me", fetcher);
+    const { data: me } = useSWR<{ id?: string; role: string }>("/api/auth/me", fetcher);
     const { data: users = [], isLoading, mutate, error } = useSWR<AppUser[]>(
         me?.role === "admin" ? "/api/users" : null,
         fetcher,
@@ -77,6 +77,18 @@ export default function UsersPage() {
             mutate();
             mutateMe("/api/auth/me");
             showToast(`@${u.username} restored`);
+        } catch (e: any) {
+            showToast(e.response?.data?.error || "Error", "error");
+        }
+    };
+
+    const deleteUser = async (id: string, u: AppUser) => {
+        if (!confirm(`Delete @${u.username} permanently? They will stop receiving notifications.`)) return;
+        try {
+            await axios.delete(`/api/users/${id}`);
+            mutate();
+            mutateMe("/api/auth/me");
+            showToast(`@${u.username} deleted`);
         } catch (e: any) {
             showToast(e.response?.data?.error || "Error", "error");
         }
@@ -278,6 +290,24 @@ export default function UsersPage() {
                                                             <Play size={14} />
                                                         </button>
                                                     ))}
+                                                {u.role !== "admin" && u.id !== me?.id && (
+                                                    <button
+                                                        onClick={() => deleteUser(u.id, u)}
+                                                        title="Delete"
+                                                        style={{
+                                                            background: "none",
+                                                            border: "none",
+                                                            color: "rgba(255,69,69,0.8)",
+                                                            cursor: "pointer",
+                                                            padding: "0.35rem",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                        }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
