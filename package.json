@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "worker": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/worker/monitor.ts",
     "auth": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/scripts/auth.ts",
+    "auth:qr": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/scripts/auth_qr.ts",
     "seed:keywords": "npx ts-node --compiler-options '{\"module\":\"commonjs\", \"moduleResolution\": \"node\"}' src/scripts/seed_keywords.ts"
   },
   "dependencies": {

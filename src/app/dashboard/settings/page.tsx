@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Key, Phone, ShieldCheck, Mail, Fingerprint, Activity, Database, Download, Trash2, AlertTriangle, Users, History, Send, Loader2 } from "lucide-react";
+import { Key, Phone, ShieldCheck, Mail, Fingerprint, Activity, Database, Download, Trash2, AlertTriangle, Users, History, Send, Loader2, RefreshCw } from "lucide-react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import axios from "axios";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -35,6 +36,9 @@ export default function SettingsPage() {
     const [testRecipients, setTestRecipients] = useState<Set<string>>(new Set());
     const [sendingTest, setSendingTest] = useState(false);
     const [testResult, setTestResult] = useState<{ sent: string[]; failed: { username: string; error: string }[]; queued?: string } | null>(null);
+    const [reauthStatus, setReauthStatus] = useState<{ status: string; qrUrl?: string; hint?: string; error?: string } | null>(null);
+    const [reauthPassword, setReauthPassword] = useState("");
+    const [reauthPolling, setReauthPolling] = useState(false);
 
     useEffect(() => {
         if (me && me.role !== "admin") router.replace("/dashboard");
@@ -48,6 +52,20 @@ export default function SettingsPage() {
             testInitDone.current = true;
         }
     }, [activeUsers.length]);
+
+    useEffect(() => {
+        if (!reauthPolling) return;
+        const fetchStatus = async () => {
+            try {
+                const { data } = await axios.get<{ status: string; qrUrl?: string; hint?: string; error?: string }>("/api/settings/reauth/status");
+                setReauthStatus(data);
+                if (data.status === "done" || data.status === "error") setReauthPolling(false);
+            } catch {}
+        };
+        fetchStatus();
+        const t = setInterval(fetchStatus, 1500);
+        return () => clearInterval(t);
+    }, [reauthPolling]);
 
     if (!me) return <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>;
     if (me.role !== "admin") return <div style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Redirecting...</div>;
@@ -71,9 +89,79 @@ export default function SettingsPage() {
                             Telegram account is already connected via server configuration and cannot be changed from the admin panel.
                         </p>
                     )}
-                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
-                        If Sync or notifications fail: session may be expired. Run <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>npm run auth</code> locally to re-authenticate.
-                    </p>
+
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '0.5rem' }}>Re-authenticate</h3>
+                        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.75rem' }}>
+                            If Telegram reset the session or Sync fails — re-auth via QR. 2FA will be prompted if enabled.
+                        </p>
+                        {!reauthStatus || reauthStatus.status === "idle" ? (
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await axios.post("/api/settings/reauth");
+                                        setReauthStatus({ status: "starting" });
+                                        setReauthPolling(true);
+                                    } catch (e: any) {
+                                        setReauthStatus({ status: "error", error: e.response?.data?.error || "Failed" });
+                                    }
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.85rem', fontSize: '0.85rem', background: 'rgba(0,163,255,0.15)', border: '1px solid rgba(0,163,255,0.3)', borderRadius: '8px', color: '#00A3FF', cursor: 'pointer' }}
+                            >
+                                <RefreshCw size={14} />
+                                Start re-auth (QR)
+                            </button>
+                        ) : reauthStatus.status === "starting" ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
+                                <Loader2 size={16} className="animate-spin" />
+                                Connecting…
+                            </div>
+                        ) : reauthStatus.status === "qr" && reauthStatus.qrUrl ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>Scan with Telegram → Settings → Devices → Link Desktop Device</p>
+                                <div style={{ padding: '0.75rem', background: 'white', borderRadius: '8px', width: 'fit-content' }}>
+                                    <QRCodeSVG value={reauthStatus.qrUrl} size={200} level="M" />
+                                </div>
+                            </div>
+                        ) : reauthStatus.status === "password" ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>2FA password{reauthStatus.hint ? ` (hint: ${reauthStatus.hint})` : ""}</label>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <input
+                                        type="password"
+                                        className="input-field"
+                                        value={reauthPassword}
+                                        onChange={(e) => setReauthPassword(e.target.value)}
+                                        placeholder="Password"
+                                        style={{ flex: 1, height: '36px', fontSize: '0.85rem' }}
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await axios.post("/api/settings/reauth/password", { password: reauthPassword });
+                                                setReauthPassword("");
+                                            } catch {}
+                                        }}
+                                        disabled={!reauthPassword.trim()}
+                                        className="btn-primary"
+                                        style={{ height: '36px', padding: '0 1rem', fontSize: '0.85rem' }}
+                                    >
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        ) : reauthStatus.status === "done" ? (
+                            <div>
+                                <p style={{ fontSize: '0.85rem', color: '#00FF75', marginBottom: '0.5rem' }}>✅ Session saved. Redeploy worker on Railway.</p>
+                                <button onClick={() => setReauthStatus(null)} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>Start over</button>
+                            </div>
+                        ) : reauthStatus.status === "error" ? (
+                            <div>
+                                <p style={{ fontSize: '0.85rem', color: 'rgba(255,159,10,0.9)', marginBottom: '0.5rem' }}>❌ {reauthStatus.error}</p>
+                                <button onClick={() => setReauthStatus(null)} style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>Try again</button>
+                            </div>
+                        ) : null}
+                    </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {/* Step 1: API Information */}
