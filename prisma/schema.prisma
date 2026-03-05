@@ -92,6 +92,7 @@ model AppUser {
   username       String    @unique
   role           String    @default("moderator") // "admin" | "moderator"
   isActive       Boolean   @default(true)
+  canAccessAdmin Boolean   @default(true) // false = suspended: no login, but still receives notifications
   createdAt      DateTime  @default(now())
   lastLoginAt    DateTime?
   lastActivityAt DateTime?

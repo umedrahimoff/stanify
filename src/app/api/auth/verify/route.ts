@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         }
 
         const user = await prisma.appUser.findUnique({
-            where: { id: userId, isActive: true },
+            where: { id: userId, isActive: true, canAccessAdmin: true },
         });
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 401 });

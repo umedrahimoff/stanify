@@ -7,7 +7,7 @@ export async function getCurrentUser(): Promise<{ id: string; username: string; 
     if (!userId) return null;
 
     const user = await prisma.appUser.findUnique({
-        where: { id: userId, isActive: true },
+        where: { id: userId, isActive: true, canAccessAdmin: true },
     });
     return user ? { id: user.id, username: user.username, role: user.role } : null;
 }

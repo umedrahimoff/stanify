@@ -42,7 +42,7 @@ export async function DELETE(req: Request) {
 
     await prisma.appUser.update({
         where: { id },
-        data: { isActive: false },
+        data: { canAccessAdmin: false },
     });
     return NextResponse.json({ success: true });
 }
@@ -59,10 +59,13 @@ export async function PATCH(req: Request) {
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
     if (user.role === "admin") return NextResponse.json({ error: "Cannot modify admin" }, { status: 400 });
 
-    const isActive = !!body?.isActive;
+    const updates: { isActive?: boolean; canAccessAdmin?: boolean } = {};
+    if (typeof body?.isActive === "boolean") updates.isActive = body.isActive;
+    if (typeof body?.canAccessAdmin === "boolean") updates.canAccessAdmin = body.canAccessAdmin;
+    if (Object.keys(updates).length === 0) return NextResponse.json({ success: true });
     await prisma.appUser.update({
         where: { id },
-        data: { isActive },
+        data: updates,
     });
-    return NextResponse.json({ success: true, isActive });
+    return NextResponse.json({ success: true, ...updates });
 }

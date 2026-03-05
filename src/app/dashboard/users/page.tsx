@@ -14,6 +14,7 @@ interface AppUser {
     username: string;
     role: string;
     isActive: boolean;
+    canAccessAdmin: boolean;
     createdAt: string;
     lastLoginAt: string | null;
     lastActivityAt: string | null;
@@ -59,7 +60,7 @@ export default function UsersPage() {
     };
 
     const suspendUser = async (id: string, u: AppUser) => {
-        if (!confirm(`Suspend @${u.username}? They won't be able to log in or receive alerts.`)) return;
+        if (!confirm(`Suspend @${u.username}? They won't be able to log in, but will still receive notifications.`)) return;
         try {
             await axios.delete("/api/users", { data: { id } });
             mutate();
@@ -72,7 +73,7 @@ export default function UsersPage() {
 
     const restoreUser = async (id: string, u: AppUser) => {
         try {
-            await axios.patch("/api/users", { id, isActive: true });
+            await axios.patch("/api/users", { id, canAccessAdmin: true, isActive: true });
             mutate();
             mutateMe("/api/auth/me");
             showToast(`@${u.username} restored`);
@@ -168,7 +169,7 @@ export default function UsersPage() {
                             </thead>
                             <tbody>
                                 {users.map((u) => (
-                                    <tr key={u.id} style={{ opacity: u.isActive ? 1 : 0.6 }}>
+                                    <tr key={u.id} style={{ opacity: u.canAccessAdmin !== false ? 1 : 0.6 }}>
                                         <td>
                                             <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>@{u.username}</span>
                                         </td>
@@ -194,7 +195,7 @@ export default function UsersPage() {
                                             {u.lastLoginAt ? formatDate(u.lastLoginAt) : "—"}
                                         </td>
                                         <td>
-                                            {u.isActive ? (
+                                            {u.canAccessAdmin !== false ? (
                                                 <span
                                                     style={{
                                                         display: "inline-flex",
@@ -242,7 +243,7 @@ export default function UsersPage() {
                                                     <Settings size={14} />
                                                 </Link>
                                                 {u.role !== "admin" &&
-                                                    (u.isActive ? (
+                                                    (u.canAccessAdmin !== false ? (
                                                         <button
                                                             onClick={() => suspendUser(u.id, u)}
                                                             title="Suspend"

@@ -39,7 +39,7 @@ export async function POST(req: Request) {
             }
         } else {
             user = await prisma.appUser.findFirst({
-                where: { username, isActive: true },
+                where: { username, isActive: true, canAccessAdmin: true },
             });
         }
 
