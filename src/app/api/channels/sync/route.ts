@@ -143,6 +143,12 @@ export async function POST() {
         });
     } catch (error: any) {
         console.error("Sync API Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        let msg = error?.message || "Sync failed";
+        if (msg.includes("AUTH_KEY_DUPLICATED") || msg.includes("406")) {
+            msg = "Worker holds the session. Stop worker → Sync → restart worker.";
+        } else if (msg.includes("AUTH_KEY") || msg.includes("SESSION") || msg.includes("401")) {
+            msg = "Session expired. Run: npm run auth";
+        }
+        return NextResponse.json({ error: msg }, { status: 500 });
     }
 }

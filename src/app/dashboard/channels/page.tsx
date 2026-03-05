@@ -64,9 +64,10 @@ export default function ChannelsPage() {
             mutate();
             mutateStats("/api/stats");
             showToast("Channels synced successfully!");
-        } catch (error) {
-            console.error("Sync failed:", error);
-            showToast("Sync failed. Check console.", "error");
+        } catch (error: any) {
+            const msg = error?.response?.data?.error || "Sync failed. Check console.";
+            console.error("Sync failed:", msg);
+            showToast(msg, "error");
         } finally {
             setSyncing(false);
         }

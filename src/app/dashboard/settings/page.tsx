@@ -71,6 +71,9 @@ export default function SettingsPage() {
                             Telegram account is already connected via server configuration and cannot be changed from the admin panel.
                         </p>
                     )}
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
+                        If Sync or notifications fail: session may be expired. Run <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>npm run auth</code> locally to re-authenticate.
+                    </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {/* Step 1: API Information */}
