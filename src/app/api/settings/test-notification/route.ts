@@ -7,6 +7,7 @@ import { StringSession } from "telegram/sessions";
 const apiId = parseInt(process.env.TELEGRAM_API_ID || "0");
 const apiHash = process.env.TELEGRAM_API_HASH || "";
 
+const PENDING_TEST_KEY = "pending_test_notification";
 const TEST_MESSAGE = [
     "✅ <b>Stanify Test Message</b>",
     "",
@@ -42,32 +43,52 @@ export async function POST(req: Request) {
         const session = await prisma.session.findFirst({ where: { isActive: true } });
         if (!session) return NextResponse.json({ error: "No active Telegram session" }, { status: 500 });
 
-        const client = new TelegramClient(new StringSession(session.sessionStr), apiId, apiHash, { connectionRetries: 2 });
-        await client.connect();
+        try {
+            const client = new TelegramClient(new StringSession(session.sessionStr), apiId, apiHash, { connectionRetries: 2 });
+            await client.connect();
 
-        const sent: string[] = [];
-        const failed: { username: string; error: string }[] = [];
+            const sent: string[] = [];
+            const failed: { username: string; error: string }[] = [];
 
-        for (const username of usernames) {
-            try {
-                await client.sendMessage(username, { message: TEST_MESSAGE, parseMode: "html" });
-                sent.push(username);
-            } catch (e: unknown) {
-                const errMsg = e instanceof Error ? e.message : String(e);
-                failed.push({ username, error: errMsg });
+            for (const username of usernames) {
+                try {
+                    await client.sendMessage(username, { message: TEST_MESSAGE, parseMode: "html" });
+                    sent.push(username);
+                } catch (e: unknown) {
+                    const errMsg = e instanceof Error ? e.message : String(e);
+                    failed.push({ username, error: errMsg });
+                }
             }
+
+            await client.disconnect();
+
+            return NextResponse.json({
+                success: true,
+                sent,
+                failed,
+                queued: false,
+                message: failed.length === 0
+                    ? `Test message sent to ${sent.length} user(s)`
+                    : `Sent to ${sent.length}, failed for ${failed.length}`,
+            });
+        } catch (connectError: unknown) {
+            const errStr = connectError instanceof Error ? connectError.message : String(connectError);
+            if (errStr.includes("AUTH_KEY_DUPLICATED") || errStr.includes("406")) {
+                await prisma.appSetting.upsert({
+                    where: { key: PENDING_TEST_KEY },
+                    create: { key: PENDING_TEST_KEY, value: JSON.stringify({ usernames, createdAt: new Date().toISOString() }) },
+                    update: { value: JSON.stringify({ usernames, createdAt: new Date().toISOString() }) },
+                });
+                return NextResponse.json({
+                    success: true,
+                    sent: [],
+                    failed: [],
+                    queued: true,
+                    message: "Worker is connected. Test message queued — the worker will send it within ~30 seconds.",
+                });
+            }
+            throw connectError;
         }
-
-        await client.disconnect();
-
-        return NextResponse.json({
-            success: true,
-            sent,
-            failed,
-            message: failed.length === 0
-                ? `Test message sent to ${sent.length} user(s)`
-                : `Sent to ${sent.length}, failed for ${failed.length}`,
-        });
     } catch (error: unknown) {
         console.error("Test notification error:", error);
         const msg = error instanceof Error ? error.message : "Failed to send test message";

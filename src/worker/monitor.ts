@@ -377,6 +377,36 @@ async function startMonitoring() {
         }
     }, 5 * 60 * 1000);
 
+    // Process pending test notifications (queued when API gets AUTH_KEY_DUPLICATED)
+    const PENDING_TEST_KEY = "pending_test_notification";
+    const TEST_MSG = [
+        "✅ <b>Stanify Test Message</b>",
+        "",
+        "Notification service is working correctly.",
+        "",
+        "<i>Sent from Settings → Test notification</i>",
+    ].join("\n");
+    setInterval(async () => {
+        try {
+            const row = await prisma.appSetting.findUnique({ where: { key: PENDING_TEST_KEY } });
+            if (!row?.value) return;
+            const data = JSON.parse(row.value) as { usernames?: string[] };
+            const usernames = Array.isArray(data?.usernames) ? data.usernames : [];
+            if (usernames.length === 0) return;
+            await prisma.appSetting.delete({ where: { key: PENDING_TEST_KEY } });
+            for (const u of usernames) {
+                try {
+                    await tg.sendMessage(u, TEST_MSG, "html");
+                    console.log(`📤 Test message sent to @${u}`);
+                } catch (e: any) {
+                    console.warn(`Failed to send test to @${u}:`, e?.message);
+                }
+            }
+        } catch (e) {
+            console.warn("Pending test notification error:", (e as Error).message);
+        }
+    }, 30 * 1000);
+
     console.log("🟢 Listener active. Waiting for messages...");
 }
 

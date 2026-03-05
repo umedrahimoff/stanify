@@ -34,7 +34,7 @@ export default function SettingsPage() {
     const [savingParser, setSavingParser] = useState(false);
     const [testRecipients, setTestRecipients] = useState<Set<string>>(new Set());
     const [sendingTest, setSendingTest] = useState(false);
-    const [testResult, setTestResult] = useState<{ sent: string[]; failed: { username: string; error: string }[] } | null>(null);
+    const [testResult, setTestResult] = useState<{ sent: string[]; failed: { username: string; error: string }[]; queued?: string } | null>(null);
 
     useEffect(() => {
         if (me && me.role !== "admin") router.replace("/dashboard");
@@ -246,10 +246,14 @@ export default function SettingsPage() {
                                                 setSendingTest(true);
                                                 setTestResult(null);
                                                 try {
-                                                    const { data } = await axios.post<{ sent: string[]; failed: { username: string; error: string }[] }>('/api/settings/test-notification', {
+                                                    const { data } = await axios.post<{ sent: string[]; failed: { username: string; error: string }[]; queued?: boolean; message?: string }>('/api/settings/test-notification', {
                                                         usernames: [...testRecipients],
                                                     });
-                                                    setTestResult({ sent: data.sent, failed: data.failed });
+                                                    setTestResult({
+                                                        sent: data.sent,
+                                                        failed: data.failed,
+                                                        ...(data.queued && data.message ? { queued: data.message } : {}),
+                                                    });
                                                 } catch (e: any) {
                                                     setTestResult({ sent: [], failed: [{ username: '', error: e.response?.data?.error || 'Failed' }] });
                                                 } finally {
@@ -279,6 +283,9 @@ export default function SettingsPage() {
                                     </div>
                                     {testResult && (
                                         <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+                                            {testResult.queued && (
+                                                <span style={{ color: '#00A3FF' }}>{testResult.queued}</span>
+                                            )}
                                             {testResult.sent.length > 0 && (
                                                 <span style={{ color: '#00FF94' }}>Sent to @{testResult.sent.join(', @')}</span>
                                             )}
